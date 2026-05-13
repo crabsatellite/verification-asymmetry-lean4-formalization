@@ -1,0 +1,6 @@
+/.lake
+/build
+
+# Tool outputs
+audit-report.json
+audit_v*.txt
