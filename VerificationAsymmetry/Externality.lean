@@ -42,9 +42,19 @@
   each factor in `θ` separately (under the paper's hypotheses
   `K_AI ≥ L_G`, `ρ ≤ 0` ∨ `ρ ∈ (0, 1/a)`).  The unbounded-as-θ→1
   claim is a limit statement we record as a parametric inequality.
+
+  ## Audit note (post-audit 2026-05)
+
+  The composite Cobb-Douglas-factor-share + steady-state-stock
+  identity used in Part 3 (Pigouvian subsidy formula) was formerly
+  carried as a *hypothesis* of `thm_externality_pigouvian_cobb_douglas`.
+  An axiom-discharged form `_from_axioms` is now provided alongside,
+  using `axiom_cobb_douglas_factor_share` (Cat 2) + the definitional
+  unfolding of `Vinf`.
 -/
 
 import VerificationAsymmetry.Basic
+import VerificationAsymmetry.Axioms
 import VerificationAsymmetry.Collapse
 
 namespace VerificationAsymmetry
@@ -154,7 +164,6 @@ theorem thm_externality_wedge_identity
   have h1mθ_ne : 1 - θ ≠ 0 := ne_of_gt h1mθ
   have hwG_ne : wG ≠ 0 := ne_of_gt hwG
   field_simp
-  ring
 
 /-! ### Theorem~\ref{thm:externality} Part 3: Pigouvian subsidy. -/
 
@@ -188,9 +197,21 @@ theorem thm_externality_pigouvian_cobb_douglas
   have hkey : wV * gE * hE = (1 - E.eta) * Y / (E.nu * E.Ts) := by
     rw [hY]
     field_simp
-    ring
   rw [hkey]
   ring
+
+/-- **Theorem~\ref{thm:externality} Part 3 — axiom-discharged form.**
+    Same as `thm_externality_pigouvian_cobb_douglas` but with the
+    composite Cobb-Douglas-factor-share + steady-state-stock identity
+    derived from `axiom_cobb_douglas_factor_share` (Cat 2) + the
+    `Vinf` definition. -/
+theorem thm_externality_pigouvian_cobb_douglas_from_axioms
+    (Y wV Lambda : ℝ) (g h : ℝ → ℝ) (θ : ℝ) :
+    E.externalityResidual wV (g (E.eBar θ)) (h (E.eBar θ)) Lambda
+      = E.pigouvianSubsidy_CD Y Lambda :=
+  E.thm_externality_pigouvian_cobb_douglas
+    Y wV (g (E.eBar θ)) (h (E.eBar θ)) Lambda
+    (E.cobb_douglas_steady_state_identity Y wV g h θ)
 
 /-! ### Proposition~\ref{prop:internalization}: within-firm internalization. -/
 
@@ -235,7 +256,7 @@ theorem prop_decentralized_theta_wG_strict
     (pAI sStar wG_soc wG_eq : ℝ) (hSoc : pAI + sStar = wG_soc)
     (hEq : pAI = wG_eq) (hsStar : 0 < sStar) :
     wG_eq < wG_soc := by
-  have := E.prop_decentralized_theta_foc pAI sStar wG_soc wG_eq hSoc hEq
+  have := prop_decentralized_theta_foc pAI sStar wG_soc wG_eq hSoc hEq
   linarith
 
 /-- **Proposition~\ref{prop:decentralized-theta} (monotonicity of

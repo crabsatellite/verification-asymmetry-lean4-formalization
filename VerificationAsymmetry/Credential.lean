@@ -36,9 +36,26 @@
   pre-collapse is encoded as the algebraic identity that
   `g(ē) h(ē)` scales as `(1-θ)^{a+b}` (smooth threshold) versus
   `(1-θ)^a` (below `θ*`); proven inline.
+
+  ## Audit note (post-audit 2026-05)
+
+  The composite identity `(1-η) Y = w_V · (ν T_s g h)` (Cobb-Douglas
+  factor share applied to the steady-state stock identity) was
+  formerly carried as a *hypothesis* of every Cobb-Douglas-regime
+  theorem in this file.  The post-audit version provides BOTH:
+    * the original parametric form (taking the composite identity
+      as hypothesis — honest about the assumption);
+    * a derived `_from_axioms` companion that discharges the
+      hypothesis using `axiom_cobb_douglas_factor_share` (Cat 2)
+      composed with `steady_state_stock_identity` (definitional
+      unfolding of `Vinf`).
+  The `_from_axioms` companions make explicit that the textbook
+  Cobb-Douglas factor share IS the substantive assumption; without
+  the axiom, the hypothesis would have no derivation route.
 -/
 
 import VerificationAsymmetry.Basic
+import VerificationAsymmetry.Axioms
 import VerificationAsymmetry.Collapse
 
 namespace VerificationAsymmetry
@@ -68,7 +85,28 @@ theorem thm_credential_cobb_douglas_reduction
   have hnu : E.nu ≠ 0 := ne_of_gt E.nu_pos
   rw [hY]
   field_simp
-  ring
+
+/-- **Theorem~\ref{thm:credential} (Cobb-Douglas reduction —
+    axiom-discharged form).** Same as `thm_credential_cobb_douglas_reduction`
+    but with the composite Cobb-Douglas-factor-share + steady-state-
+    stock identity discharged using `axiom_cobb_douglas_factor_share`
+    (Cat 2, textbook) and the definitional unfolding of `Vinf`.
+
+    *Substantive content.*  Identifies which assumption is the
+    Cat 2 axiom (Cobb-Douglas factor share) versus the definitional
+    consequence (steady-state stock).  After the axiom-discharged
+    form, the Cobb-Douglas regime in this paper depends on exactly
+    one textbook fact, not on a composite hypothesis. -/
+theorem thm_credential_cobb_douglas_reduction_from_axioms
+    (Y wV : ℝ) (g h : ℝ → ℝ) (θ : ℝ)
+    (hgh_pos : 0 < g (E.eBar θ) * h (E.eBar θ))
+    (hTs_pos : 0 < E.Ts) :
+    E.Ts * g (E.eBar θ) * h (E.eBar θ) * wV
+      = (1 - E.eta) * Y / E.nu :=
+  E.thm_credential_cobb_douglas_reduction
+    Y wV (g (E.eBar θ)) (h (E.eBar θ))
+    (E.cobb_douglas_steady_state_identity Y wV g h θ)
+    hgh_pos hTs_pos
 
 /-- **Theorem~\ref{thm:credential} (closed-form per-entrant return,
     paper Eq.~\eqref{eq:R-cobb-douglas}).** Substituting the
@@ -174,7 +212,19 @@ theorem prop_junior_senior_wage
   have hg : g ≠ 0 := ne_of_gt hg_pos
   rw [hY]
   field_simp
-  ring
+
+/-- **Proposition~\ref{prop:junior-senior} — axiom-discharged form.**
+    The senior wage `w_S = w_V · h(ē) = (1-η) Y / (ν T_s g(ē))` follows
+    from Cobb-Douglas factor share (Cat 2 axiom) and the steady-state
+    stock identity (definitional). -/
+theorem prop_junior_senior_wage_from_axioms
+    (Y wV : ℝ) (g h : ℝ → ℝ) (θ : ℝ)
+    (hg_pos : 0 < g (E.eBar θ)) (hTs_pos : 0 < E.Ts) :
+    wV * h (E.eBar θ)
+      = (1 - E.eta) * Y / (E.nu * E.Ts * g (E.eBar θ)) :=
+  E.prop_junior_senior_wage Y wV (g (E.eBar θ)) (h (E.eBar θ))
+    (E.cobb_douglas_steady_state_identity Y wV g h θ)
+    hg_pos hTs_pos
 
 end Economy
 

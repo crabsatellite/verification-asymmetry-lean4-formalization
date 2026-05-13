@@ -34,9 +34,30 @@
   product algebra of CES; the threshold is the linear inversion of
   `G(θ) = (1-θ) L_G + θ K_AI` against the critical generation level
   `G*`.  Both are pure real-arithmetic identities.
+
+  ## Audit note (post-audit 2026-05)
+
+  The closed-form `wageRatio` defined below packages the CES
+  marginal-product ratio
+      `w_V/w_G = ((1-η)/η) · λ^ρ · (G/V)^{1-ρ}`
+  (Eq.~\eqref{eq:wage-ratio}) as a Lean *definition*, sidestepping
+  the formal derivation from `w_V = ∂F/∂V`, `w_G = ∂F/∂G` of the
+  CES function `F(G, V) = (η G^ρ + (1-η)(λ V)^ρ)^{1/ρ}`.  The
+  identification of the closed form with the CES wage ratio is
+  carried by `axiom_ces_wage_ratio` in `Axioms.lean` (Cat 2,
+  Acemoglu 2009 §15).
+
+  The endpoint-identification lemmas
+  (`cor_bounded_AI_threshold_at_rBarZero`,
+  `cor_bounded_AI_threshold_at_rBarMax`) formerly took
+  `hGstar_eq : E.Gstar V (E.rBarZero V) = E.LG` as a hypothesis.
+  The current version derives this from `Real.rpow_mul` and the
+  algebraic identity `(x^(1-ρ))^(1/(1-ρ)) = x` (Mathlib-derivable),
+  eliminating the hidden-hypothesis form.
 -/
 
 import VerificationAsymmetry.Basic
+import VerificationAsymmetry.Axioms
 
 namespace VerificationAsymmetry
 
@@ -198,29 +219,104 @@ noncomputable def rBarZero (V : ℝ) : ℝ :=
 noncomputable def rBarMax (V : ℝ) : ℝ :=
   ((1 - E.eta) / E.eta) * E.lam ^ E.rho * (E.KAI / V) ^ (1 - E.rho)
 
+/-! ### Mathlib-derivable: `G*(r̄_0) = L_G` and `G*(r̄_max) = K_AI`.
+
+  The endpoint identifications are pure `Real.rpow` arithmetic.
+  Key fact used: `Real.rpow_mul (hx : 0 ≤ x) (y z : ℝ)` gives
+  `x ^ (y * z) = (x ^ y) ^ z`, so for `x > 0` and `a ≠ 0`,
+  `(x^a)^(1/a) = x^(a * (1/a)) = x^1 = x`.
+
+  Post-audit: these were formerly carried as hypotheses
+  `hGstar_eq`, which is exactly the kind of substance-in-hypothesis
+  hiding the audit identified.  Replaced by derivations. -/
+
+/-- *Endpoint identity at `r̄_0`.*  `G*(r̄_0) = L_G`.
+
+    Derived from `Real.rpow_mul` and the algebraic cancellation
+    `((L_G/V)^(1-ρ))^(1/(1-ρ)) = L_G/V` for `L_G/V > 0`, `ρ < 1`. -/
+theorem Gstar_at_rBarZero (V : ℝ) (hV_pos : 0 < V) (hLG_pos : 0 < E.LG)
+    (hrho_lt : E.rho < 1) :
+    E.Gstar V (E.rBarZero V) = E.LG := by
+  unfold Gstar rBarZero
+  -- rBarZero V * η / ((1-η) λ^ρ) = (L_G/V)^(1-ρ).
+  have hone_minus_eta_pos : 0 < 1 - E.eta := by linarith [E.eta_lt_one]
+  have hone_minus_eta_ne : (1 - E.eta) ≠ 0 := ne_of_gt hone_minus_eta_pos
+  have heta_ne : E.eta ≠ 0 := ne_of_gt E.eta_pos
+  have hlam_pow_pos : 0 < E.lam ^ E.rho := Real.rpow_pos_of_pos E.lam_pos _
+  have hlam_pow_ne : E.lam ^ E.rho ≠ 0 := ne_of_gt hlam_pow_pos
+  have hone_minus_rho_pos : 0 < 1 - E.rho := by linarith
+  have hone_minus_rho_ne : (1 - E.rho) ≠ 0 := ne_of_gt hone_minus_rho_pos
+  have hLG_div_V_pos : 0 < E.LG / V := div_pos hLG_pos hV_pos
+  have hkey :
+      ((1 - E.eta) / E.eta * E.lam ^ E.rho * (E.LG / V) ^ (1 - E.rho))
+          * E.eta / ((1 - E.eta) * E.lam ^ E.rho)
+        = (E.LG / V) ^ (1 - E.rho) := by
+    field_simp
+  rw [hkey]
+  -- ((L_G/V)^(1-ρ))^(1/(1-ρ)) = L_G/V.
+  rw [← Real.rpow_mul hLG_div_V_pos.le (1 - E.rho) (1 / (1 - E.rho))]
+  have hself : (1 - E.rho) * (1 / (1 - E.rho)) = 1 := by
+    field_simp
+  rw [hself]
+  rw [Real.rpow_one]
+  -- V * (L_G/V) = L_G.
+  field_simp
+
+/-- *Endpoint identity at `r̄_max`.*  `G*(r̄_max) = K_AI`.
+
+    Derived from `Real.rpow_mul` analogously to `Gstar_at_rBarZero`. -/
+theorem Gstar_at_rBarMax (V : ℝ) (hV_pos : 0 < V)
+    (hrho_lt : E.rho < 1) :
+    E.Gstar V (E.rBarMax V) = E.KAI := by
+  unfold Gstar rBarMax
+  have hone_minus_eta_pos : 0 < 1 - E.eta := by linarith [E.eta_lt_one]
+  have hone_minus_eta_ne : (1 - E.eta) ≠ 0 := ne_of_gt hone_minus_eta_pos
+  have heta_ne : E.eta ≠ 0 := ne_of_gt E.eta_pos
+  have hlam_pow_pos : 0 < E.lam ^ E.rho := Real.rpow_pos_of_pos E.lam_pos _
+  have hlam_pow_ne : E.lam ^ E.rho ≠ 0 := ne_of_gt hlam_pow_pos
+  have hone_minus_rho_pos : 0 < 1 - E.rho := by linarith
+  have hone_minus_rho_ne : (1 - E.rho) ≠ 0 := ne_of_gt hone_minus_rho_pos
+  have hKAI_div_V_pos : 0 < E.KAI / V := div_pos E.KAI_pos hV_pos
+  have hkey :
+      ((1 - E.eta) / E.eta * E.lam ^ E.rho * (E.KAI / V) ^ (1 - E.rho))
+          * E.eta / ((1 - E.eta) * E.lam ^ E.rho)
+        = (E.KAI / V) ^ (1 - E.rho) := by
+    field_simp
+  rw [hkey]
+  rw [← Real.rpow_mul hKAI_div_V_pos.le (1 - E.rho) (1 / (1 - E.rho))]
+  have hself : (1 - E.rho) * (1 / (1 - E.rho)) = 1 := by
+    field_simp
+  rw [hself]
+  rw [Real.rpow_one]
+  field_simp
+
 /-- **Corollary~\ref{cor:bounded-AI} (endpoint identification).**
     At the baseline wage ratio `r̄ = r̄_0`, the inversion threshold
     is `0`:  `θ_inv(r̄_0) = 0`.
 
-    *Proof sketch:* `G*(r̄_0) = L_G` by the closed-form definition;
-    substituting into `θ_inv = (G* - L_G)/(K_AI - L_G)` gives `0`. -/
+    *Post-audit form.*  Previously took `hGstar_eq` as hypothesis;
+    now derived from `Gstar_at_rBarZero` using `Real.rpow_mul` —
+    no hidden hypothesis. -/
 theorem cor_bounded_AI_threshold_at_rBarZero
-    (V : ℝ) (_hV_pos : 0 < V) (_hKAI_gt : E.LG < E.KAI)
-    (hGstar_eq : E.Gstar V (E.rBarZero V) = E.LG) :
+    (V : ℝ) (hV_pos : 0 < V) (hLG_pos : 0 < E.LG)
+    (hKAI_gt : E.LG < E.KAI) (hrho_lt : E.rho < 1) :
     E.thetaInv V (E.rBarZero V) = 0 := by
   unfold thetaInv
-  rw [hGstar_eq]
+  rw [E.Gstar_at_rBarZero V hV_pos hLG_pos hrho_lt]
   simp
 
 /-- **Corollary~\ref{cor:bounded-AI} (endpoint identification).**
     At the maximum reachable wage ratio `r̄ = r̄_max`, the inversion
-    threshold is `1`. -/
+    threshold is `1`.
+
+    *Post-audit form.*  Previously took `hGstar_eq` as hypothesis;
+    now derived from `Gstar_at_rBarMax`. -/
 theorem cor_bounded_AI_threshold_at_rBarMax
-    (V : ℝ) (hKAI_gt : E.LG < E.KAI)
-    (hGstar_eq : E.Gstar V (E.rBarMax V) = E.KAI) :
+    (V : ℝ) (hV_pos : 0 < V) (hKAI_gt : E.LG < E.KAI)
+    (hrho_lt : E.rho < 1) :
     E.thetaInv V (E.rBarMax V) = 1 := by
   unfold thetaInv
-  rw [hGstar_eq]
+  rw [E.Gstar_at_rBarMax V hV_pos hrho_lt]
   have h_ne : E.KAI - E.LG ≠ 0 := by
     have : 0 < E.KAI - E.LG := by linarith
     exact ne_of_gt this

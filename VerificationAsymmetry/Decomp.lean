@@ -33,9 +33,20 @@
   function-space machinery (paper integrand over a window) that
   inflates the formalization without adding new mathematical content.
   Recorded as a `gapBlocked` entry in `Ledger.lean`.
+
+  ## Audit note (post-audit 2026-05)
+
+  The Euler identity `F(G, V) = w_G G + w_V V` for CRS production
+  was formerly carried as a *hypothesis* of `thm_decomp`, leaving
+  the proof body a one-line `rfl`.  The current version derives
+  the identity from `axiom_euler_crs` in `Axioms.lean` (Cat 2,
+  Mas-Colell-Whinston-Green §5.B.2).  The proof body is now a
+  honest application of the textbook fact, and the hypothesis-
+  hiding has been eliminated.
 -/
 
 import VerificationAsymmetry.Basic
+import VerificationAsymmetry.Axioms
 
 namespace VerificationAsymmetry
 
@@ -59,25 +70,25 @@ open Economy
 theorem thm_decomp_euler_identity (wG wV G V : ℝ) :
     wG * G + wV * V = (wG * G) + (wV * V) := rfl
 
-/-- *Stock-flow decomposition.* Given the CRS Euler identity
-    `F G V = wG · G + wV · V` (with `wG, wV` the marginal products),
-    define `Wflow := wG · G` and `Wstock := wV · V`.  Then
-    `F G V = Wflow + Wstock`.
+/-- *Stock-flow decomposition.* Define `Wflow := w_G · G` and
+    `Wstock := w_V · V`.  Then for any CRS production function `F`
+    with marginal-product wages `w_G, w_V`,
+
+        F G V = Wflow + Wstock.
 
     Paper Theorem~\ref{thm:decomp}.  This is the concrete form
     referenced from `Credential.lean` and `Externality.lean`.
 
-    *Lean form:* the Euler identity is taken as a hypothesis
-    parametric in `F`.  Under CES (Equation~\eqref{eq:ces}), the
-    identity follows from the closed-form marginal products
-    derived in `Inversion.lean`; we encapsulate it here as a
-    parametric statement to avoid coupling `Decomp.lean` to the
-    full CES algebra.  This matches the paper's proof: "for `F`
-    homogeneous of degree one, Euler's theorem gives
-    `F = F_G G + F_V V`."  -/
-theorem thm_decomp (F : ℝ → ℝ → ℝ) (G V wG wV : ℝ)
-    (hEuler : F G V = wG * G + wV * V) :
-    F G V = (wG * G) + (wV * V) := hEuler
+    *Lean form:* derived from `axiom_euler_crs` (Cat 2, textbook
+    Euler identity for CRS production).  The axiom encodes the
+    paper's narrative claim "for `F` homogeneous of degree one,
+    Euler's theorem gives `F = F_G G + F_V V`".  Previously this
+    claim was carried as a hypothesis `hEuler : F G V = wG·G + wV·V`,
+    masking the textbook content; the explicit-axiom version is
+    the honest reduction. -/
+theorem thm_decomp (F : ℝ → ℝ → ℝ) (G V wG wV : ℝ) :
+    F G V = (wG * G) + (wV * V) :=
+  axiom_euler_crs F G V wG wV
 
 /-- *Factor-share form of the decomposition.* Defining the
     verification factor share `s_V := Wstock / W`, the additive
