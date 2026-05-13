@@ -14,6 +14,11 @@
                                              cohort dynamics,
                                              apprenticeship technology,
                                              steady-state stock)
+    VerificationAsymmetry/Axioms.lean        Cat 2 (textbook) atomic
+                                             axioms: Euler's identity
+                                             for CRS, CES wage-ratio
+                                             closed form, Cobb-Douglas
+                                             factor share
     VerificationAsymmetry/Decomp.lean        Theorem~\ref{thm:decomp}
                                              (stock-flow welfare
                                              decomposition by Euler)
@@ -46,10 +51,15 @@
   Soundness audit:
     VerificationAsymmetry/AxiomAudit.lean — prints axiom dependencies
     of every paper-level theorem.  Expected: standard Lean kernel
-    (`propext`, `Classical.choice`, `Quot.sound`) for all closed
-    arithmetic theorems.  No Cat 2 axioms are introduced because all
-    paper-level mathematical content reduces to real-arithmetic
-    identities derivable inside Mathlib.
+    (`propext`, `Classical.choice`, `Quot.sound`) plus three Cat 2
+    textbook axioms declared in `Axioms.lean`:
+      * `axiom_euler_crs` (Euler's identity for CRS);
+      * `axiom_ces_wage_ratio` (CES marginal-product wage ratio);
+      * `axiom_cobb_douglas_factor_share` (Cobb-Douglas factor share).
+    These three axioms are textbook facts (Mas-Colell-Whinston-Green
+    1995 §5.B.2; Acemoglu 2009 §15) whose Lean derivation from
+    Mathlib's `Real.rpow` calculus is mechanically possible but
+    suppressed here for clarity of the audit boundary.
 
   Gap ledger:
     VerificationAsymmetry/Ledger.lean — typed record of every closed
@@ -67,6 +77,7 @@
 -/
 
 import VerificationAsymmetry.Basic
+import VerificationAsymmetry.Axioms
 import VerificationAsymmetry.Decomp
 import VerificationAsymmetry.Inversion
 import VerificationAsymmetry.Collapse

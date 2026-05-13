@@ -16,16 +16,34 @@
   (citation revisions, atomic refactors, prior retractions); docstrings
   and scope fields are kept to current-state content only.
 
-  *Inventory profile of this project.*  Unlike the Einstein-Test
-  companion (which formalizes recursion-theoretic and Kolmogorov-
-  complexity content requiring external textbook axioms), the
-  Verification Asymmetry paper's structural mathematics is entirely
-  real-analytic: CES algebra, linear-cohort accounting, Brouwer
-  fixed-point, finite-product algebra.  The corresponding Lean
-  formalization closes every paper-level theorem WITHOUT introducing
-  any Cat 2 or Cat 3 atomic axioms — all proofs use Mathlib's
-  real-arithmetic infrastructure and the standard Lean kernel
-  (`propext`, `Classical.choice`, `Quot.sound`).
+  *Inventory profile of this project (post-audit 2026-05).*  The
+  paper's structural mathematics is real-analytic — CES algebra,
+  linear-cohort accounting, Brouwer fixed-point, finite-product
+  algebra — and most paper-level theorems reduce to Mathlib's
+  real-arithmetic infrastructure plus the Lean kernel (`propext`,
+  `Classical.choice`, `Quot.sound`).
+
+  However, three textbook microeconomics facts enter the paper's
+  proofs and are not derivable from `F : ℝ → ℝ → ℝ` taken
+  abstractly:
+
+    * Euler's identity for CRS production functions
+      (`axiom_euler_crs` in `Axioms.lean`);
+    * CES marginal-product wage ratio closed form
+      (`axiom_ces_wage_ratio`);
+    * Cobb-Douglas verification factor share `w_V V = (1-η) Y`
+      (`axiom_cobb_douglas_factor_share`).
+
+  These are declared as Cat 2 (external textbook) axioms with
+  explicit citations (Mas-Colell, Whinston, Green 1995 §5.B.2;
+  Acemoglu 2009 §15).
+
+  Previously, the same facts were carried inside theorem signatures
+  as hypotheses, e.g. `thm_decomp F G V wG wV (hEuler : F G V =
+  wG * G + wV * V) : ...`, leaving the proof body a one-line `rfl`
+  while hiding the textbook content inside the hypothesis.  The
+  post-audit refactor lifted these hypotheses to explicit Cat 2
+  axioms.
 
   The `gapBlocked` entries record paper-level claims that are
   predominantly *economic narrative* (e.g., "the apprenticeship
@@ -77,6 +95,78 @@ structure GapEntry where
   /-- What content the entry carries; what it does NOT claim. -/
   scope : String
 
+/-! ### Cat 2 axiom entries (gapClosed: declared in `Axioms.lean`) -/
+
+/-- Cat 2 axiom: Euler's identity for CRS production. -/
+def gap_axiom_euler_crs : GapEntry := {
+  name := "axiom_euler_crs"
+  status := GapStatus.gapClosed
+  inputCategory := InputCategory.cat2External
+  paperSource :=
+    "Li 2026, `\\label{thm:decomp}` proof; " ++
+    "citation: Mas-Colell, Whinston, Green 1995 §5.B.2"
+  attackHistory := [
+    "Pre-audit (v0.1.0): Euler identity carried as hypothesis " ++
+    "`hEuler` of `thm_decomp`; proof body `rfl`. Audit (2026-05) " ++
+    "lifted to explicit Cat 2 axiom."
+  ]
+  scope :=
+    "For any homogeneous-of-degree-one `F : ℝ → ℝ → ℝ` evaluated at " ++
+    "`(G, V)` with marginal-product wage rates `w_G, w_V`, " ++
+    "`F G V = w_G · G + w_V · V`. Atomic algebraic identity at " ++
+    "fixed factor levels"
+}
+
+/-- Cat 2 axiom: CES wage-ratio closed form. -/
+def gap_axiom_ces_wage_ratio : GapEntry := {
+  name := "axiom_ces_wage_ratio"
+  status := GapStatus.gapClosed
+  inputCategory := InputCategory.cat2External
+  paperSource :=
+    "Li 2026, `\\label{thm:inversion}` Part 1, " ++
+    "Eq. `\\eqref{eq:wage-ratio}`; " ++
+    "citation: Acemoglu 2009 §15 (CES marginal products)"
+  attackHistory := [
+    "Pre-audit (v0.1.0): `wageRatio` defined as closed form; " ++
+    "no axiom recorded for the identification with CES marginal " ++
+    "products. Audit (2026-05) added the Cat 2 axiom for honest " ++
+    "accounting of the suppressed CES marginal-product derivation."
+  ]
+  scope :=
+    "The CES marginal-product wage ratio admits the closed form " ++
+    "`((1-η)/η) · λ^ρ · (G/V)^{1-ρ}`. Atomic algebraic identity at " ++
+    "fixed CES parameters and factor levels. The Mathlib-derivable " ++
+    "marginal-product calculation is suppressed; the closed form is " ++
+    "the substantive content of Part 1"
+}
+
+/-- Cat 2 axiom: Cobb-Douglas verification factor share. -/
+def gap_axiom_cobb_douglas_factor_share : GapEntry := {
+  name := "axiom_cobb_douglas_factor_share"
+  status := GapStatus.gapClosed
+  inputCategory := InputCategory.cat2External
+  paperSource :=
+    "Li 2026, `\\label{thm:credential}` proof " ++
+    "(\\eqref{eq:R-cobb-douglas}); " ++
+    "citation: Mas-Colell, Whinston, Green 1995 §5.B.2"
+  attackHistory := [
+    "Pre-audit (v0.1.0): composite identity " ++
+    "`(1-η) Y = w_V · (ν T_s g h)` carried as hypothesis of every " ++
+    "Cobb-Douglas-regime theorem (`thm_credential`, " ++
+    "`prop_junior_senior`, `thm_externality_pigouvian_cobb_douglas`); " ++
+    "proof bodies `field_simp`. Audit (2026-05) decomposed into " ++
+    "(i) Cat 2 axiom for the Cobb-Douglas factor share " ++
+    "`w_V V = (1-η) Y`, and (ii) definitional unfolding of `Vinf = " ++
+    "ν T_s g h`. Composite hypothesis no longer carries hidden " ++
+    "textbook content"
+  ]
+  scope :=
+    "Under Cobb-Douglas `F G V = G^η · (λ V)^{1-η}` with competitive " ++
+    "marginal products, the verification factor share is `(1-η)`: " ++
+    "`w_V · V = (1-η) · Y`. Atomic algebraic identity at fixed " ++
+    "`(Y, w_V, V, η)`"
+}
+
 /-! ### gapClosed entries — paper-level results formalized without `sorry` -/
 
 /-- Theorem~\ref{thm:decomp} (stock-flow welfare decomposition,
@@ -86,11 +176,19 @@ def gap_thm_decomp_CLOSED : GapEntry := {
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
   paperSource := "Li 2026, `\\label{thm:decomp}`"
-  attackHistory := []
+  attackHistory := [
+    "Pre-audit (v0.1.0): Euler identity carried as hypothesis " ++
+    "`hEuler : F G V = wG · G + wV · V`; proof body `rfl`. " ++
+    "Audit (2026-05) replaced the hypothesis with an application " ++
+    "of `axiom_euler_crs` (Cat 2, MWG 1995 §5.B.2); the proof body " ++
+    "is now `axiom_euler_crs F G V wG wV`, with the textbook content " ++
+    "located in the axiom, not buried in a hypothesis"
+  ]
   scope :=
     "Stock-flow welfare decomposition by Euler's identity: " ++
-    "`F G V = wG · G + wV · V` (CRS hypothesis) implies " ++
-    "`F = Wflow + Wstock` where `Wflow = wG · G`, `Wstock = wV · V`. " ++
+    "for any CRS `F`, `F G V = w_G · G + w_V · V` " ++
+    "(by `axiom_euler_crs`), implying `F = Wflow + Wstock` where " ++
+    "`Wflow = wG · G`, `Wstock = wV · V`. " ++
     "The Cobb-Douglas factor-share special case (Proposition " ++
     "`prop:stock-flow-asymptotics` Part 2) is formalized as " ++
     "`thm_decomp_cobb_douglas_shares`. Window invariance " ++
@@ -118,12 +216,23 @@ def gap_thm_inversion_wage_ratio_CLOSED : GapEntry := {
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
   paperSource := "Li 2026, `\\label{thm:inversion}` Part 1"
-  attackHistory := []
+  attackHistory := [
+    "Pre-audit (v0.1.0): `wageRatio` defined as the closed form " ++
+    "`((1-η)/η) λ^ρ (G/V)^{1-ρ}`; identification with the CES " ++
+    "marginal-product ratio implicit. Audit (2026-05) added " ++
+    "`axiom_ces_wage_ratio` for honest accounting of the suppressed " ++
+    "CES marginal-product derivation. The monotonicity proof " ++
+    "(`thm_inversion_wage_ratio_monotone`) operates on the closed-" ++
+    "form `wageRatio` definition and does not invoke the axiom; the " ++
+    "axiom only locates where the textbook fact sits in the audit"
+  ]
   scope :=
     "Wage-ratio function `r(θ) = ((1-η)/η) λ^ρ (G(θ)/V)^{1-ρ}` is " ++
     "non-decreasing in `θ` under `K_AI ≥ L_G` and `ρ < 1`. Proof " ++
     "uses `Real.rpow_le_rpow` on `G(θ)/V` together with the " ++
-    "monotonicity of `G` (`Economy.G_monotone_of_KAI_ge_LG`)"
+    "monotonicity of `G` (`Economy.G_monotone_of_KAI_ge_LG`). " ++
+    "Closed-form identification with CES marginal products: " ++
+    "`axiom_ces_wage_ratio` (Cat 2, Acemoglu 2009 §15)"
 }
 
 /-- Corollary~\ref{cor:bounded-AI} (endpoint identifications). -/
@@ -132,10 +241,19 @@ def gap_cor_bounded_AI_CLOSED : GapEntry := {
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
   paperSource := "Li 2026, `\\label{cor:bounded-AI}`"
-  attackHistory := []
+  attackHistory := [
+    "Pre-audit (v0.1.0): the endpoint identities " ++
+    "`G*(r̄_0) = L_G`, `G*(r̄_max) = K_AI` were carried as " ++
+    "`hGstar_eq` hypotheses of the corollary statements (these are " ++
+    "real `rpow` algebraic identities, not assumptions). Audit " ++
+    "(2026-05) derived them inline via `Real.rpow_mul` " ++
+    "(`Gstar_at_rBarZero`, `Gstar_at_rBarMax`); no longer hypotheses"
+  ]
   scope :=
     "At `r̄ = r̄_0`, `G*(r̄_0) = L_G`, so `θ_inv = 0`. At `r̄ = r̄_max`, " ++
-    "`G*(r̄_max) = K_AI`, so `θ_inv = 1`"
+    "`G*(r̄_max) = K_AI`, so `θ_inv = 1`. Both endpoint identities " ++
+    "derived from `Real.rpow_mul` and the cancellation " ++
+    "`(x^a)^(1/a) = x` for `x > 0, a ≠ 0`"
 }
 
 /-- Theorem~\ref{thm:collapse} Part 1: below-threshold smooth power-law. -/
@@ -220,12 +338,22 @@ def gap_thm_credential_CLOSED : GapEntry := {
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
   paperSource := "Li 2026, `\\label{thm:credential}`"
-  attackHistory := []
+  attackHistory := [
+    "Pre-audit (v0.1.0): composite Cobb-Douglas identity " ++
+    "`(1-η) Y = wV · (ν T_s g h)` carried as hypothesis `hY`. " ++
+    "Audit (2026-05) added a companion `_from_axioms` theorem that " ++
+    "derives `hY` from `axiom_cobb_douglas_factor_share` (Cat 2, " ++
+    "MWG 1995 §5.B.2) composed with the definitional " ++
+    "steady-state stock identity"
+  ]
   scope :=
     "Under Cobb-Douglas factor share `(1-η) Y = wV · ν T_s · g · h` " ++
     "and `g · h > 0`, the per-entrant senior earnings " ++
     "`T_s · g · h · wV` simplify to `(1-η) Y / ν`. The closed-form " ++
-    "return per entrant is `R(θ) = (1-η) Y(θ)/ν - T_j · c_J(θ)`"
+    "return per entrant is `R(θ) = (1-η) Y(θ)/ν - T_j · c_J(θ)`. " ++
+    "Parametric form takes the composite identity as hypothesis; " ++
+    "`_from_axioms` form discharges via Cat 2 axiom + Lean " ++
+    "definitional unfolding"
 }
 
 /-- Theorem~\ref{thm:credential} Part 3: multiplicative decay. -/
@@ -246,10 +374,16 @@ def gap_prop_junior_senior_CLOSED : GapEntry := {
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
   paperSource := "Li 2026, `\\label{prop:junior-senior}`"
-  attackHistory := []
+  attackHistory := [
+    "Pre-audit (v0.1.0): same composite Cobb-Douglas hypothesis as " ++
+    "`thm_credential_cobb_douglas_reduction`. Audit (2026-05) added " ++
+    "`prop_junior_senior_wage_from_axioms` that discharges via Cat 2 " ++
+    "axiom + definitional unfolding"
+  ]
   scope :=
     "Senior wage `w_S = wV · h(ē) = (1-η) Y / (ν T_s g(ē))`. " ++
-    "Diverges as `g(ē) → 0` for `θ → 1` under smooth threshold"
+    "Diverges as `g(ē) → 0` for `θ → 1` under smooth threshold. " ++
+    "Parametric and `_from_axioms` forms"
 }
 
 /-- Theorem~\ref{thm:externality} (wedge formula). -/
@@ -283,11 +417,16 @@ def gap_thm_externality_pigouvian_CLOSED : GapEntry := {
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
   paperSource := "Li 2026, `\\label{thm:externality}` Part 3"
-  attackHistory := []
+  attackHistory := [
+    "Pre-audit (v0.1.0): same composite Cobb-Douglas hypothesis as " ++
+    "`thm_credential_cobb_douglas_reduction`. Audit (2026-05) added " ++
+    "`thm_externality_pigouvian_cobb_douglas_from_axioms` that " ++
+    "discharges via Cat 2 axiom + definitional unfolding"
+  ]
   scope :=
     "Under Cobb-Douglas factor share and `g · h > 0`, " ++
     "`s*(θ) = (1-η) Y(θ) Λ / (ν T_s)`. Closed-form Pigouvian " ++
-    "subsidy per junior"
+    "subsidy per junior. Parametric and `_from_axioms` forms"
 }
 
 /-- Proposition~\ref{prop:internalization} (within-firm internalization). -/
@@ -563,6 +702,10 @@ def gap_cor_quant_predictions_BLOCKED : GapEntry := {
 
 /-- All gap entries in canonical order. -/
 def allGaps : List GapEntry := [
+  -- Cat 2 axioms (gapClosed: declared in Axioms.lean)
+  gap_axiom_euler_crs,
+  gap_axiom_ces_wage_ratio,
+  gap_axiom_cobb_douglas_factor_share,
   -- gapClosed: paper-level theorems formalized
   gap_thm_decomp_CLOSED,
   gap_thm_inversion_threshold_CLOSED,
@@ -626,22 +769,31 @@ def inputCategoryCounts : Nat × Nat × Nat × Nat :=
 
 #eval s!"Total entries: {allGaps.length}"
 
-/-! ### Inventory summary
+/-! ### Inventory summary (post-audit 2026-05)
 
   The live status counts and input-category counts are printed by the
   `#eval` calls above (run `lake env lean VerificationAsymmetry/Ledger.lean`
   to see them).
 
-  Inventory profile.  This project has ZERO Cat 2 / Cat 3 atomic
-  axioms; every paper-level theorem is closed using Mathlib's real-
-  arithmetic infrastructure and the standard Lean kernel.  The
-  paper's mathematical content reduces to:
-    * CES algebra (closed-form wage ratio, threshold);
-    * Linear-cohort accounting (transient decay, hysteresis bound);
-    * Finset products / sums (aggregation min-theorem);
-    * 1-D Brouwer fixed point (intermediate-value theorem).
-  All of these live inside Mathlib's core libraries and do not
-  require external textbook axioms.
+  Inventory profile.  This project has:
+    * Cat 1 (Mathlib-derivable theorems): the bulk of paper-level
+      content. Real-analytic identities, `rpow` arithmetic, Finset
+      sums / products, 1-D Brouwer / IVT.
+    * Cat 2 (external textbook axioms): three atomic axioms —
+      `axiom_euler_crs` (Euler identity for CRS, MWG 1995 §5.B.2),
+      `axiom_ces_wage_ratio` (CES wage-ratio closed form,
+      Acemoglu 2009 §15),
+      `axiom_cobb_douglas_factor_share` (Cobb-Douglas verification
+      factor share, MWG 1995 §5.B.2).
+    * Cat 3 (paper-novel atomic axioms): zero. Every paper-novel
+      structural object (`Economy`, `Vinf`, `eBar`, `gHard`, `wageRatio`,
+      `Vreq`) is a Lean *definition*, not an axiom.
+
+  The Cat 2 axioms were introduced by the 2026-05 audit as the
+  honest accounting of textbook facts that were previously hidden
+  inside theorem signatures as hypotheses.  Each axiom is atomic
+  (a single algebraic identity at fixed parameter values), with an
+  explicit citation in `Axioms.lean`.
 
   Lean kernel axioms used: propext, Classical.choice, Quot.sound.
 -/

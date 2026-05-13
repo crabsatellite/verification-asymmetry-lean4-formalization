@@ -3,37 +3,66 @@
 
   Prints the axiom dependency list for every paper-level theorem.
 
-  Trust policy.  Every paper-level theorem in this project should
-  depend ONLY on the Lean kernel:
+  ## Trust policy
 
-    * `propext`           — propositional extensionality
-    * `Classical.choice`  — classical choice (used by `Real.rpow` and
-                            other Mathlib reals)
-    * `Quot.sound`        — quotient soundness
+  Every paper-level theorem in this project should depend on:
+    * the Lean kernel — `propext`, `Classical.choice`, `Quot.sound`;
+    * the Cat 2 axioms declared in `Axioms.lean`, identified below.
 
-  No Cat 2 or Cat 3 atomic axioms are introduced by this project,
-  because the paper's structural mathematics is entirely real-analytic
-  (CES algebra, linear cohort accounting, finite products / sums,
-  1-D Brouwer / intermediate-value theorem) and lives inside Mathlib.
+  ## Inventory by category (post-audit 2026-05)
 
-  Inventory by category (live counts: see `lake env lean
-  VerificationAsymmetry/Ledger.lean`):
+  Cat 1 (Mathlib-derivable theorems).  Closed via `Real.rpow_*` and
+                                       Mathlib real-analysis.
 
-    Cat 1 (Mathlib-derivable theorems): ALL paper-level results.
-                                         Project has zero `axiom`s.
-    Cat 2 (external textbook axioms):   NONE.
-    Cat 3 (paper-novel axioms):         NONE.
+  Cat 2 (external textbook axioms).  Three atomic axioms:
+    * `axiom_euler_crs` — Euler's identity for CRS production.
+      Used by: `thm_decomp`.
+      Citation: Mas-Colell, Whinston, Green (1995) §5.B.2.
+    * `axiom_ces_wage_ratio` — CES marginal-product wage ratio
+      admits the closed form `((1-η)/η) λ^ρ (G/V)^{1-ρ}`.
+      Used by: identification of the `wageRatio` definition with
+      the CES wage ratio (paper Eq.~\eqref{eq:wage-ratio}).
+      Citation: Acemoglu (2009) §15.
+    * `axiom_cobb_douglas_factor_share` — Cobb-Douglas verification
+      factor share `w_V V = (1-η) Y`.
+      Used by: `cobb_douglas_steady_state_identity`, which the
+      `_from_axioms` versions of the Cobb-Douglas-regime theorems
+      consume.
+      Citation: Mas-Colell, Whinston, Green (1995) §5.B.2.
 
-  Per-axiom citations live in the corresponding theorem docstring in
-  the source file.  Round-history (prior retracted citations + atomic
-  refactor steps) lives in `gap_*.attackHistory` fields inside
-  `VerificationAsymmetry.Ledger`.
+  Cat 3 (paper-novel atomic axioms).  ZERO.  Every paper-novel
+                                      structural object (`Economy`,
+                                      `Vinf`, `eBar`, `gHard`,
+                                      `wageRatio`, `Vreq`, …) is
+                                      encoded as a Lean *definition*,
+                                      not an axiom.
 
-  Per-theorem axiom dependency profile (verified by `#print axioms`
-  below): all theorems expected to depend on Lean kernel only.
+  ## Audit history
 
-  Any axiom outside the Lean kernel (`propext`, `Classical.choice`,
-  `Quot.sound`) is a RED FLAG — investigate.
+  The 2026-05 audit refactored four theorems from substance-in-
+  hypothesis form to honest axiom-discharged form:
+    * `thm_decomp` (Decomp.lean) — previously took the Euler identity
+      as a hypothesis; now derived from `axiom_euler_crs`.
+    * `thm_credential_cobb_douglas_reduction`,
+      `prop_junior_senior_wage`,
+      `thm_externality_pigouvian_cobb_douglas` — previously took
+      the composite Cobb-Douglas-factor-share identity as a
+      hypothesis; now have `_from_axioms` companion theorems that
+      discharge via `axiom_cobb_douglas_factor_share` + the
+      definitional unfolding of `Vinf`.
+    * `cor_bounded_AI_threshold_at_rBarZero`, `_at_rBarMax` —
+      previously took the endpoint identity `Gstar V (rBarZero V) =
+      L_G` as a hypothesis; now derived from `Real.rpow_mul` via
+      `Gstar_at_rBarZero`, `Gstar_at_rBarMax`.
+
+  ## Trust profile
+
+  Any axiom outside this list — i.e. anything beyond the Lean kernel
+  plus the three declared Cat 2 axioms — is a RED FLAG, investigate.
+
+  Per-axiom citations live in the docstrings of `Axioms.lean`.
+  Round-history (prior retracted citations, refactor steps) lives
+  in `gap_*.attackHistory` fields inside `Ledger.lean`.
 
   Usage:
     lake exe cache get
@@ -41,6 +70,15 @@
 -/
 
 import VerificationAsymmetry
+
+-- Cat 2 axioms (declared in Axioms.lean).
+#print axioms VerificationAsymmetry.Economy.axiom_euler_crs
+#print axioms VerificationAsymmetry.Economy.axiom_ces_wage_ratio
+#print axioms VerificationAsymmetry.Economy.axiom_cobb_douglas_factor_share
+
+-- Derived steady-state identity (definitional unfolding of Vinf).
+#print axioms VerificationAsymmetry.Economy.steady_state_stock_identity
+#print axioms VerificationAsymmetry.Economy.cobb_douglas_steady_state_identity
 
 -- Theorem~\ref{thm:decomp}
 #print axioms VerificationAsymmetry.thm_decomp_euler_identity
@@ -53,6 +91,8 @@ import VerificationAsymmetry
 #print axioms VerificationAsymmetry.Economy.thm_inversion_threshold_in_unit_interval
 #print axioms VerificationAsymmetry.Economy.thm_inversion_wage_ratio_monotone
 #print axioms VerificationAsymmetry.Economy.thm_inversion_threshold_monotone_in_rBar
+#print axioms VerificationAsymmetry.Economy.Gstar_at_rBarZero
+#print axioms VerificationAsymmetry.Economy.Gstar_at_rBarMax
 
 -- Corollary~\ref{cor:bounded-AI}
 #print axioms VerificationAsymmetry.Economy.cor_bounded_AI_threshold_at_rBarZero
@@ -75,6 +115,7 @@ import VerificationAsymmetry
 
 -- Theorem~\ref{thm:credential}
 #print axioms VerificationAsymmetry.Economy.thm_credential_cobb_douglas_reduction
+#print axioms VerificationAsymmetry.Economy.thm_credential_cobb_douglas_reduction_from_axioms
 #print axioms VerificationAsymmetry.Economy.thm_credential_closed_form
 #print axioms VerificationAsymmetry.Economy.thm_credential_leontief_pre_collapse
 #print axioms VerificationAsymmetry.Economy.thm_credential_leontief_post_collapse
@@ -83,6 +124,7 @@ import VerificationAsymmetry
 
 -- Proposition~\ref{prop:junior-senior}
 #print axioms VerificationAsymmetry.Economy.prop_junior_senior_wage
+#print axioms VerificationAsymmetry.Economy.prop_junior_senior_wage_from_axioms
 
 -- Theorem~\ref{thm:externality}
 #print axioms VerificationAsymmetry.Economy.thm_externality_residual_identity
@@ -90,6 +132,7 @@ import VerificationAsymmetry
 #print axioms VerificationAsymmetry.Economy.thm_externality_residual_pos
 #print axioms VerificationAsymmetry.Economy.thm_externality_wedge_identity
 #print axioms VerificationAsymmetry.Economy.thm_externality_pigouvian_cobb_douglas
+#print axioms VerificationAsymmetry.Economy.thm_externality_pigouvian_cobb_douglas_from_axioms
 
 -- Proposition~\ref{prop:internalization}
 #print axioms VerificationAsymmetry.Economy.prop_internalization

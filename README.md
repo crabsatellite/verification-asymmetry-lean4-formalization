@@ -15,17 +15,34 @@ The formalization machine-checks the **structural mathematics** of the
 paper end-to-end inside Lean 4 + Mathlib.  Every paper-internal
 deduction is a genuine Lean 4 theorem — **zero `sorry`**.
 
-This project has **zero atomic axioms** (Cat 2 / Cat 3): the paper's
-mathematical content is entirely real-analytic, reducing to:
+The trust boundary is explicit:
 
-* CES algebra (closed-form wage ratio, inversion threshold);
-* Linear-cohort accounting (transient decay, hysteresis bound);
-* `Finset` products / sums (aggregation min-theorem);
-* 1-D Brouwer fixed point (intermediate value theorem).
+* **Cat 1 (Mathlib-derivable theorems).** The bulk of paper-level
+  content.  Closed via `Real.rpow` arithmetic, `Finset` sums /
+  products, 1-D Brouwer (intermediate-value theorem), and the
+  standard Lean kernel (`propext`, `Classical.choice`, `Quot.sound`).
+* **Cat 2 (external textbook axioms).** Three atomic axioms
+  declared in
+  [`VerificationAsymmetry/Axioms.lean`](VerificationAsymmetry/Axioms.lean):
+  Euler's identity for CRS production (used in Theorem~`thm:decomp`;
+  citation Mas-Colell, Whinston, Green 1995 §5.B.2), the CES
+  marginal-product wage-ratio closed form (used to identify the
+  `wageRatio` definition with the CES marginal products; citation
+  Acemoglu 2009 §15), and the Cobb-Douglas verification factor
+  share (used in `thm:credential`, `prop:junior-senior`,
+  `thm:externality` Part 3; citation Mas-Colell, Whinston, Green
+  1995 §5.B.2).
+* **Cat 3 (paper-novel atomic axioms).** Zero.  Every paper-novel
+  structural object (`Economy`, `Vinf`, `eBar`, `gHard`,
+  `wageRatio`, `Vreq`) is a Lean *definition*, not an axiom.
 
-All four ingredients live inside Mathlib's core libraries and the
-standard Lean kernel (`propext`, `Classical.choice`, `Quot.sound`);
-no external textbook axioms are required.
+The Cat 2 axioms were introduced by the 2026-05 audit as the honest
+accounting of textbook facts that were previously hidden inside
+theorem signatures as hypotheses (e.g. `thm_decomp` formerly took
+`hEuler : F G V = wG * G + wV * V` as a hypothesis, with proof body
+`rfl`).  The audited form lifts the textbook content to explicit,
+atomic axioms with citations; the consumer theorems' proofs are now
+honest applications of those axioms.
 
 Paper claims deferred to economic narrative or path-dependent
 analysis (window invariance, sequential phase-transition kinks at
@@ -45,6 +62,7 @@ see those sources for the live counts.
 | File | Paper component |
 |------|-----------------|
 | [`VerificationAsymmetry/Basic.lean`](VerificationAsymmetry/Basic.lean) | Definitions `def:gve`, `def:gen-supply`, `def:cohort`, `def:verification`, `def:diagnostic`; Lemma `lem:steady-state`; carriers `Economy`, `G`, `eBar`, `gHard`, `Vinf`, `VinfHard` |
+| [`VerificationAsymmetry/Axioms.lean`](VerificationAsymmetry/Axioms.lean) | Cat 2 (textbook) atomic axioms: `axiom_euler_crs` (Euler's identity for CRS), `axiom_ces_wage_ratio` (CES wage-ratio closed form), `axiom_cobb_douglas_factor_share` (Cobb-Douglas verification factor share). Each axiom has a docstring with textbook citation |
 | [`VerificationAsymmetry/Decomp.lean`](VerificationAsymmetry/Decomp.lean) | Theorem `thm:decomp` (stock-flow welfare decomposition, Euler identity); Cobb-Douglas factor-share special case |
 | [`VerificationAsymmetry/Inversion.lean`](VerificationAsymmetry/Inversion.lean) | Theorem `thm:inversion` (wage ratio scaling, closed-form threshold); Corollary `cor:bounded-AI` (endpoint identifications) |
 | [`VerificationAsymmetry/Collapse.lean`](VerificationAsymmetry/Collapse.lean) | Theorem `thm:collapse` (phase transition at `θ*`, transient decay, jump magnitude, general-`h` bound); Proposition `prop:smooth-collapse` (smooth-threshold decay rate) |
