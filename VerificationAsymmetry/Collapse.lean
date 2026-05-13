@@ -140,6 +140,7 @@ theorem thm_collapse_jump_magnitude (a : ℝ) :
   have heBar_eq : E.eBar E.thetaStar = E.tauStar := by
     unfold eBar thetaStar
     field_simp
+    ring
   rw [hBelow, heBar_eq]
 
 /-- **Theorem~\ref{thm:collapse} Part 2 (jump statement).** The
@@ -184,7 +185,8 @@ theorem thm_collapse_transient_at_Ts (Vinf_init : ℝ) :
   unfold transientStock
   have hTs_pos : 0 < E.Ts := E.Ts_pos
   have h : (1 : ℝ) - E.Ts / E.Ts = 0 := by
-    field_simp
+    have : E.Ts / E.Ts = 1 := div_self (ne_of_gt hTs_pos)
+    linarith
   rw [h, max_self, mul_zero]
 
 /-- **Theorem~\ref{thm:collapse} Part 4 (transient decay is linear
@@ -227,6 +229,7 @@ theorem thm_collapse_jump_general_h
   have heBar : E.eBar E.thetaStar = E.tauStar := by
     unfold eBar thetaStar
     field_simp
+    ring
   rw [heBar]
   rw [E.gHard_of_ge (le_refl E.tauStar)]
   ring
@@ -252,7 +255,6 @@ theorem prop_smooth_collapse_below
   have h' : E.tauStar ≤ E.eBar θ :=
     (E.eBar_ge_tauStar_iff_theta_le_thetaStar θ).mpr h
   simp [h']
-  ring
 
 /-- **Proposition~\ref{prop:smooth-collapse} (above θ*).** For
     `θ > θ*` under smooth threshold, the stock decays as
@@ -268,7 +270,6 @@ theorem prop_smooth_collapse_above
   -- The `if` branch evaluates to (eBar θ / τ*)^b since ē < τ*.
   have hbranch : ¬ (E.tauStar ≤ E.eBar θ) := not_le.mpr h'
   simp [hbranch]
-  ring
 
 end Economy
 

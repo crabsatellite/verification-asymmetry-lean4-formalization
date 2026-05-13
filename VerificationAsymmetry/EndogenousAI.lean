@@ -49,7 +49,7 @@
 
 import VerificationAsymmetry.Basic
 import VerificationAsymmetry.Collapse
-import Mathlib.Topology.Algebra.Order.IntermediateValue
+import Mathlib.Topology.Order.IntermediateValue
 
 namespace VerificationAsymmetry
 

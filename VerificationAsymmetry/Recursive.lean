@@ -109,7 +109,6 @@ theorem thm_recursive_threshold_ratio
     apply ne_of_gt hμLG_lt
     linarith
   field_simp
-  ring
 
 /-- **Theorem~\ref{thm:recursive} Part 1 (μ ≥ 1 ⇒ leftward shift).**
     For `μ > 1` and `K_AI > L_G`, `θ_inv^{rec} < θ_inv` (strict). -/
