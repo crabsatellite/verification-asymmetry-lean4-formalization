@@ -3,10 +3,17 @@
 
   Gap ledger.  Every closed top-level result and every paper-level
   claim deferred to economic narrative is recorded as a typed
-  `GapEntry` with TWO orthogonal classifications:
+  `GapEntry` with TWO orthogonal classifications plus a Cat 3
+  sub-type refinement:
 
-    * 5-tier status:   gapOpen / gapPartial / gapBlocked / gapDeadEnd / gapClosed
-    * 3-input-category: cat1Mathlib / cat2External / cat3PaperNovel / notInput
+    * 6-tier status:    gapOpen / gapPartial / gapBlocked / gapDeadEnd /
+                        gapClosed / gapClosedConditional
+    * 4-input-category: cat1Mathlib / cat2External / cat3PaperNovel /
+                        notInput  (Cat 0 = Lean kernel layer is not
+                        tracked here per `feedback_gap_ledger_in_lean4` v6 §3.1)
+    * Cat 3 sub-type:   carrier / hypothesisPredicate /
+                        structuralEquation / workingAssumption /
+                        conditionalHypothesis / notCat3
 
   Pre-attack discipline.  Scan this ledger before launching new
   attacks.  Re-attempting a `gapBlocked` or `gapDeadEnd` route is a
@@ -58,42 +65,88 @@ import VerificationAsymmetry
 
 namespace VerificationAsymmetry.Ledger
 
-/-- 5-tier status tag attached to each gap. -/
+/-- 6-tier status tag attached to each gap.  `gapClosedConditional`
+    is used when Phase 4 catches a defect breaking a typed-bridge
+    chain: the downstream closure is preserved as conditional on a
+    named `Hyp_*` broken-link hypothesis (recorded in the entry's
+    `conditionalOn` field) pending repair or independent derivation.
+    See `feedback_gap_ledger_in_lean4` §12. -/
 inductive GapStatus
   | gapOpen
   | gapPartial
   | gapBlocked
   | gapDeadEnd
   | gapClosed
+  | gapClosedConditional
   deriving DecidableEq, Repr
 
-/-- 3-input-category tag attached to each gap.  Orthogonal to status. -/
+/-- 4-input-category tag attached to each gap.  Orthogonal to status.
+    (Cat 0 = Lean kernel axioms — `propext` / `Classical.choice` /
+    `Quot.sound` — is the always-present system layer and is not
+    tracked here per v6 §3.1.) -/
 inductive InputCategory
-  /-- Mathlib-derivable theorem (no axiom). -/
+  /-- Mathlib-derivable theorem (no axiom).  Project has zero such. -/
   | cat1Mathlib
   /-- External published; opaque-carrier-bound axiom + citation. -/
   | cat2External
-  /-- Paper-novel: carrier or paper-stated atomic defining equation. -/
+  /-- Paper-novel: carrier, hypothesis predicate, structural defining
+      equation, working assumption, or conditional hypothesis.
+      Refine via the `cat3SubType` field. -/
   | cat3PaperNovel
-  /-- Not an atomic input: derived theorem (gapClosed) or blocked
-      Mathlib-derivation route (gapBlocked). -/
+  /-- Not an atomic input: derived theorem (gapClosed) or genuine
+      no-acceptance-possible route (gapBlocked / gapDeadEnd). -/
   | notInput
+  deriving DecidableEq, Repr
+
+/-- Cat 3 paper-novel sub-types per v6 §3.4.  Orthogonal to status and
+    input-category; only meaningful when `inputCategory = cat3PaperNovel`. -/
+inductive Cat3SubType
+  /-- Paper-introduced primitive type or typed-primitive value
+      (e.g., paper 5-tuple carriers).  Definitional atom; 永不 close. -/
+  | carrier
+  /-- Paper-introduced scope/regime predicate (e.g., `Conditions_C1_C2_C3`,
+      `IsBlackwellOrdered`).  Definitional atom; 永不 close. -/
+  | hypothesisPredicate
+  /-- Paper-stated definitional equation on its primitives (e.g., paper
+      Def 2.6 `V_dyn(v|H,ω) = max{r(w) : w ∈ R(v|H,ω)}`).  Definitional
+      atom; 永不 close — these constitute the paper's commitments to
+      how its primitives behave. -/
+  | structuralEquation
+  /-- Higher-level claim temporarily axiomatized while derivation is
+      developed.  必须 close before paper submission. -/
+  | workingAssumption
+  /-- Paper's conclusion conditional on an external open problem (RH,
+      BSD, Hodge, P≠NP).  永不 close; encoded as theorem-signature
+      antecedent `theorem T (hRH : RiemannHypothesis) : ...`, NOT as
+      an axiom.  Listed here only for completeness; project has none. -/
+  | conditionalHypothesis
+  /-- This entry is not Cat 3 paper-novel. -/
+  | notCat3
   deriving DecidableEq, Repr
 
 /-- Typed record for a single gap. -/
 structure GapEntry where
   /-- Identifier matching the underlying axiom / theorem name. -/
   name : String
-  /-- 5-tier status (orthogonal to inputCategory). -/
+  /-- 6-tier status. -/
   status : GapStatus
   /-- Input category (orthogonal to status). -/
   inputCategory : InputCategory
+  /-- Cat 3 sub-type (orthogonal; `notCat3` unless `inputCategory =
+      cat3PaperNovel`). -/
+  cat3SubType : Cat3SubType
   /-- Operative paper / obstacle citation. -/
   paperSource : String
-  /-- Per-round attack trace (canonical location for round metadata). -/
+  /-- Per-round attack trace (canonical location for round metadata).
+      For Cat 3 entries, MUST include ≥2 reductionism check outcomes
+      (Cat 1? Cat 2?) per v6 §5. -/
   attackHistory : List String
   /-- What content the entry carries; what it does NOT claim. -/
   scope : String
+  /-- Names of `Hyp_*` broken-link predicates this entry's proof
+      depends on.  Invariant: non-empty iff `status =
+      gapClosedConditional`.  See v6 §12. -/
+  conditionalOn : List String := []
 
 /-! ### Cat 2 axiom entries (gapClosed: declared in `Axioms.lean`) -/
 
@@ -102,6 +155,7 @@ def gap_axiom_euler_crs : GapEntry := {
   name := "axiom_euler_crs"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.cat2External
+  cat3SubType := Cat3SubType.notCat3
   paperSource :=
     "Li 2026, `\\label{thm:decomp}` proof; " ++
     "citation: Mas-Colell, Whinston, Green 1995 §5.B.2"
@@ -122,6 +176,7 @@ def gap_axiom_ces_wage_ratio : GapEntry := {
   name := "axiom_ces_wage_ratio"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.cat2External
+  cat3SubType := Cat3SubType.notCat3
   paperSource :=
     "Li 2026, `\\label{thm:inversion}` Part 1, " ++
     "Eq. `\\eqref{eq:wage-ratio}`; " ++
@@ -145,6 +200,7 @@ def gap_axiom_cobb_douglas_factor_share : GapEntry := {
   name := "axiom_cobb_douglas_factor_share"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.cat2External
+  cat3SubType := Cat3SubType.notCat3
   paperSource :=
     "Li 2026, `\\label{thm:credential}` proof " ++
     "(\\eqref{eq:R-cobb-douglas}); " ++
@@ -175,6 +231,7 @@ def gap_thm_decomp_CLOSED : GapEntry := {
   name := "thm_decomp"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:decomp}`"
   attackHistory := [
     "Pre-audit (v0.1.0): Euler identity carried as hypothesis " ++
@@ -202,6 +259,7 @@ def gap_thm_inversion_threshold_CLOSED : GapEntry := {
   name := "thm_inversion_threshold_closed_form"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:inversion}` Part 2"
   attackHistory := []
   scope :=
@@ -215,6 +273,7 @@ def gap_thm_inversion_wage_ratio_CLOSED : GapEntry := {
   name := "thm_inversion_wage_ratio_monotone"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:inversion}` Part 1"
   attackHistory := [
     "Pre-audit (v0.1.0): `wageRatio` defined as the closed form " ++
@@ -240,6 +299,7 @@ def gap_cor_bounded_AI_CLOSED : GapEntry := {
   name := "cor_bounded_AI_threshold_endpoints"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{cor:bounded-AI}`"
   attackHistory := [
     "Pre-audit (v0.1.0): the endpoint identities " ++
@@ -261,6 +321,7 @@ def gap_thm_collapse_below_CLOSED : GapEntry := {
   name := "thm_collapse_below_threshold"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:collapse}` Part 1"
   attackHistory := []
   scope :=
@@ -274,6 +335,7 @@ def gap_thm_collapse_jump_CLOSED : GapEntry := {
   name := "thm_collapse_jump_magnitude"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:collapse}` Part 2"
   attackHistory := []
   scope :=
@@ -286,6 +348,7 @@ def gap_thm_collapse_above_CLOSED : GapEntry := {
   name := "thm_collapse_above_threshold"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:collapse}` Part 3"
   attackHistory := []
   scope :=
@@ -298,6 +361,7 @@ def gap_thm_collapse_transient_CLOSED : GapEntry := {
   name := "thm_collapse_transient_decay"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:collapse}` Part 4"
   attackHistory := []
   scope :=
@@ -312,6 +376,7 @@ def gap_thm_collapse_general_h_CLOSED : GapEntry := {
   name := "thm_collapse_jump_general_h"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:collapse}` Part 5"
   attackHistory := []
   scope :=
@@ -325,6 +390,7 @@ def gap_prop_smooth_collapse_CLOSED : GapEntry := {
   name := "prop_smooth_collapse_above"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:smooth-collapse}`"
   attackHistory := []
   scope :=
@@ -337,6 +403,7 @@ def gap_thm_credential_CLOSED : GapEntry := {
   name := "thm_credential_cobb_douglas_reduction"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:credential}`"
   attackHistory := [
     "Pre-audit (v0.1.0): composite Cobb-Douglas identity " ++
@@ -361,6 +428,7 @@ def gap_thm_credential_multiplicative_CLOSED : GapEntry := {
   name := "thm_credential_multiplicative_decay"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:credential}` Part 3"
   attackHistory := []
   scope :=
@@ -373,6 +441,7 @@ def gap_prop_junior_senior_CLOSED : GapEntry := {
   name := "prop_junior_senior_wage"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:junior-senior}`"
   attackHistory := [
     "Pre-audit (v0.1.0): same composite Cobb-Douglas hypothesis as " ++
@@ -391,6 +460,7 @@ def gap_thm_externality_wedge_CLOSED : GapEntry := {
   name := "thm_externality_wedge_identity"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:externality}` (wedge identity)"
   attackHistory := []
   scope :=
@@ -403,6 +473,7 @@ def gap_thm_externality_nonneg_CLOSED : GapEntry := {
   name := "thm_externality_residual_nonneg"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:externality}` Part 2"
   attackHistory := []
   scope :=
@@ -416,6 +487,7 @@ def gap_thm_externality_pigouvian_CLOSED : GapEntry := {
   name := "thm_externality_pigouvian_cobb_douglas"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:externality}` Part 3"
   attackHistory := [
     "Pre-audit (v0.1.0): same composite Cobb-Douglas hypothesis as " ++
@@ -434,6 +506,7 @@ def gap_prop_internalization_CLOSED : GapEntry := {
   name := "prop_internalization"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:internalization}`"
   attackHistory := []
   scope :=
@@ -447,6 +520,7 @@ def gap_prop_decentralized_theta_CLOSED : GapEntry := {
   name := "prop_decentralized_theta_overshoots"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:decentralized-theta}`"
   attackHistory := []
   scope :=
@@ -460,6 +534,7 @@ def gap_thm_recursive_threshold_CLOSED : GapEntry := {
   name := "thm_recursive_threshold_closed_form"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:recursive}` Part 1"
   attackHistory := []
   scope :=
@@ -473,6 +548,7 @@ def gap_thm_recursive_wedge_CLOSED : GapEntry := {
   name := "thm_recursive_wage_ratio_amplification"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:recursive}` Parts 2 + 4"
   attackHistory := []
   scope :=
@@ -485,6 +561,7 @@ def gap_thm_recursive_invariance_CLOSED : GapEntry := {
   name := "thm_recursive_thetaStar_invariant"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:recursive}` Part 3"
   attackHistory := []
   scope :=
@@ -498,6 +575,7 @@ def gap_prop_boundary_CLOSED : GapEntry := {
   name := "prop_boundary_collapse_iff"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:boundary}`"
   attackHistory := []
   scope :=
@@ -510,6 +588,7 @@ def gap_thm_aggregation_CD_CLOSED : GapEntry := {
   name := "thm_aggregation_cobb_douglas_zero"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:aggregation}` Part 2"
   attackHistory := []
   scope :=
@@ -523,6 +602,7 @@ def gap_thm_aggregation_PS_CLOSED : GapEntry := {
   name := "thm_aggregation_perfect_substitutes_survival"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:aggregation}` Part 3"
   attackHistory := []
   scope :=
@@ -535,6 +615,7 @@ def gap_prop_adjustment_career_CLOSED : GapEntry := {
   name := "prop_adjustment_career_extension"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:adjustment-margins}` (career extension)"
   attackHistory := []
   scope :=
@@ -551,6 +632,7 @@ def gap_thm_endogenous_ai_existence_CLOSED : GapEntry := {
   name := "thm_endogenous_ai_existence"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:endogenous-ai}` Part 1"
   attackHistory := []
   scope :=
@@ -565,6 +647,7 @@ def gap_thm_endogenous_ai_uniqueness_CLOSED : GapEntry := {
   name := "thm_endogenous_ai_uniqueness"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:endogenous-ai}` Part 2"
   attackHistory := []
   scope :=
@@ -578,6 +661,7 @@ def gap_thm_endogenous_ai_corner_CLOSED : GapEntry := {
   name := "thm_endogenous_ai_corner"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:endogenous-ai}` Part 3"
   attackHistory := []
   scope :=
@@ -592,6 +676,7 @@ def gap_thm_endogenous_ai_hysteresis_CLOSED : GapEntry := {
   name := "thm_endogenous_ai_recovery"
   status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:endogenous-ai}` Parts 4–5"
   attackHistory := []
   scope :=
@@ -617,6 +702,7 @@ def gap_window_invariance_BLOCKED : GapEntry := {
   name := "window_invariance"
   status := GapStatus.gapBlocked
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:stock-flow-asymptotics}` Part 4"
   attackHistory := []
   scope :=
@@ -636,6 +722,7 @@ def gap_aggregation_sequential_kinks_BLOCKED : GapEntry := {
   name := "aggregation_sequential_kinks"
   status := GapStatus.gapBlocked
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:aggregation}` Part 1"
   attackHistory := []
   scope :=
@@ -654,6 +741,7 @@ def gap_aggregation_intermediate_BLOCKED : GapEntry := {
   name := "aggregation_intermediate_regime"
   status := GapStatus.gapBlocked
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:aggregation}` Part 4"
   attackHistory := []
   scope :=
@@ -669,6 +757,7 @@ def gap_prop_adjustment_narrative_BLOCKED : GapEntry := {
   name := "prop_adjustment_narrative"
   status := GapStatus.gapBlocked
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:adjustment-margins}` (narrative)"
   attackHistory := []
   scope :=
@@ -687,6 +776,7 @@ def gap_cor_quant_predictions_BLOCKED : GapEntry := {
   name := "cor_quant_predictions"
   status := GapStatus.gapBlocked
   inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{cor:quant-predictions}`"
   attackHistory := []
   scope :=
@@ -744,15 +834,17 @@ def allGaps : List GapEntry := [
   gap_cor_quant_predictions_BLOCKED
 ]
 
-/-- Status-keyed counts: `(open, partial, blocked, deadEnd, closed)`. -/
-def gapCounts : Nat × Nat × Nat × Nat × Nat :=
+/-- Status-keyed counts:
+    `(open, partial, blocked, deadEnd, closed, closedConditional)`. -/
+def gapCounts : Nat × Nat × Nat × Nat × Nat × Nat :=
   let countWhere (s : GapStatus) : Nat :=
     (allGaps.filter (fun g => g.status = s)).length
   ( countWhere GapStatus.gapOpen
   , countWhere GapStatus.gapPartial
   , countWhere GapStatus.gapBlocked
   , countWhere GapStatus.gapDeadEnd
-  , countWhere GapStatus.gapClosed )
+  , countWhere GapStatus.gapClosed
+  , countWhere GapStatus.gapClosedConditional )
 
 /-- InputCategory-keyed counts: `(cat1Mathlib, cat2External, cat3PaperNovel, notInput)`. -/
 def inputCategoryCounts : Nat × Nat × Nat × Nat :=
@@ -763,17 +855,31 @@ def inputCategoryCounts : Nat × Nat × Nat × Nat :=
   , countWhere InputCategory.cat3PaperNovel
   , countWhere InputCategory.notInput )
 
-#eval s!"VerificationAsymmetry gap-ledger inventory (status):  open={(gapCounts).1} partial={(gapCounts).2.1} blocked={(gapCounts).2.2.1} deadEnd={(gapCounts).2.2.2.1} closed={(gapCounts).2.2.2.2}"
+/-- Cat3SubType-keyed counts:
+    `(carrier, hypothesisPredicate, structuralEquation, workingAssumption, conditionalHypothesis, notCat3)`. -/
+def cat3SubTypeCounts : Nat × Nat × Nat × Nat × Nat × Nat :=
+  let countWhere (s : Cat3SubType) : Nat :=
+    (allGaps.filter (fun g => g.cat3SubType = s)).length
+  ( countWhere Cat3SubType.carrier
+  , countWhere Cat3SubType.hypothesisPredicate
+  , countWhere Cat3SubType.structuralEquation
+  , countWhere Cat3SubType.workingAssumption
+  , countWhere Cat3SubType.conditionalHypothesis
+  , countWhere Cat3SubType.notCat3 )
 
-#eval s!"VerificationAsymmetry gap-ledger inventory (input):   cat1Mathlib={(inputCategoryCounts).1} cat2External={(inputCategoryCounts).2.1} cat3PaperNovel={(inputCategoryCounts).2.2.1} notInput={(inputCategoryCounts).2.2.2}"
+#eval s!"VerificationAsymmetry gap-ledger inventory (status):    open={(gapCounts).1} partial={(gapCounts).2.1} blocked={(gapCounts).2.2.1} deadEnd={(gapCounts).2.2.2.1} closed={(gapCounts).2.2.2.2.1} closedConditional={(gapCounts).2.2.2.2.2}"
+
+#eval s!"VerificationAsymmetry gap-ledger inventory (input):     cat1Mathlib={(inputCategoryCounts).1} cat2External={(inputCategoryCounts).2.1} cat3PaperNovel={(inputCategoryCounts).2.2.1} notInput={(inputCategoryCounts).2.2.2}"
+
+#eval s!"VerificationAsymmetry gap-ledger inventory (Cat 3 sub): carrier={(cat3SubTypeCounts).1} hypothesisPredicate={(cat3SubTypeCounts).2.1} structuralEquation={(cat3SubTypeCounts).2.2.1} workingAssumption={(cat3SubTypeCounts).2.2.2.1} conditionalHypothesis={(cat3SubTypeCounts).2.2.2.2.1} notCat3={(cat3SubTypeCounts).2.2.2.2.2}"
 
 #eval s!"Total entries: {allGaps.length}"
 
 /-! ### Inventory summary (post-audit 2026-05)
 
-  The live status counts and input-category counts are printed by the
-  `#eval` calls above (run `lake env lean VerificationAsymmetry/Ledger.lean`
-  to see them).
+  The live status / input-category / Cat 3 sub-type counts are printed
+  by the `#eval` calls above (run `lake env lean
+  VerificationAsymmetry/Ledger.lean` to see them).
 
   Inventory profile.  This project has:
     * Cat 1 (Mathlib-derivable theorems): the bulk of paper-level
@@ -785,9 +891,16 @@ def inputCategoryCounts : Nat × Nat × Nat × Nat :=
       Acemoglu 2009 §15),
       `axiom_cobb_douglas_factor_share` (Cobb-Douglas verification
       factor share, MWG 1995 §5.B.2).
-    * Cat 3 (paper-novel atomic axioms): zero. Every paper-novel
+    * Cat 3 (paper-novel atomic axioms): zero.  Every paper-novel
       structural object (`Economy`, `Vinf`, `eBar`, `gHard`, `wageRatio`,
       `Vreq`) is a Lean *definition*, not an axiom.
+
+  Cat 3 ratio = 0% (= 0 / 3 axioms; post-audit refactor lifted all
+  hypothesis-hidden textbook content into Cat 2 axioms; no Cat 3
+  paper-novel axioms in this project — all paper-novel structural
+  objects are `def`s).  Well under the v6 §3.4.6 50% reductionism
+  threshold.  Consequently every `GapEntry.cat3SubType` is `notCat3`;
+  the sub-type field is uniformly present but uniformly trivial here.
 
   The Cat 2 axioms were introduced by the 2026-05 audit as the
   honest accounting of textbook facts that were previously hidden
@@ -795,7 +908,8 @@ def inputCategoryCounts : Nat × Nat × Nat × Nat :=
   (a single algebraic identity at fixed parameter values), with an
   explicit citation in `Axioms.lean`.
 
-  Lean kernel axioms used: propext, Classical.choice, Quot.sound.
+  Lean kernel (Cat 0; not declared here): propext, Classical.choice,
+  Quot.sound.
 -/
 
 end VerificationAsymmetry.Ledger
