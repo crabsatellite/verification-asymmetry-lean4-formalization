@@ -11,9 +11,7 @@
   The three Cat 2 axioms `axiom_euler_crs`, `axiom_ces_wage_ratio`,
   and `axiom_cobb_douglas_factor_share` require EXPLICIT antecedents
   (production-function shape, marginal-product identification,
-  positivity); without antecedents these would be False-injectable
-  (counterexample on file in the corresponding Ledger.lean
-  `attackHistory`).
+  positivity); without antecedents these would be False-injectable.
 
   This file declares three Cat 3 paper-novel hypothesisPredicate
   predicates (`IsCRS`, `IsCobbDouglas`, `IsCES`) and three Cat 2

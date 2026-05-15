@@ -137,9 +137,9 @@
   carrier signatures) are `gapOpen` `GapEntry` records with no Lean
   declaration at all.
 
-  Per-axiom citations live in the docstrings of `Axioms.lean`.
-  Attack history (citation revisions, refactor steps) lives in
-  `gap_*.attackHistory` fields inside `Ledger.lean`.
+  Per-axiom citations live in the docstrings of `Axioms.lean`; the
+  per-entry scope and notes for each closed result or deferred claim
+  live in the corresponding `GapEntry` inside `Ledger.lean`.
 
   Usage:
     lake exe cache get

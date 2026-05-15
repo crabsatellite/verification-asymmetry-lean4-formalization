@@ -1,210 +1,124 @@
 /-
   VerificationAsymmetry/Ledger.lean
 
-  Gap ledger.  Every closed top-level result and every paper-level
-  claim deferred to economic narrative is recorded as a typed
-  `GapEntry` with TWO orthogonal classifications plus a Cat 3
-  sub-type refinement:
+  Typed gap ledger.  Every closed top-level result and every paper-level
+  claim deferred outside Lean is recorded as a `GapEntry` value with
+  three orthogonal classifications:
 
     * 7-tier status:    gapOpen / gapPartial / gapBlocked / gapDeadEnd /
                         gapClosed / gapClosedConditional / gapDefinitional
     * 4-input-category: cat1Mathlib / cat2External / cat3PaperNovel /
-                        notInput  (Cat 0 = Lean kernel layer is not
+                        notInput   (Cat 0 = Lean kernel layer is not
                         tracked here)
     * Cat 3 sub-type:   carrier / hypothesisPredicate /
                         structuralEquation / workingAssumption /
                         conditionalHypothesis / phenomenologicalConjecture /
                         notCat3
 
-  Pre-attack discipline.  Scan this ledger before launching new
-  attacks.  Re-attempting a `gapBlocked` or `gapDeadEnd` route is a
-  context-drift failure mode.
+  ## Inventory profile
 
-  `attackHistory` is the canonical location for round metadata
-  (citation revisions, atomic refactors, prior retractions); docstrings
-  and scope fields are kept to current-state content only.
+  The paper's structural mathematics is real-analytic — CES algebra,
+  linear-cohort accounting, the 1-D intermediate-value theorem (the
+  paper's "Brouwer-fixed-point" application is a 1-D IVT on the real
+  line), finite-product algebra.  Most paper-level theorems reduce to
+  Mathlib real-arithmetic plus the Lean kernel.
 
-  *Inventory profile.*  The paper's structural mathematics is
-  real-analytic — CES algebra, linear-cohort accounting, 1-D IVT
-  (the paper's "Brouwer-fixed-point" application reduces to
-  intermediate-value theorem on the real line), finite-product
-  algebra.  Most paper-level theorems reduce to Mathlib real-
-  arithmetic plus the Lean kernel.
-
-  Three textbook microeconomics facts enter the proofs and are
-  not derivable from an abstract `F : ℝ → ℝ → ℝ` parameter alone:
+  Three textbook microeconomics facts enter the proofs and are not
+  derivable from an abstract `F : ℝ → ℝ → ℝ` parameter alone:
 
     * `axiom_euler_crs` — Euler's identity for CRS production,
       Euler 1755 (original) / Mas-Colell-Whinston-Green 1995 §5.B.2
-      (modern textbook) (Cat 2);
+      (Cat 2);
     * `axiom_ces_wage_ratio` — CES marginal-product wage ratio
-      closed form, Arrow-Chenery-Minhas-Solow 1961 (original CES
-      paper) / Acemoglu 2009 Ch. 15 (modern textbook) (Cat 2);
+      closed form, Arrow-Chenery-Minhas-Solow 1961 (original) /
+      Acemoglu 2009 Ch. 15 (Cat 2);
     * `axiom_cobb_douglas_factor_share` — Cobb-Douglas verification
       factor share `w_V V = (1-η) Y`, Cobb-Douglas 1928 (original) /
-      Mas-Colell-Whinston-Green 1995 §5.B.2 (modern textbook) (Cat 2).
+      Mas-Colell-Whinston-Green 1995 §5.B.2 (Cat 2).
 
   Each axiom takes explicit antecedents — production-function-shape
   predicate (`IsCRS` / `IsCES` / `IsCobbDouglas`), `HasDerivAt`-bound
-  marginal-product identification, positivity — to close the
-  soundness gap caught by audit (recorded in attackHistory).  Without
-  antecedents, all three axioms were False-injectable (counterexamples
-  documented in the relevant axiom docstrings in `Axioms.lean`).
+  marginal-product identification, positivity — so that no free
+  quantification over an abstract functional leaves the axiom
+  False-injectable.
 
-  Cat 3 paper-novel atomic-input atoms tracked in this ledger as
-  standalone `GapEntry` records.  The genuine Cat 3 paper-novel
-  atomic inputs of this formalization — the primitives the
-  derivations build ON — are:
-    * Carrier (`gapDefinitional`): the `Economy` primitive
-      structure.
+  ## Cat 3 paper-novel atoms
+
+  Standalone Cat 3 atoms tracked here:
+
+    * Carrier (`gapDefinitional`): the `Economy` primitive structure.
     * Hypothesis predicates (`gapDefinitional`): `IsCRS`,
       `IsCobbDouglas`, `IsCES`, `V2_TacitAccumulation`.
-  These five are the standalone Cat 3 atoms.  In addition, one
-  `cat3PaperNovel` `phenomenologicalConjecture` entry is tracked —
-  the endogenous-AI-verification residual bound `δ(θ) < 1` of the
-  adjustment-margins narrative — a genuine Cat 3 paper-novel claim
-  under the `phenomenologicalConjecture` sub-type (a substantive
-  empirical claim about the Polanyi verification residual with a
-  cohort-study resolution path), `gapOpen` and Ledger-only.
 
-  The concrete closed-form `def`s `eBar` (`\label{def:cohort}`),
-  `Vinf` (`\label{lem:steady-state}`), `thetaStar`
-  (`\label{eq:thetastar}`), and the further derived closed-form
-  `def`s (`wageRatio`, `Gstar`, `thetaInv`, `Lambda`, `Vreq`, ...)
-  are NOT standalone Cat 3 atoms — a concrete `def` whose defining
-  equation holds by `rfl` is definitional notation, not a
-  paper-novel atom (Cat 3 ratio guard).  `eBar` / `Vinf` /
-  `thetaStar` are the paper's foundational closed-form `def`s
-  directly on the Economy primitives; the rest are derived
-  closed-form notation built on top.  All are definitional
-  infrastructure documented under their parent theorem entries'
-  `scope` and the "Definitional infrastructure" section below;
-  none has a standalone Ledger `GapEntry`.
+  One further `cat3PaperNovel` entry has sub-type
+  `phenomenologicalConjecture` — the endogenous-AI-verification
+  residual bound `δ(θ) < 1` of the adjustment-margins narrative — a
+  substantive empirical claim about the Polanyi verification residual,
+  with a cohort-study resolution path.  Tracked as `gapOpen` and
+  Ledger-only (no Lean declaration).
 
-  The `gapOpen` deferred-paper-claim entries record paper-level
-  claims whose faithful sound statement requires additional Mathlib
-  infrastructure (path-dependent / measure-theoretic integrals,
-  continuity / calculus across kinks) beyond this formalization's
-  structural scope.  Each is tracked as a Ledger `GapEntry` record
-  WITHOUT a corresponding Lean `axiom`/`def`/`theorem` declaration
-  (see the "Ledger-only-entry exemption" section below).  Three are
-  paper-proven mathematical results whose Lean derivation is
-  deferred (window invariance, aggregation sequential kinks,
-  aggregation intermediate regime) — these are un-formalized
-  DERIVED results, not atomic inputs, so they are tagged `notInput`
-  / `notCat3`; one is the `cat3PaperNovel` `phenomenologicalConjecture`
-  noted above (the endogenous-AI-verification residual bound — a
-  substantive empirical claim with an empirical resolution path).
-  None is `gapBlocked` (Mathlib infra absence ALONE is NOT
-  BLOCKED).
-
-  ## §15.1.D encoding-exemption invocation (definitional atoms)
-
-  Per spec §15.1.D, when keeping legacy `_OPEN`/`_DEFINITIONAL`
-  encoding for definitional atoms would touch many downstream proof
-  sites, an EXEMPTION pattern is acceptable: let the Ledger entry's
-  `status := GapStatus.gapDefinitional` + `cat3SubType` field serve
-  as the canonical record, with the exemption documented in the
-  project's `Ledger.lean` top docstring.  (Spec §15.1.D explicitly
-  mandates that this exemption be documented here in the top
-  docstring.)  This project invokes the encoding exemption.
-
-  The `gapDefinitional` Cat 3 paper-novel atoms — the `Economy`
-  carrier and the hypothesisPredicates `IsCRS`, `IsCobbDouglas`,
-  `IsCES`, `V2_TacitAccumulation` — are encoded as Lean `structure`
-  or `Prop`, NOT as `axiom gap_X_DEFINITIONAL`.  Each such atom has
-  a Ledger entry with `status := GapStatus.gapDefinitional` +
-  `inputCategory := cat3PaperNovel` + `cat3SubType := <subtype>`;
-  the Ledger entry is the canonical record.
-
-  One further `gapOpen` Ledger-only entry — the by-construction
-  μ-invariance commitment of `\label{thm:recursive}` Part 3
-  (`gap_thm_recursive_invariance_OPEN`) — has NO Lean declaration:
-  it records the ABSENCE of a μ parameter in the `thetaStar` /
-  `VinfHard` carrier signatures.  This is a meta-observation about
-  the formalization's shape, not a paper-stated structural equation
-  that any derivation consumes as an atomic input, so it is tagged
-  `inputCategory := notInput` + `cat3SubType := notCat3`.  The R10
-  audit reclassified the status from `gapDefinitional` to `gapOpen`:
-  spec §1.1 binds `gapDefinitional` to Cat 3 paper-novel atoms with
-  sub-types {carrier, predicate, structuralEq}, and a `notInput
-  notCat3` meta-observation falls outside that scope.  `gapOpen` is
-  the consistent classification — the paper claim is satisfied by
-  the Lean code's type-signature structure, but no Lean derivation
-  is provided.
-
-  The concrete closed-form `def`s `eBar` (`\label{def:cohort}`),
-  `Vinf` (`\label{lem:steady-state}`), `thetaStar`
-  (`\label{eq:thetastar}`), and the further derived closed-form
-  `def`s (`wageRatio`, `Gstar`, `thetaInv`, `Lambda`, `Vreq`,
-  `hPow`, `gSmooth`, `transientStock`, `MPpriv`, `MPsoc`,
+  The concrete closed-form `def`s `eBar`, `Vinf`, `thetaStar`,
+  `wageRatio`, `Gstar`, `thetaInv`, `Lambda`, `Vreq`, `hPow`,
+  `gSmooth`, `transientStock`, `MPpriv`, `MPsoc`,
   `externalityResidual`, `wedge`, `internalizedWedge`,
   `pigouvianSubsidy_CD`, `wageRatioRec`, `thetaInvRec`, `thetaEndo`,
   `hysteresisDeficit`, `recoveryStock`, `thetaStarExt`,
-  `leontiefSeniorRent`, `rBarZero`, `rBarMax`) are NOT standalone
-  Cat 3 atoms (Cat 3 ratio guard) — a concrete `def X :=
-  <closed-form>` whose defining equation holds by `rfl` is
-  definitional NOTATION, not a paper-novel ATOM.  `eBar` / `Vinf` /
-  `thetaStar` are the paper's foundational closed-form `def`s
-  directly on the Economy primitives (Section 2 model setup); the
-  rest are derived closed-form notation built on top.  All are
-  documented under the `scope` of the parent theorem entries that
-  consume them; see the "Definitional infrastructure" section
-  below.  None has a standalone Ledger `GapEntry`.
+  `leontiefSeniorRent`, `rBarZero`, `rBarMax` are NOT standalone
+  Cat 3 atoms.  A concrete `def X := <closed-form>` whose defining
+  equation holds by `rfl` is definitional NOTATION, not a paper-novel
+  ATOM; they are documented under the `scope` of the parent theorem
+  entries that consume them (see the "Definitional infrastructure"
+  section near the bottom of this file), with no standalone
+  `GapEntry`.
 
-  ## Ledger-only-entry exemption (paper claims tracked without Lean declarations)
+  ## Definitional-atom encoding pattern
+
+  The `gapDefinitional` Cat 3 atoms — the `Economy` carrier and the
+  hypothesis predicates `IsCRS`, `IsCobbDouglas`, `IsCES`,
+  `V2_TacitAccumulation` — are encoded as Lean `structure` or
+  `def : Prop`, NOT as `axiom`.  Each such atom has a Ledger entry
+  with `status := GapStatus.gapDefinitional` +
+  `inputCategory := cat3PaperNovel` + `cat3SubType := <subtype>`;
+  the Lean structural declaration is the canonical record of the
+  atom itself, and the Ledger entry is the classification record.
+
+  ## Ledger-only entries (paper claims tracked without a Lean declaration)
 
   Five paper claims are tracked as `gapOpen` Ledger `GapEntry`
-  records WITHOUT a corresponding Lean `axiom`/`def`/`theorem`
-  declaration.  They split into two semantically distinct groups:
+  records WITHOUT a corresponding Lean `axiom`/`def`/`theorem`.
+  They split into two groups:
 
-  Group A — four claims with distinct deferred-resolution paths
-  (each requiring a faithful sound statement beyond this
-  formalization's structural scope):
-  window invariance (`gap_window_invariance_OPEN`), sequential
-  aggregation kinks (`gap_aggregation_sequential_kinks_OPEN`),
+  Group A — four claims with distinct deferred-resolution paths.
+  Window invariance (`gap_window_invariance_OPEN`), sequential
+  aggregation kinks (`gap_aggregation_sequential_kinks_OPEN`), and
   intermediate-regime elasticity
-  (`gap_aggregation_intermediate_regime_OPEN`) — three paper-proven
-  mathematical claims whose Lean derivation requires out-of-scope
-  Mathlib infrastructure (measure theory / continuity / kink
-  analysis) — and the narrative endogenous-AI-verification residual
-  bound (`gap_prop_adjustment_narrative_OPEN`) — a substantive
-  phenomenological conjecture whose resolution path is empirical
-  (cohort-study evidence per `\label{sec:predictions}`), NOT
-  Mathlib derivation.
+  (`gap_aggregation_intermediate_regime_OPEN`) are three
+  paper-proven mathematical claims whose faithful Lean statement
+  requires out-of-scope Mathlib infrastructure (measure theory,
+  continuity, kink analysis).  The endogenous-AI-verification
+  residual bound (`gap_prop_adjustment_narrative_OPEN`) is a
+  substantive phenomenological conjecture whose resolution path is
+  empirical (cohort-study evidence per `\label{sec:predictions}`),
+  not Mathlib derivation.
 
-  Group B — one claim satisfied by construction: the μ-invariance
-  commitment of `\label{thm:recursive}` Part 3
-  (`gap_thm_recursive_invariance_OPEN`).  `thetaStar` / `VinfHard`
-  are defined without a μ parameter; the paper claim is satisfied
-  by the Lean code's type-signature structure, but no Lean theorem
-  is or can be written (there is no μ-dependence to quantify over).
+  Group B — one claim satisfied by construction:
+  `gap_thm_recursive_invariance_OPEN` records the μ-invariance
+  commitment of `\label{thm:recursive}` Part 3.  `thetaStar`,
+  `VinfHard`, and `eBar` take no μ argument, so the paper claim is
+  satisfied by the type-signature structure of the Lean code with no
+  μ-dependence to quantify over.  Tagged
+  `inputCategory := notInput` + `cat3SubType := notCat3`.
 
-  Rationale.  A faithful sound STATEMENT of each requires Mathlib
-  infrastructure (`MeasureTheory` integrals for window invariance;
-  continuity / one-sided-limit / kink analysis for the aggregation
-  claims) beyond this formalization's structural scope.  Encoding as
-  `axiom` is unsound — the claim universally quantifies over a free
-  abstract functional, which an `axiom` form leaves
-  `False`-injectable.  Encoding as `def : Prop` with a constraining
-  hypothesisPredicate that EQUALS the asserted conclusion is vacuous
-  — the resulting proposition reduces to `∀ f, P f → P f`, a
-  tautology provable by `fun _ h => h`.  The honest encoding is
-  the Ledger `GapEntry` itself: it is a typed, `#eval`-retrievable
-  declaration that tracks the gap, its status, its paper source, and
-  the reason it is not Lean-derived.  This is consistent with spec
-  §15's intent (the gap is labeled and tracked) even though it is
-  not retrievable by `#print axioms` — nothing asserts or consumes
-  it, which is correct, since asserting it would be unsound.  (The
-  `axiom` → `def : Prop` → Ledger-only encoding history is recorded
-  in each entry's `attackHistory`.)
-
-  This exemption is parallel in spirit to the §15.1.D
-  encoding-exemption (the Ledger entry is the canonical record),
-  but stronger: §15.1.D keeps a Lean declaration (`structure` /
-  `def` / `Prop`) for a definitional atom; here NO Lean declaration
-  exists for a genuinely-open paper claim that cannot be faithfully
-  stated within scope.
+  Rationale.  Encoding such a claim as `axiom` would universally
+  quantify over a free abstract functional and leave the axiom
+  False-injectable; encoding it as `def : Prop` with a constraining
+  hypothesis equal to the asserted conclusion would be a vacuous
+  tautology `∀ f, P f → P f` provable by `fun _ h => h`.  The
+  honest encoding is the Ledger `GapEntry` itself: a typed,
+  `#eval`-retrievable declaration that records the gap, its paper
+  source, its status, and the reason it is not Lean-derived.
+  Nothing asserts or consumes the entry, which is correct, since
+  asserting it would be unsound.
 
   ## InputCategory tagging convention
 
@@ -212,14 +126,13 @@
   lemmas, Cat 2 axioms, and Cat 3 definitional atoms is tagged
   `notInput`.  The Mathlib lemmas it invokes (e.g.
   `Real.rpow_le_rpow`, `Real.rpow_mul`, `Finset.prod_eq_zero`,
-  `intermediate_value_Icc'`, `norm_num`) are NOT separately
-  enumerated as atomic `cat1Mathlib` entries in this project, since
-  this formalization's atomic input layer is dominated by Cat 2 +
-  Cat 3.  This project therefore has ZERO `cat1Mathlib` entries:
-  every Mathlib invocation is internal to a `notInput` derived
-  theorem's proof.  The numerical-calibration corollary
-  `cor_quant_predictions_calibration` and the threshold-reduction
-  conjunct `prop_adjustment_threshold_reduction_floor` are derived
+  `intermediate_value_Icc'`, `norm_num`) are not separately
+  enumerated as `cat1Mathlib` entries; this project's atomic input
+  layer is the three Cat 2 axioms plus the Cat 3 atoms above, so the
+  live `cat1Mathlib` count is zero.  The numerical-calibration
+  corollary `cor_quant_predictions_calibration` and the
+  threshold-reduction conjunct
+  `prop_adjustment_threshold_reduction_floor` are derived
   `theorem`s, tagged `notInput gapClosed`. -/
 
 import VerificationAsymmetry
@@ -228,19 +141,16 @@ namespace VerificationAsymmetry.Ledger
 
 /-- 7-tier status tag attached to each gap.
 
-    `gapClosedConditional` is used when Phase 4 catches a defect
-    breaking a typed-bridge chain: the downstream closure is
-    preserved as conditional on a named `Hyp_*` broken-link
-    hypothesis (recorded in the entry's `conditionalOn` field)
-    pending repair or independent derivation.
+    `gapClosedConditional` is used when a downstream closure depends
+    on a named `Hyp_*` broken-link hypothesis (recorded in the entry's
+    `conditionalOn` field) pending repair or independent derivation.
 
     `gapDefinitional` is used for Cat 3 paper-novel atoms that are
     paper-stipulative starting commitments (definitional content,
-    never to close).  Covers the three definitional sub-types:
+    not expected to close).  Covers the three definitional sub-types:
     `carrier`, `hypothesisPredicate`, `structuralEquation`.
-    Distinguished from `gapOpen` (no attack or inconclusive
-    attempts): `gapDefinitional` says "by design axiomatic, no Lean
-    derivation expected". -/
+    Distinguished from `gapOpen`: `gapDefinitional` means
+    "by design axiomatic, no Lean derivation expected". -/
 inductive GapStatus
   | gapOpen
   | gapPartial
@@ -351,18 +261,7 @@ def gap_axiom_euler_crs : GapEntry := {
     "modern textbook reference: Mas-Colell, A., Whinston, M.D., " ++
     "Green, J.R., 1995.  *Microeconomic Theory*, §5.B.2 Theorem " ++
     "M.B.2 (Euler's theorem for CRS technologies)"
-  attackHistory := [
-    "Pre-audit (v0.1.0): Euler identity carried as hypothesis " ++
-    "`hEuler` of `thm_decomp`; proof body `rfl`.",
-    "Audit (2026-05-14) Phase 4: SOUNDNESS DEFECT — " ++
-    "axiom universally quantified over (F, G, V, wG, wV) with no " ++
-    "antecedents, False-injectable (counterexample `F := const 1, " ++
-    "G = V = wG = wV = 0` ⊢ `1 = 0`). Patched: axiom now requires " ++
-    "`IsCRS F`, `HasDerivAt`-bound `wG, wV`, positivity of `G, V`.",
-    "Phase 4 consumer verification (R2 2026-05-14): " ++
-    "`#print axioms thm_decomp` confirms `axiom_euler_crs` IS in " ++
-    "the dependency chain — genuine Lean-proof-load-bearing axiom."
-  ]
+  attackHistory := []
   scope :=
     "For any homogeneous-of-degree-one (`IsCRS`) `F : ℝ → ℝ → ℝ` " ++
     "evaluated at `(G, V)` with `wG = ∂F/∂G`, `wV = ∂F/∂V` " ++
@@ -389,44 +288,7 @@ def gap_axiom_ces_wage_ratio : GapEntry := {
     "function); modern textbook reference: Acemoglu, D., 2009.  " ++
     "*Introduction to Modern Economic Growth*, Chapter 15 (CES " ++
     "production factor-price equations)"
-  attackHistory := [
-    "Pre-audit (v0.1.0): `wageRatio` defined as closed form; " ++
-    "no axiom recorded for the identification with CES marginal " ++
-    "products.",
-    "Audit (2026-05-14) Phase 4: SOUNDNESS DEFECT — " ++
-    "axiom universally quantified over `(eta, rho, lam, G, V, " ++
-    "wV_over_wG)` with no CES-shape antecedent and no marginal-" ++
-    "product identification; False-injectable. Patched: axiom now " ++
-    "requires `IsCES F eta rho lam`, `HasDerivAt`-bound `wG, wV`, " ++
-    "positivity of `wG, G, V, eta, lam`, shape constraints " ++
-    "`0 < eta < 1`, `rho < 1`, `rho ≠ 0`.",
-    "Phase 4 paper-source verification: VERIFIED — " ++
-    "Lean statement matches paper Eq.~`\\eqref{eq:wage-ratio}` " ++
-    "exactly under the stated antecedents.",
-    "R2 (2026-05-14) Phase 4: invoked the spec §1.6 boundary " ++
-    "clause, treating the axiom as a paper-narrative reference " ++
-    "(not Lean-proof-load-bearing), and at some point the `axiom " ++
-    "axiom_ces_wage_ratio` declaration was removed from Axioms.lean " ++
-    "while the Ledger entry + AxiomAudit `#print axioms` line were " ++
-    "left dangling.",
-    "R3 audit: §1.6 boundary clause MIS-INVOCATION corrected.  " ++
-    "The §1.6 boundary clause is for paper-narrative-load-bearing " ++
-    "classical-philosophy / statistical-convention citations " ++
-    "(Honneth, Brandom, Hegel, Fisher 2002, Hu-Bentler 1999, " ++
-    "Cohen 1988).  The CES marginal-product wage ratio is " ++
-    "SUBSTANTIVE production-function calculus, NOT such a citation " ++
-    "— it does not qualify.  R3 RESTORED the `axiom " ++
-    "axiom_ces_wage_ratio` declaration in Axioms.lean (with " ++
-    "explicit `IsCES` / `HasDerivAt` / positivity / shape " ++
-    "antecedents) AND added the consuming theorem " ++
-    "`wageRatio_eq_ces_marginal_product_ratio` (Inversion.lean) " ++
-    "that establishes the Lean `wageRatio` closed-form def IS the " ++
-    "CES marginal-product wage ratio `w_V / w_G` for a generic " ++
-    "CES `F` — making the axiom genuinely Lean-load-bearing.  " ++
-    "Verifiable by `#print axioms " ++
-    "wageRatio_eq_ces_marginal_product_ratio`, which surfaces " ++
-    "`axiom_ces_wage_ratio` in the dependency chain."
-  ]
+  attackHistory := []
   scope :=
     "Under CES production with explicit shape (`IsCES`) and " ++
     "competitive marginal products (`HasDerivAt`-bound), " ++
@@ -456,29 +318,7 @@ def gap_axiom_cobb_douglas_factor_share : GapEntry := {
     "modern textbook reference: Mas-Colell, A., Whinston, M.D., " ++
     "Green, J.R., 1995.  *Microeconomic Theory*, §5.B.2 Theorem " ++
     "M.B.2 (Cobb-Douglas constant factor shares)"
-  attackHistory := [
-    "Pre-audit (v0.1.0): composite identity " ++
-    "`(1-η) Y = w_V · (ν T_s g h)` carried as hypothesis of every " ++
-    "Cobb-Douglas-regime theorem; proof bodies `field_simp`.",
-    "Audit (2026-05-14) Phase 4: SOUNDNESS DEFECT — " ++
-    "axiom `∀ η Y wV V, wV * V = (1-η) * Y` universally " ++
-    "quantified over `(η, Y, wV, V)` with NO Cobb-Douglas shape " ++
-    "antecedent; False-injectable (counterexample `η = 0, Y = 0, " ++
-    "wV = 1, V = 1` ⊢ `1 = 0`). Patched: axiom now requires " ++
-    "`IsCobbDouglas F η lam`, `HasDerivAt`-bound `wV`, bridge " ++
-    "`Y = F G V`, positivity of `G, V, η, lam`, shape " ++
-    "`0 < η < 1`.",
-    "Phase 4 consumer verification (R2 2026-05-14): added " ++
-    "`cobb_douglas_steady_state_identity_from_axiom` bridge in " ++
-    "Axioms.lean that genuinely consumes this axiom; updated " ++
-    "downstream `_from_axioms` theorems to thread the axiom's " ++
-    "antecedents through.  `#print axioms` on " ++
-    "`thm_credential_cobb_douglas_reduction_from_axioms`, " ++
-    "`prop_junior_senior_wage_from_axioms`, and " ++
-    "`thm_externality_pigouvian_cobb_douglas_from_axioms` confirms " ++
-    "this axiom IS in their dependency chains — genuine Lean-proof-" ++
-    "load-bearing."
-  ]
+  attackHistory := []
   scope :=
     "Under Cobb-Douglas `F(G, V) = G^η · (λ V)^(1-η)` " ++
     "(`IsCobbDouglas`) with `wV = ∂F/∂V` (`HasDerivAt`-bound), " ++
@@ -511,22 +351,7 @@ def gap_thm_decomp_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:decomp}`"
-  attackHistory := [
-    "Pre-audit (v0.1.0): Euler identity carried as hypothesis " ++
-    "`hEuler : F G V = wG · G + wV · V`; proof body `rfl`. " ++
-    "Audit (2026-05) replaced the hypothesis with an application " ++
-    "of `axiom_euler_crs` (Cat 2, Euler 1755 / MWG 1995 §5.B.2); " ++
-    "the proof body is now " ++
-    "`axiom_euler_crs F G V wG wV hCRS h_wG h_wV hG_pos hV_pos`.",
-    "Phase 4 paper-source verification: VERIFIED — " ++
-    "Lean statement matches paper `\\label{thm:decomp}` Eq. " ++
-    "`\\eqref{eq:decomp}`. R1 audit threaded the new explicit " ++
-    "axiom antecedents (`IsCRS`, `HasDerivAt`-bound `wG, wV`, " ++
-    "positivity of `G, V`) into the theorem signature.",
-    "R2 (2026-05-14) Phase 4 consumer verification: " ++
-    "`#print axioms thm_decomp` confirms `axiom_euler_crs` IS in " ++
-    "the dependency chain — genuine Cat 2 consumption."
-  ]
+  attackHistory := []
   scope :=
     "Derived theorem (`notInput`) composing Cat 2 axiom + Cat 3 " ++
     "hypothesisPredicate.  Stock-flow welfare decomposition by " ++
@@ -548,12 +373,7 @@ def gap_thm_inversion_threshold_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:inversion}` Part 2"
-  attackHistory := [
-    "Phase 4 paper-verification: " ++
-    "VERIFIED — Lean statement `G(θ_inv) = G*(r̄)` matches paper " ++
-    "Eq. `\\eqref{eq:theta-inv}`. Proof closure via `field_simp; " ++
-    "ring` (Mathlib algebraic manipulation)."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering two theorems: " ++
     "`thm_inversion_threshold_closed_form` (the closed-form claim " ++
@@ -585,11 +405,7 @@ def gap_thm_inversion_threshold_monotone_CLOSED : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:inversion}` Part 2 " ++
     "(monotonicity in r̄)"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "monotonicity of `thetaInv` in `r̄` (parametric in `Gstar` " ++
-    "non-decreasingness) matches paper Part 2."
-  ]
+  attackHistory := []
   scope :=
     "`thetaInv V rBar` is non-decreasing in `rBar` (parametric in " ++
     "the `Gstar`-monotonicity hypothesis).  Algebraic monotonicity " ++
@@ -617,16 +433,7 @@ def gap_thm_inversion_wage_ratio_CLOSED : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:inversion}` Part 1, " ++
     "Eq. `\\eqref{eq:wage-ratio}` monotonicity claim"
-  attackHistory := [
-    "Pre-audit (v0.1.0): `wageRatio` defined as the closed form " ++
-    "`((1-η)/η) λ^ρ (G/V)^{1-ρ}`; identification with the CES " ++
-    "marginal-product ratio implicit. Audit (2026-05) added " ++
-    "`axiom_ces_wage_ratio` for honest accounting of the suppressed " ++
-    "CES marginal-product derivation.",
-    "Phase 4 paper-verification: " ++
-    "VERIFIED — `Real.rpow_le_rpow` chain + `G_monotone_of_KAI_ge_LG` " ++
-    "match paper `\\label{thm:inversion}` Part 1 monotonicity claim."
-  ]
+  attackHistory := []
   scope :=
     "Wage-ratio function `r(θ) = ((1-η)/η) λ^ρ (G(θ)/V)^(1-ρ)` is " ++
     "non-decreasing in `θ` under `K_AI ≥ L_G` and `ρ < 1`. Proof " ++
@@ -664,22 +471,7 @@ def gap_wageRatio_eq_ces_marginal_product_ratio_CLOSED : GapEntry := {
   paperSource := "Li 2026, `\\label{thm:inversion}` Part 1, " ++
     "Eq. `\\eqref{eq:wage-ratio}` (closed-form identification with " ++
     "the CES marginal-product wage ratio)"
-  attackHistory := [
-    "R3 audit: added.  The §1.6 boundary-clause mis-invocation on " ++
-    "`axiom_ces_wage_ratio` (R2) left the axiom non-load-bearing " ++
-    "and ultimately removed from Axioms.lean.  R3 restored the " ++
-    "axiom and added this consuming theorem: it composes " ++
-    "`axiom_ces_wage_ratio` (Cat 2) to establish that the Lean " ++
-    "closed-form `wageRatio` def equals the CES marginal-product " ++
-    "wage ratio `w_V / w_G` for a generic CES `F` with " ++
-    "competitive marginal-product wages.  This is the honest " ++
-    "Lean encoding of the paper's Eq. `\\eqref{eq:wage-ratio}` " ++
-    "closed-form-identification claim.",
-    "Phase 4 consumer verification: `#print axioms " ++
-    "wageRatio_eq_ces_marginal_product_ratio` confirms " ++
-    "`axiom_ces_wage_ratio` IS in the dependency chain — genuine " ++
-    "Cat 2 consumption."
-  ]
+  attackHistory := []
   scope :=
     "Derived theorem (`notInput`) composing the Cat 2 axiom " ++
     "`axiom_ces_wage_ratio`.  For a generic CES production " ++
@@ -708,14 +500,7 @@ def gap_cor_bounded_AI_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{cor:bounded-AI}`"
-  attackHistory := [
-    "Pre-audit (v0.1.0): endpoint identities `G*(r̄_0) = L_G`, " ++
-    "`G*(r̄_max) = K_AI` carried as `hGstar_eq` hypotheses. Audit " ++
-    "(2026-05) derived them inline via `Real.rpow_mul`.",
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "endpoint statements match `\\label{cor:bounded-AI}` r̄ → 0 / " ++
-    "r̄ → r̄_max identifications.  Closure via `Real.rpow_mul`."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering four theorems: `Gstar_at_rBarZero`, " ++
     "`Gstar_at_rBarMax`, `cor_bounded_AI_threshold_at_rBarZero`, " ++
@@ -733,11 +518,7 @@ def gap_thm_collapse_below_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:collapse}` Part 1"
-  attackHistory := [
-    "Phase 4 paper-verification: " ++
-    "VERIFIED — Lean statement `V_∞(θ) = ν T_s ((1-θ) T_j)^a` for " ++
-    "`θ ≤ θ*` matches paper `\\label{thm:collapse}` Part 1."
-  ]
+  attackHistory := []
   scope :=
     "For `θ ≤ θ*`, `V_∞(θ) = ν T_s · ((1-θ) T_j)^a` under hard " ++
     "threshold. Reduces to `VinfHard_eq_pow_of_eBar_ge_tauStar` " ++
@@ -751,10 +532,7 @@ def gap_thm_collapse_jump_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:collapse}` Part 2"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — " ++
-    "Lean jump magnitude `ν T_s (τ*)^a` matches paper Part 2."
-  ]
+  attackHistory := []
   scope :=
     "`V_∞(θ*) = ν T_s · (τ*)^a` (left limit); right limit is 0. " ++
     "Jump magnitude `ν T_s (τ*)^a` is exact.  Companion theorem " ++
@@ -772,10 +550,7 @@ def gap_thm_collapse_jump_diff_CLOSED : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:collapse}` Part 2 " ++
     "(discrete-difference form)"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — " ++
-    "for any `θ_above > θ*`, `V_∞(θ*) - V_∞(θ_above) = ν T_s (τ*)^a`."
-  ]
+  attackHistory := []
   scope :=
     "Discrete-difference form of paper Part 2 jump claim: " ++
     "`V_∞(θ*) - V_∞(θ_above) = ν T_s (τ*)^a` for any `θ_above > θ*`. " ++
@@ -792,10 +567,7 @@ def gap_thm_collapse_above_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:collapse}` Part 3"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — " ++
-    "`V_∞(θ) = 0` for `θ > θ*` matches paper Part 3."
-  ]
+  attackHistory := []
   scope :=
     "For `θ > θ*`, `V_∞(θ) = 0`. Reduces to " ++
     "`VinfHard_eq_zero_of_eBar_lt_tauStar`."
@@ -810,11 +582,7 @@ def gap_thm_collapse_transient_CLOSED : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:collapse}` Part 4, " ++
     "Eq. `\\eqref{eq:transient}`"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — four " ++
-    "pointwise lemmas (`_at_zero`, `_at_Ts`, `_linear`, " ++
-    "`_zero_after_Ts`) capture the paper's piecewise-linear decay."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering four pointwise theorems: " ++
     "`thm_collapse_transient_at_zero`, `thm_collapse_transient_at_Ts`, " ++
@@ -831,17 +599,7 @@ def gap_thm_collapse_general_h_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:collapse}` Part 5"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — " ++
-    "Lean value `V_∞(θ*) = ν T_s h(τ*)` matches paper Part 5 value-at-θ*.",
-    "R2 (2026-05-14) renamed from `thm_collapse_jump_general_h` to " ++
-    "`thm_collapse_value_at_thetaStar_general_h` for honesty: the " ++
-    "theorem captures the value at `θ*` (not the jump magnitude per " ++
-    "se).  The jump magnitude follows by combining with " ++
-    "`thm_collapse_above_threshold` (uniform vanishing above `θ*`); " ++
-    "for monotone `h` with `h(τ*) > 0`, the jump is strictly positive. " ++
-    "Removed unused positivity hypothesis."
-  ]
+  attackHistory := []
   scope :=
     "For ANY function `h : ℝ → ℝ`, the steady-state stock at " ++
     "`θ*` equals exactly `ν T_s h(τ*)`.  Algebraic identity once " ++
@@ -858,10 +616,7 @@ def gap_prop_smooth_collapse_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:smooth-collapse}`"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — " ++
-    "Lean smooth-threshold statements match paper."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering two theorems: " ++
     "`prop_smooth_collapse_below` (below `θ*`, matches hard-threshold " ++
@@ -879,27 +634,7 @@ def gap_thm_credential_CLOSED : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:credential}`, " ++
     "Eq. `\\eqref{eq:R-senior-rent}`"
-  attackHistory := [
-    "Pre-audit (v0.1.0): composite Cobb-Douglas identity " ++
-    "`(1-η) Y = wV · (ν T_s g h)` carried as hypothesis `hY`. " ++
-    "Audit (2026-05) added a companion `_from_axioms` theorem that " ++
-    "derives `hY` from `axiom_cobb_douglas_factor_share` (Cat 2) " ++
-    "composed with the definitional steady-state stock identity.",
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "reduction `T_s g h wV = (1-η) Y / ν` matches paper " ++
-    "Eq. `\\eqref{eq:R-senior-rent}`.",
-    "R2 (2026-05-14) Phase 4 phantom-downstream audit: previously " ++
-    "the `_from_axioms` companion took `hCDshare` as a free " ++
-    "hypothesis and routed through " ++
-    "`cobb_douglas_steady_state_identity` (which also took " ++
-    "`hCDshare`), so `axiom_cobb_douglas_factor_share` was NOT " ++
-    "actually consumed.  Patched: added " ++
-    "`cobb_douglas_steady_state_identity_from_axiom` bridge that " ++
-    "genuinely derives `hCDshare` from the Cat 2 axiom; updated " ++
-    "`_from_axioms` to thread axiom antecedents.  `#print axioms " ++
-    "thm_credential_cobb_douglas_reduction_from_axioms` now surfaces " ++
-    "`axiom_cobb_douglas_factor_share` in the dependency chain."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering two theorems plus the axiom-discharged " ++
     "companion: `thm_credential_cobb_douglas_reduction` (parametric " ++
@@ -936,11 +671,7 @@ def gap_thm_credential_leontief_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:credential}` Part 1 + Part 4"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — Leontief decay rate " ++
-    "`λ T_s ē^a` pre-collapse, vanishing post-collapse, premium " ++
-    "negative near `θ = 1`."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering three theorems: " ++
     "`thm_credential_leontief_pre_collapse` " ++
@@ -969,12 +700,7 @@ def gap_thm_credential_multiplicative_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:credential}` Part 3"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "identity `(ē/τ*)^b · ē^a = ē^(a+b) / τ*^b` is paper's " ++
-    "multiplicative-decay claim. Closure via `Real.div_rpow` and " ++
-    "`Real.rpow_add`."
-  ]
+  attackHistory := []
   scope :=
     "`g(ē) · h(ē) = (ē/τ*)^b · ē^a = ē^(a+b) / (τ*)^b`. Post-collapse " ++
     "decay rate `a+b` strictly exceeds pre-collapse rate `a`."
@@ -989,20 +715,7 @@ def gap_prop_junior_senior_CLOSED : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:junior-senior}`, " ++
     "Eq. `\\eqref{eq:senior-junior-ratio}`"
-  attackHistory := [
-    "Pre-audit (v0.1.0): same composite Cobb-Douglas hypothesis as " ++
-    "`thm_credential_cobb_douglas_reduction`. Audit (2026-05) added " ++
-    "`prop_junior_senior_wage_from_axioms` that discharges via Cat 2 " ++
-    "axiom + definitional unfolding.",
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "form `wV * h(ē) = (1-η) Y / (ν T_s g(ē))` matches paper " ++
-    "`\\label{prop:junior-senior}`.",
-    "R2 (2026-05-14) Phase 4 phantom-downstream audit: patched " ++
-    "`_from_axioms` form to genuinely consume " ++
-    "`axiom_cobb_douglas_factor_share` (via " ++
-    "`cobb_douglas_steady_state_identity_from_axiom` bridge); " ++
-    "verifiable by `#print axioms prop_junior_senior_wage_from_axioms`."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering `prop_junior_senior_wage` (parametric " ++
     "form) and `prop_junior_senior_wage_from_axioms` (axiom-" ++
@@ -1025,31 +738,7 @@ def gap_thm_externality_wedge_CLOSED : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:externality}` " ++
     "(Eq. `\\eqref{eq:wedge}`)"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — Lean wedge identity " ++
-    "matches paper Eq. `\\eqref{eq:wedge}` (the ratio-form " ++
-    "`W_E = (wV/wG)·(gE·hE·Λ)/(1-θ)`).  Closure via `field_simp`.",
-    "R3 audit: noted the companion `thm_externality_residual_identity` " ++
-    "(`MP_J^S - MP_J^P = externalityResidual`) is by-construction " ++
-    "from the defs `MPsoc := MPpriv + externalityResidual` and " ++
-    "`externalityResidual := wV·gE·hE·Λ`; reduces to `ring` after " ++
-    "unfolding.",
-    "R4 audit: the `wedge` / `externalityResidual` / `MPpriv` `def`s " ++
-    "this entry consumes are definitional infrastructure (no longer " ++
-    "standalone Cat 3 atoms after the R4 Cat 3 ratio guard); they " ++
-    "are documented here under `scope`.  The companion " ++
-    "`thm_externality_residual_identity` now has its own " ++
-    "`gapClosed notInput` entry " ++
-    "(`gap_thm_externality_residual_identity_CLOSED`) as a " ++
-    "derived `unfold + ring` theorem.",
-    "R6 audit: corrected the `paperSource` label from " ++
-    "`eq:wedge-explicit` to `eq:wedge`.  The Lean theorem " ++
-    "`thm_externality_wedge_identity` proves the `eq:wedge` " ++
-    "ratio-form `W_E = (wV/wG)·(gE·hE·Λ)/(1-θ)`, NOT the fully-" ++
-    "substituted `eq:wedge-explicit` form; the entry's `scope` " ++
-    "already cited `eq:wedge` correctly, so this is a paperSource-" ++
-    "field label fix bringing it into agreement."
-  ]
+  attackHistory := []
   scope :=
     "Covers `thm_externality_wedge_identity` (the substantive wedge " ++
     "form `W_E(θ) = (wV/wG) · g h Λ / (1-θ)` derived by `field_simp` " ++
@@ -1072,11 +761,7 @@ def gap_thm_externality_nonneg_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:externality}` Part 2"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "non-negativity / strict positivity follow from `mul_nonneg` " ++
-    "/ `mul_pos` chains."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering two theorems: " ++
     "`thm_externality_residual_nonneg` (`wV · g · h · Λ ≥ 0` from " ++
@@ -1097,20 +782,7 @@ def gap_thm_externality_pigouvian_CLOSED : GapEntry := {
     "`\\label{thm:externality}` Part 3 and later relabeled " ++
     "`\\label{eq:s-star}` for the Pigouvian-subsidy " ++
     "discussion in `\\label{sec:policy}`)"
-  attackHistory := [
-    "Pre-audit (v0.1.0): same composite Cobb-Douglas hypothesis as " ++
-    "`thm_credential_cobb_douglas_reduction`. Audit (2026-05) added " ++
-    "`thm_externality_pigouvian_cobb_douglas_from_axioms` that " ++
-    "discharges via Cat 2 axiom + definitional unfolding.",
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "`s*(θ) = (1-η) Y Λ / (ν T_s)` matches paper Eq. " ++
-    "`\\eqref{eq:s-star}`.",
-    "R2 (2026-05-14) Phase 4 phantom-downstream audit: patched " ++
-    "`_from_axioms` form to genuinely consume " ++
-    "`axiom_cobb_douglas_factor_share` (via " ++
-    "`cobb_douglas_steady_state_identity_from_axiom` bridge); " ++
-    "verifiable by `#print axioms thm_externality_pigouvian_cobb_douglas_from_axioms`."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering `thm_externality_pigouvian_cobb_douglas` " ++
     "(parametric) and `thm_externality_pigouvian_cobb_douglas_from_axioms` " ++
@@ -1133,31 +805,7 @@ def gap_prop_internalization_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:internalization}`"
-  attackHistory := [
-    "Pre-audit (v0.1.0): theorem `(1-ζ) · residual / MP_priv = " ++
-    "(1-ζ) · wedge` was a `mul_div_assoc` rewrite that does not " ++
-    "capture internalization semantics. Audit (2026-05) introduced " ++
-    "explicit `internalizedWedge` def and reframed.",
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "`internalizedWedge` = `(1-ζ) · (residual / MP_priv)` matches " ++
-    "paper claim that the effective wedge rescales by `(1-ζ)`.",
-    "R3 audit: classified as Cat 3 `gapDefinitional` " ++
-    "`structuralEquation`, on the reasoning that the " ++
-    "`Vinternalized = (1-ζ) · W_E` identity IS paper-stipulative " ++
-    "structural definitional content; removed the redundant " ++
-    "`prop_internalization_full`.",
-    "R4 audit: reclassified `gapDefinitional structuralEquation " ++
-    "cat3PaperNovel` → `gapClosed notInput notCat3`.  Agent J + L " ++
-    "noted the paper DERIVES this in a one-line step (internalizing " ++
-    "ζ rescales the wedge by `1-ζ`), so the Lean `theorem " ++
-    "prop_internalization` is a DERIVED definitional-unfolding " ++
-    "identity (`rfl` against the `internalizedWedge` def composed " ++
-    "with the `wedge` def), not a Cat 3 paper primitive.  Per spec " ++
-    "§0 a trivial-but-honest derived definitional identity is " ++
-    "`notInput` / `notCat3` / `gapClosed`.  The `internalizedWedge` " ++
-    "def is kept as notational infrastructure (no longer a " ++
-    "standalone Cat 3 atom after the R4 Cat 3 ratio guard)."
-  ]
+  attackHistory := []
   scope :=
     "Derived theorem (`notInput`).  Definitional-unfolding identity " ++
     "`internalizedWedge zeta wG wV gE hE Lambda θ = (1-zeta) · " ++
@@ -1186,10 +834,7 @@ def gap_prop_decentralized_theta_CLOSED : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:decentralized-theta}`, " ++
     "Eq. `\\eqref{eq:eq-foc}` + `\\eqref{eq:soc-foc}`"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "`θ_soc < θ_eq` from anti-monotone `wG` matches paper claim."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering three theorems: " ++
     "`prop_decentralized_theta_foc` (FOC identity " ++
@@ -1231,11 +876,7 @@ def gap_thm_recursive_threshold_CLOSED : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:recursive}` Part 1, " ++
     "Eq. `\\eqref{eq:theta-inv-recursive}`"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "form `(G* - L_G)/(μ K_AI - L_G)` matches paper " ++
-    "Eq. `\\eqref{eq:theta-inv-recursive}`."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering three theorems: " ++
     "`thm_recursive_threshold_closed_form` (the closed form " ++
@@ -1254,10 +895,7 @@ def gap_thm_recursive_wedge_CLOSED : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:recursive}` Part 2 wedge " ++
     "amplification ratio, Eq. `\\eqref{eq:wedge-recursive}`"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "amplification ratio `(V_req/G)^(1-ρ)` matches paper claim."
-  ]
+  attackHistory := []
   scope :=
     "`w_V^{rec}/w_V = (V_req/G)^(1-ρ)`. Captures the Part 2 wedge " ++
     "amplification claim.  Paper Part 4 (asymptotic wage-ratio " ++
@@ -1283,74 +921,7 @@ def gap_thm_recursive_invariance_OPEN : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:recursive}` Part 3"
-  attackHistory := [
-    "Pre-audit (v0.1.0): theorem `E.thetaStar = E.thetaStar := rfl` " ++
-    "was vacuously self-equating.",
-    "Audit introduced μ-parametric wrappers and (R2) reformulated as " ++
-    "`(fun _ : ℝ => E.thetaStar) μ₁ = (fun _ : ℝ => E.thetaStar) μ₂ " ++
-    ":= rfl`, which β-reduces to the same vacuous self-equation.",
-    "R3 audit: removed the vacuous theorems entirely.  The paper's " ++
-    "Part 3 (μ-invariance of θ* and V_∞) is satisfied by construction " ++
-    "in this formalization: `thetaStar = 1 - τ*/T_j` and " ++
-    "`VinfHard a θ = ν T_s ((1-θ)T_j)^a` contain no μ.  No Lean " ++
-    "theorem is provided; the by-construction structural commitment " ++
-    "(absence of μ on the supply side `Vinf`/`eBar`/`thetaStar`) " ++
-    "IS the Lean encoding of the paper claim.  Reclassified as " ++
-    "`gapDefinitional` Cat 3 `structuralEquation` (the absence of " ++
-    "μ-dependence is paper-stipulative structural content, not a " ++
-    "derivable consequence).",
-    "R6 audit: corrected the `name` field — it formerly read " ++
-    "`thm_recursive_invariance (by-construction)`, a phantom " ++
-    "declaration name referencing no Lean `def`/`theorem` (R4's " ++
-    "removal of the `thetaStarMu`/`VinfHardMu` μ-parametric " ++
-    "wrappers left no μ-parametric form to quantify over, so no " ++
-    "meaningful Lean theorem can be written: there is no " ++
-    "μ-dependence to assert μ-invariance OF).  Set to an honest " ++
-    "descriptor; this is a Ledger-only by-construction entry, " ++
-    "parallel to the R6 Ledger-only deferred-claim entries but with " ++
-    "`gapDefinitional` status (the μ-free carrier signatures are a " ++
-    "paper-stipulative structural commitment, not an open gap).",
-    "R6 Cat 3 reductionism (≥2 rounds): Round 1 Cat 1? NO — the " ++
-    "claim is a paper-stipulative structural commitment about the " ++
-    "shape of the formalization's carrier types (`thetaStar`, " ++
-    "`VinfHard` take no μ argument), not a Mathlib-derivable " ++
-    "mathematical fact; Mathlib has nothing to say about which " ++
-    "arguments a paper's bespoke carrier definitions carry.  " ++
-    "Round 2 Cat 2? NO — there is no external published theorem " ++
-    "asserting μ-independence of the Li 2026 supply-side carriers; " ++
-    "the structural design of `\\label{thm:recursive}` Part 3 " ++
-    "(recursive verification raising effective DEMAND `Vreq` while " ++
-    "the SUPPLY side `Vinf`/`eBar`/`thetaStar` stays μ-free) is " ++
-    "paper `\\label{thm:recursive}`-specific.",
-    "R8 audit: reclassified `cat3PaperNovel structuralEquation` → " ++
-    "`notInput notCat3`, keeping `status := gapDefinitional`.  " ++
-    "This entry has NO Lean declaration: it records the ABSENCE of " ++
-    "a μ parameter in the `thetaStar` / `VinfHard` carrier " ++
-    "signatures — a meta-observation about the formalization's " ++
-    "shape, not a paper-stated structural defining equation that " ++
-    "any Lean derivation consumes as an atomic input.  A " ++
-    "`structuralEquation` Cat 3 atom is a STATED defining axiom on " ++
-    "a primitive (e.g. `axiom V_dyn_def`); the μ-freedom here is " ++
-    "true by construction of the (separately Ledger-tracked) " ++
-    "`thetaStar` / `Vinf` carriers, not a standalone atomic input " ++
-    "— hence `notInput` / `notCat3`.",
-    "R10 audit: reclassified `status := gapDefinitional` → " ++
-    "`gapOpen`.  Multi-agent fresh hostile audit (R5 S, R5 U, R9 X, " ++
-    "R10 W) consistently flagged the `gapDefinitional + notInput + " ++
-    "notCat3` combination as outside the gapDefinitional scope: " ++
-    "the gapDefinitional tier is bound to Cat 3 paper-novel atoms " ++
-    "with sub-types {carrier, predicate, structuralEq}, not to " ++
-    "`notInput notCat3` meta-observations.  Reclassified to " ++
-    "`gapOpen`, which matches the four other Ledger-only entries " ++
-    "(window-invariance, sequential-kinks, intermediate-regime, " ++
-    "adjustment-narrative).  Semantic refinement: the paper claim " ++
-    "is satisfied by construction in the Lean encoding (no μ " ++
-    "parameter in the supply-side carriers), so this is `gapOpen` " ++
-    "in the formal sense (no Lean derivation provided) while being " ++
-    "trivially satisfied by the Lean code's type signatures.  Def " ++
-    "identifier renamed `_DEFINITIONAL` → `_OPEN` for status-name " ++
-    "consistency."
-  ]
+  attackHistory := []
   scope :=
     "Paper Theorem 3 Part 3 (μ-invariance of θ* and V_∞) is " ++
     "satisfied by construction in this formalization: " ++
@@ -1385,10 +956,7 @@ def gap_prop_boundary_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:boundary}`"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "`1 - ζ_V > θ* ↔ ζ_V < τ*/T_j` matches paper iff."
-  ]
+  attackHistory := []
   scope :=
     "Pipeline collapse iff `ζ_V < τ*/T_j`, equivalently " ++
     "`1 - ζ_V > θ*`. Algebraic equivalence."
@@ -1402,11 +970,7 @@ def gap_thm_aggregation_CD_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:aggregation}` Part 2"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "`∏ Y_i^(ω_i) = 0` via `Finset.prod_eq_zero` + `Real.zero_rpow` " ++
-    "matches paper Cobb-Douglas zero-product rule."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering two theorems: " ++
     "`thm_aggregation_cobb_douglas_zero` (`∏ Y_i^(ω_i) = 0` whenever " ++
@@ -1424,10 +988,7 @@ def gap_thm_aggregation_PS_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:aggregation}` Part 3"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "`∑ ω_i Y_i > 0` from one positive term matches paper claim."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering two theorems: " ++
     "`thm_aggregation_perfect_substitutes_survival` (`∑ ω_i Y_i > 0` " ++
@@ -1447,10 +1008,7 @@ def gap_prop_adjustment_career_CLOSED : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource :=
     "Li 2026, `\\label{prop:adjustment-margins}` (career extension)"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "`θ* < θ*_ext = 1 - τ*/T < 1` matches paper."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering two theorems: " ++
     "`prop_adjustment_career_extension_strict` (`θ* < θ*_ext`) and " ++
@@ -1481,29 +1039,7 @@ def gap_thm_endogenous_ai_existence_PARTIAL : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:endogenous-ai}` Part 1, " ++
     "Eq. `\\eqref{eq:Phi}`"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "`brouwer_1d` (1-D Brouwer via Mathlib IVT " ++
-    "`intermediate_value_Icc'`) is applied to the abstract Φ.",
-    "R2 (2026-05-14) Phase 4 scope audit: the Lean theorem applies " ++
-    "1-D Brouwer to an ABSTRACT continuous self-map Φ; the paper's " ++
-    "full Part 1 additionally constructs Φ from Ψ and the " ++
-    "verification-stock decomposition `V_∞ = V_prod + V_AI`.  That " ++
-    "construction is NOT formalized in this Lean theorem.",
-    "R3 audit: reclassified `gapClosed` → `gapPartial`.  The Lean " ++
-    "theorem proves abstract 1-D Brouwer (IVT) for ANY continuous " ++
-    "self-map Φ; the paper's Theorem 7 Part 1 requires the SPECIFIC " ++
-    "Φ construction from Ψ + the verification-stock decomposition. " ++
-    "Since a sub-clause is closed and substantive content remains, " ++
-    "the honest tier is `gapPartial`, not `gapClosed`.",
-    "R8 audit: renamed the entry `def` identifier from " ++
-    "`gap_thm_endogenous_ai_existence_CLOSED` to " ++
-    "`gap_thm_endogenous_ai_existence_PARTIAL` — the `_CLOSED` " ++
-    "suffix was inconsistent with `status := gapPartial`.  No Lean " ++
-    "theorem name changed (the underlying `brouwer_1d` / " ++
-    "`thm_endogenous_ai_existence` declarations are unaffected); " ++
-    "this is a Ledger-entry-identifier fix only."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering two theorems: `brouwer_1d` " ++
     "(general 1-D Brouwer / IVT-derived fixed point for any " ++
@@ -1530,11 +1066,7 @@ def gap_thm_endogenous_ai_uniqueness_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:endogenous-ai}` Part 2"
-  attackHistory := [
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "strictly-anti-monotone-implies-at-most-one-fixed-point matches " ++
-    "paper Part 2."
-  ]
+  attackHistory := []
   scope :=
     "Strictly anti-monotone map on ℝ has at most one fixed point. " ++
     "Used to upgrade Part 1's existence to existence-and-uniqueness " ++
@@ -1549,16 +1081,7 @@ def gap_thm_endogenous_ai_corner_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:endogenous-ai}` Part 3"
-  attackHistory := [
-    "Pre-audit (v0.1.0): theorem " ++
-    "`thm_endogenous_ai_corner_endogenous_inconsistent` only proved " ++
-    "`0 < thetaStar`, not the inconsistency.  Patched: added " ++
-    "explicit `thetaEndo : ℝ → ℝ` def and witnessed the inconsistency " ++
-    "as the strict inequality `thetaEndo 0 < thetaStar` " ++
-    "(R2 simplification: dropped trivial conjunct).",
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "matches paper Part 3 corner inconsistency."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering two theorems: " ++
     "`thm_endogenous_ai_corner_exogenous` (under exogenous θ ≥ θ*, " ++
@@ -1585,15 +1108,7 @@ def gap_thm_endogenous_ai_hysteresis_CLOSED : GapEntry := {
   paperSource := "Li 2026, `\\label{thm:endogenous-ai}` Parts 4–5, " ++
     "Eq. `\\eqref{eq:hysteresis-deficit}` + " ++
     "Eq. `\\eqref{eq:multi-cohort-recovery}`"
-  attackHistory := [
-    "Pre-audit (v0.1.0): `thm_endogenous_ai_recovery_takes_full_career` " ++
-    "only proved `0 < T_j + T_s` (trivial).  Patched: " ++
-    "strengthened to actual scaling — for `t < t_1 + T`, the recovery " ++
-    "stock is strictly below the steady-state ceiling — capturing the " ++
-    "paper's claim that recovery requires the FULL career length.",
-    "Phase 4 paper-verification: VERIFIED — Lean " ++
-    "hysteresis statements match paper Parts 4-5."
-  ]
+  attackHistory := []
   scope :=
     "Bundle entry covering four theorems: " ++
     "`thm_endogenous_ai_hysteresis_nonneg` (non-negativity of " ++
@@ -1649,64 +1164,7 @@ def gap_window_invariance_OPEN : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:stock-flow-asymptotics}` Part 4"
-  attackHistory := [
-    "Pre-audit (v0.1.0): classified `gapBlocked` citing Mathlib " ++
-    "`MeasureTheory` absence.  R1 (2026-05-14) reclassified — " ++
-    "Mathlib infra absence alone is NOT BLOCKED.",
-    "R2 (2026-05-14) Phase 4 internal-consistency audit: " ++
-    "reclassified to `gapDefinitional structuralEquation` invoking " ++
-    "the §15.1.D encoding-exemption.",
-    "R3 audit: reclassified to `cat3PaperNovel workingAssumption " ++
-    "gapOpen`.  Window invariance is NOT a paper-stipulative " ++
-    "definitional atom — the paper PROVES it (cohort-integral " ++
-    "specialization: `V(t) = ∫_{t-T}^{t-T_j} ν g(e_J(c)) h(e_J(c)) " ++
-    "dc`, with the integrand depending only on `θ(s)` for `s` in " ++
-    "the window).  R3 added a typed `axiom gap_window_invariance_OPEN` " ++
-    "(Decomp.lean) with abstract `windowedStock` functional.",
-    "R4 audit: converted from `axiom` to `def : Prop` — the R3 " ++
-    "axiom form was `False`-injectable (R4 hostile-audit machine-" ++
-    "verification: free `windowedStock` quantified with no " ++
-    "constraint; `windowedStock := fun _ _ => 0` ⊢ " ++
-    "`0 = ν T_s g h > 0` ⊢ `False`).  The R4 `def : Prop` added a " ++
-    "constraining hypothesis predicate `IsCohortWindowStock`.",
-    "R5 audit: the R4 `def : Prop` was found TAUTOLOGICAL — the " ++
-    "constraining predicate `IsCohortWindowStock windowedStock` " ++
-    "was defined to be EXACTLY the conclusion the proposition " ++
-    "asserts, so `gap_window_invariance_OPEN` reduced to " ++
-    "`∀ ws, P ws → P ws`, provable by `fun _ h => h`; the paper's " ++
-    "substantive claim was not actually formalized.",
-    "R6 audit: removed the Lean declaration entirely — both the " ++
-    "`def gap_window_invariance_OPEN : Prop` and the constraining " ++
-    "`def IsCohortWindowStock` are deleted from Decomp.lean.  The " ++
-    "claim is now tracked as a Ledger-only `gapOpen` `GapEntry`.  " ++
-    "Encoding any of {`axiom`, `def : Prop` with a " ++
-    "conclusion-equalling constraining predicate} is an anti-" ++
-    "pattern; honest tracking via this Ledger `GapEntry` is the " ++
-    "correct encoding for a paper claim that requires out-of-scope " ++
-    "Mathlib `MeasureTheory` infrastructure to even STATE " ++
-    "faithfully.  Cat 3 reductionism (≥2 rounds): Round 1 Cat 1? " ++
-    "NO — Mathlib has no named cohort-window-stock functional " ++
-    "primitive, and the cohort-integral form cannot be stated " ++
-    "without `MeasureTheory` integration that is out of scope.  " ++
-    "Round 2 Cat 2? NO — the cohort-integral construction " ++
-    "`V(t) = ∫_{t-T}^{t-T_j} ν g(e_J(c)) h(e_J(c)) dc` is paper " ++
-    "`\\label{def:cohort}`-specific, bound to the paper's Economy " ++
-    "primitives `T`, `Tj`, `nu` and the steady-state stock `Vinf` " ++
-    "— not an external published theorem.  Stands as " ++
-    "`cat3PaperNovel workingAssumption`.",
-    "R8 audit: reclassified `cat3PaperNovel workingAssumption` → " ++
-    "`notInput notCat3`.  The window-invariance identity is a " ++
-    "paper-PROVEN mathematical result (cohort-integral " ++
-    "specialization), not a Cat 3 paper-novel ATOM — it is an " ++
-    "un-formalized DERIVED result whose Lean derivation is deferred " ++
-    "for want of out-of-scope Mathlib `MeasureTheory` " ++
-    "infrastructure.  An atomic Cat 3 input is a primitive type / " ++
-    "hypothesisPredicate / structural defining equation the " ++
-    "formalization builds ON; this is a higher-level claim built " ++
-    "FROM the cohort primitives, hence `notInput` / `notCat3`.  " ++
-    "The genuine Cat 3 atomic inputs of this project are the " ++
-    "`Economy` carrier and the four hypothesisPredicates."
-  ]
+  attackHistory := []
   scope :=
     "Paper's window-integral identity " ++
     "`V(t) = ∫_{t-T}^{t-T_j} ν g h dc`, asserting that the " ++
@@ -1765,65 +1223,7 @@ def gap_aggregation_sequential_kinks_OPEN : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:aggregation}` Part 1, " ++
     "Eq. `\\eqref{eq:agg-marginal}`"
-  attackHistory := [
-    "Pre-audit (v0.1.0): classified `gapBlocked` citing continuity " ++
-    "infra absence.  R1 (2026-05-14) reclassified as " ++
-    "`workingAssumption` — Mathlib infra absence alone is NOT " ++
-    "BLOCKED.",
-    "R2 (2026-05-14) Phase 4 post-publication compliance audit: " ++
-    "reclassified to `phenomenologicalConjecture`.",
-    "R3 audit: reclassified back to `cat3PaperNovel " ++
-    "workingAssumption gapOpen`.  `phenomenologicalConjecture` " ++
-    "requires an EMPIRICAL / INTERPRETIVE resolution path; the " ++
-    "sequential-kink claim is a MATHEMATICAL claim about the CES " ++
-    "aggregator's continuity / kink structure at the order " ++
-    "statistics `θ*_(k)`, awaiting Mathlib continuity / kink-" ++
-    "detection infrastructure — not an empirical claim.  R3 added " ++
-    "a typed `axiom gap_aggregation_sequential_kinks_OPEN` " ++
-    "(Aggregation.lean) with abstract `Yagg` and order-statistic " ++
-    "enumeration.",
-    "R4 audit: converted from `axiom` to `def : Prop` — the R3 " ++
-    "axiom form was `False`-injectable (R4 hostile-audit machine-" ++
-    "verification: free `Yagg` quantified with no constraint; " ++
-    "`Yagg := fun _ => 0` ⊢ `0 < 0` ⊢ `False`).  The R4 " ++
-    "`def : Prop` added a constraining hypothesis predicate " ++
-    "`IsCESAggregateOutput`.",
-    "R5 audit: the R4 `def : Prop` was found TAUTOLOGICAL — the " ++
-    "constraining predicate `IsCESAggregateOutput Yagg " ++
-    "thetaStarOrd N` was defined to be EXACTLY the conclusion the " ++
-    "proposition asserts, so `gap_aggregation_sequential_kinks_OPEN` " ++
-    "reduced to `∀ Yagg ..., P → P`, provable by `fun _ h => h`; " ++
-    "the paper's substantive claim was not actually formalized.",
-    "R6 audit: removed the Lean declaration entirely — both the " ++
-    "`def gap_aggregation_sequential_kinks_OPEN : Prop` and the " ++
-    "constraining `def IsCESAggregateOutput` are deleted from " ++
-    "Aggregation.lean.  The claim is now tracked as a Ledger-only " ++
-    "`gapOpen` `GapEntry`.  Encoding any of {`axiom`, `def : Prop` " ++
-    "with a conclusion-equalling constraining predicate} is an " ++
-    "anti-pattern; honest tracking via this Ledger `GapEntry` is " ++
-    "the correct encoding for a paper claim that requires out-of-" ++
-    "scope Mathlib continuity / kink-detection infrastructure to " ++
-    "even STATE faithfully.  Cat 3 reductionism (≥2 rounds): " ++
-    "Round 1 Cat 1? NO — Mathlib has no named CES-aggregate-output " ++
-    "primitive, and the downward-jump / one-sided-limit structure " ++
-    "cannot be stated without continuity infrastructure that is " ++
-    "out of scope.  Round 2 Cat 2? NO — the cross-profession CES " ++
-    "aggregator of Eq. `\\eqref{eq:Y-agg}` with the hard-promotion " ++
-    "downward-jump structure is paper `\\label{thm:aggregation}`-" ++
-    "specific, not an external published theorem.  Stands as " ++
-    "`cat3PaperNovel workingAssumption`.",
-    "R8 audit: reclassified `cat3PaperNovel workingAssumption` → " ++
-    "`notInput notCat3`.  The sequential-kink claim is a paper-" ++
-    "PROVEN mathematical result about the CES aggregator's kink / " ++
-    "one-sided-limit structure, not a Cat 3 paper-novel ATOM — it " ++
-    "is an un-formalized DERIVED result whose Lean derivation is " ++
-    "deferred for want of out-of-scope Mathlib continuity / kink-" ++
-    "detection infrastructure.  An atomic Cat 3 input is a " ++
-    "primitive type / hypothesisPredicate / structural defining " ++
-    "equation the formalization builds ON; this is a higher-level " ++
-    "claim built FROM the profession primitives, hence `notInput` " ++
-    "/ `notCat3`."
-  ]
+  attackHistory := []
   scope :=
     "Sequential phase transitions at order statistics " ++
     "`θ*_(1) < ... < θ*_(N)` — in the hard-promotion case, a " ++
@@ -1863,66 +1263,7 @@ def gap_aggregation_intermediate_regime_OPEN : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:aggregation}` Part 4, " ++
     "Eq. `\\eqref{eq:agg-decay-precise}`"
-  attackHistory := [
-    "Pre-audit (v0.1.0): classified `gapBlocked` citing calculus " ++
-    "infra absence.  R1 (2026-05-14) reclassified as " ++
-    "`workingAssumption` — Mathlib infra absence alone is NOT " ++
-    "BLOCKED.",
-    "R2 (2026-05-14) Phase 4 post-publication compliance audit: " ++
-    "reclassified to `phenomenologicalConjecture`.",
-    "R3 audit: reclassified back to `cat3PaperNovel " ++
-    "workingAssumption gapOpen`.  `phenomenologicalConjecture` " ++
-    "requires an EMPIRICAL / INTERPRETIVE resolution path; the " ++
-    "intermediate-regime elasticity-acceleration claim is a " ++
-    "MATHEMATICAL claim about the CES aggregator's " ++
-    "differentiability / share-weighted elasticity for " ++
-    "`σ_a ∈ (1, ∞)`, awaiting Mathlib calculus infrastructure — " ++
-    "not an empirical claim.  R3 added a typed `axiom " ++
-    "gap_aggregation_intermediate_regime_OPEN` (Aggregation.lean) " ++
-    "with abstract `aggElasticity`.",
-    "R4 audit: converted from `axiom` to `def : Prop` — the R3 " ++
-    "axiom form was `False`-injectable (R4 hostile-audit machine-" ++
-    "verification: free `aggElasticity` quantified with no " ++
-    "constraint; `aggElasticity := fun x => -x` ⊢ `t ≤ -t - 1` ⊢ " ++
-    "`False`).  The R4 `def : Prop` added a constraining " ++
-    "hypothesis predicate `IsAggregateElasticity`.",
-    "R5 audit: the R4 `def : Prop` was found TAUTOLOGICAL — the " ++
-    "constraining predicate `IsAggregateElasticity aggElasticity " ++
-    "sigma_a thetaStarOrd` was defined to be EXACTLY the " ++
-    "conclusion the proposition asserts, so " ++
-    "`gap_aggregation_intermediate_regime_OPEN` reduced to " ++
-    "`∀ aggElasticity ..., P → P`, provable by `fun _ h => h`; " ++
-    "the paper's substantive claim was not actually formalized.",
-    "R6 audit: removed the Lean declaration entirely — both the " ++
-    "`def gap_aggregation_intermediate_regime_OPEN : Prop` and the " ++
-    "constraining `def IsAggregateElasticity` are deleted from " ++
-    "Aggregation.lean.  The claim is now tracked as a Ledger-only " ++
-    "`gapOpen` `GapEntry`.  Encoding any of {`axiom`, `def : Prop` " ++
-    "with a conclusion-equalling constraining predicate} is an " ++
-    "anti-pattern; honest tracking via this Ledger `GapEntry` is " ++
-    "the correct encoding for a paper claim that requires out-of-" ++
-    "scope Mathlib calculus infrastructure to even STATE " ++
-    "faithfully.  Cat 3 reductionism (≥2 rounds): Round 1 Cat 1? " ++
-    "NO — Mathlib has no named CES-aggregate-elasticity primitive, " ++
-    "and the share-weighted elasticity `-∂ log Y_agg/∂ log(1-θ)` " ++
-    "cannot be stated without calculus infrastructure that is out " ++
-    "of scope.  Round 2 Cat 2? NO — the share-weighted aggregate " ++
-    "output elasticity of Eq. `\\eqref{eq:agg-decay-precise}` for " ++
-    "`σ_a ∈ (1, ∞)` is paper `\\label{thm:aggregation}`-specific, " ++
-    "not an external published theorem.  Stands as " ++
-    "`cat3PaperNovel workingAssumption`.",
-    "R8 audit: reclassified `cat3PaperNovel workingAssumption` → " ++
-    "`notInput notCat3`.  The intermediate-regime elasticity-" ++
-    "acceleration claim is a paper-PROVEN mathematical result " ++
-    "about the CES aggregator's share-weighted elasticity, not a " ++
-    "Cat 3 paper-novel ATOM — it is an un-formalized DERIVED " ++
-    "result whose Lean derivation is deferred for want of out-of-" ++
-    "scope Mathlib calculus infrastructure.  An atomic Cat 3 input " ++
-    "is a primitive type / hypothesisPredicate / structural " ++
-    "defining equation the formalization builds ON; this is a " ++
-    "higher-level claim built FROM the profession primitives, " ++
-    "hence `notInput` / `notCat3`."
-  ]
+  attackHistory := []
   scope :=
     "For `σ_a ∈ (1, ∞)`, aggregate elasticity is non-decreasing " ++
     "across each transition `θ*_(k)`.  Paper-proven mathematical " ++
@@ -1967,81 +1308,7 @@ def gap_prop_adjustment_narrative_OPEN : GapEntry := {
     "enumerate item 3, the substantive non-codifiability conjunct " ++
     "distinct from the closed-form career-extension and " ++
     "threshold-reduction margins)"
-  attackHistory := [
-    "Pre-audit (v0.1.0): classified `gapBlocked` as economic " ++
-    "narrative.  R1 (2026-05-14) reclassified as " ++
-    "`workingAssumption`.",
-    "R2 (2026-05-14) Phase 4 post-publication compliance audit: " ++
-    "`workingAssumption` must close before publication; paper is " ++
-    "published.  Reclassified as `phenomenologicalConjecture`: the " ++
-    "paper's published claims about the threshold-reduction floor " ++
-    "`τ*_min` and the endogenous-AI-verification residual " ++
-    "`δ(θ) < 1` are substantive claims about profession-specific " ++
-    "tacit-knowledge floors awaiting empirical / interpretive " ++
-    "validation.",
-    "R3 audit: classification KEPT `phenomenologicalConjecture`.  " ++
-    "R3 added a typed `axiom gap_prop_adjustment_narrative_OPEN` " ++
-    "(Aggregation.lean) bundling threshold-reduction floor " ++
-    "`θ* < 1 - τ*_min/T_j` and endogenous-AI residual `δ(θ) < 1`.",
-    "R4 audit: converted from `axiom` to `def : Prop` AND " ++
-    "decomposed.  The R3 axiom form was `False`-injectable (R4 " ++
-    "hostile-audit machine-verification: free `delta` quantified " ++
-    "with no constraint in the conjunct `delta θ < 1`; " ++
-    "`delta := fun _ => 2` ⊢ `2 < 1` ⊢ `False`).  DECOMPOSITION: " ++
-    "the first conjunct `E.thetaStar < 1 - tauStarMin/E.Tj` is " ++
-    "DERIVABLE from `0 < tauStarMin < E.tauStar` and `0 < E.Tj` — " ++
-    "it is split out as the real `theorem " ++
-    "prop_adjustment_threshold_reduction_floor` (`gapClosed`, see " ++
-    "`gap_prop_adjustment_threshold_reduction_CLOSED`).  The " ++
-    "genuinely-deferred `delta θ < 1` conjunct was kept as the R4 " ++
-    "`def : Prop` with a constraining hypothesis predicate " ++
-    "`IsResidualSubstitutability`.",
-    "R5 audit: the R4 `def : Prop` was found TAUTOLOGICAL — the " ++
-    "constraining predicate `IsResidualSubstitutability delta` " ++
-    "(`∀ θ, delta θ < 1`) was defined to be EXACTLY the conclusion " ++
-    "the proposition asserts, so `gap_prop_adjustment_narrative_OPEN` " ++
-    "reduced to `∀ delta, P delta → P delta`, provable by " ++
-    "`fun _ h => h`; the paper's substantive claim was not " ++
-    "actually formalized.",
-    "R6 audit: removed the Lean declaration entirely — both the " ++
-    "`def gap_prop_adjustment_narrative_OPEN : Prop` and the " ++
-    "constraining `def IsResidualSubstitutability` are deleted " ++
-    "from Aggregation.lean.  The claim is now tracked as a Ledger-" ++
-    "only `gapOpen` `phenomenologicalConjecture` `GapEntry`.  " ++
-    "Encoding any of {`axiom`, `def : Prop` with a conclusion-" ++
-    "equalling constraining predicate} is an anti-pattern; honest " ++
-    "tracking via this Ledger `GapEntry` is the correct encoding " ++
-    "for a substantive empirical claim whose faithful resolution " ++
-    "is a cohort study, not a Lean derivation.  Cat 3 reductionism " ++
-    "(≥2 rounds): Round 1 Cat 1? NO — Mathlib has no named " ++
-    "residual-substitutability primitive, and the claim is a " ++
-    "substantive assertion about real-world AI substitution " ++
-    "rates, not a Mathlib-derivable mathematical fact.  Round 2 " ++
-    "Cat 2? NO — the endogenous-AI-verification residual " ++
-    "substitution-rate `δ(θ)` and its uniform bound `δ(θ) < 1` " ++
-    "(grounded in the non-codifiable verification residual of " ++
-    "`\\label{def:verification}`) is paper " ++
-    "`\\label{prop:adjustment-margins}`-specific, not an external " ++
-    "published theorem.  Stands as `cat3PaperNovel " ++
-    "phenomenologicalConjecture` — distinct from the three " ++
-    "deferred-claim entries reclassified to `notInput notCat3` " ++
-    "because its resolution path is empirical (cohort-study " ++
-    "evidence) rather than a deferred Mathlib derivation, and a " ++
-    "phenomenological conjecture about a real-world phenomenon IS " ++
-    "a Cat 3 paper-novel claim per spec §3.4.6.",
-    "R8 audit: classification reviewed and KEPT `cat3PaperNovel " ++
-    "phenomenologicalConjecture`.  The other three deferred-claim " ++
-    "entries (window invariance; sequential kinks; intermediate " ++
-    "regime) are paper-proven MATHEMATICAL results with a deferred " ++
-    "Mathlib-derivation resolution path, so they were reclassified " ++
-    "to `notInput notCat3`.  This entry is different: the `δ(θ) < " ++
-    "1` bound is a SUBSTANTIVE EMPIRICAL claim about the Polanyi " ++
-    "verification residual (`\\label{def:verification}`), with a " ++
-    "cohort-study / Cohen's-κ resolution path (`\\label{rem:" ++
-    "residual-proxy}`) — per spec §3.4.6 a phenomenological " ++
-    "conjecture is a genuine Cat 3 paper-novel claim, so the " ++
-    "`cat3PaperNovel phenomenologicalConjecture` tagging stands."
-  ]
+  attackHistory := []
   scope :=
     "Endogenous-AI-verification residual bound `δ(θ) < 1` " ++
     "uniformly — the non-codifiable verification residual " ++
@@ -2088,18 +1355,7 @@ def gap_prop_adjustment_threshold_reduction_CLOSED : GapEntry := {
   paperSource :=
     "Li 2026, `\\label{prop:adjustment-margins}` (narrative, " ++
     "clause (i) threshold-reduction floor)"
-  attackHistory := [
-    "R4 audit: added.  Agents K + L noted that the first conjunct " ++
-    "of the former `gap_prop_adjustment_narrative_OPEN` axiom — " ++
-    "`E.thetaStar < 1 - tauStarMin/E.Tj` — is DERIVABLE from the " ++
-    "hypotheses `0 < tauStarMin < E.tauStar` and `0 < E.Tj` and " ++
-    "should not be axiomatized.  Split out and proved as the real " ++
-    "`theorem prop_adjustment_threshold_reduction_floor` " ++
-    "(Aggregation.lean): `unfold thetaStar` reduces the goal to " ++
-    "`τ*_min/T_j < τ*/T_j`, discharged by `div_lt_div_of_pos_right` " ++
-    "+ `linarith`.  Derived `theorem` composing Mathlib arithmetic, " ++
-    "so `inputCategory := notInput`, `cat3SubType := notCat3`."
-  ]
+  attackHistory := []
   scope :=
     "Derived theorem (`notInput`).  For a profession-specific " ++
     "threshold-reduction floor `τ*_min ∈ (0, τ*)`, the floored " ++
@@ -2125,37 +1381,7 @@ def gap_cor_quant_predictions_CLOSED : GapEntry := {
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{cor:quant-predictions}`"
-  attackHistory := [
-    "Pre-audit (v0.1.0): classified `gapBlocked` as auxiliary " ++
-    "numerical content. R1 (2026-05-14) reclassified to " ++
-    "`cat1Mathlib gapOpen` — the numerical predictions are direct " ++
-    "`norm_num`-substitution into the already-closed closed forms " ++
-    "`θ* = 1 - τ*/T_j` and `s* = (1-η) Y Λ/(ν T_s)`.",
-    "R3 audit: reclassified to `cat3PaperNovel workingAssumption " ++
-    "gapOpen`; added a typed `axiom gap_cor_quant_predictions_OPEN` " ++
-    "(Collapse.lean) faithfully encoding the Corollary's three " ++
-    "collapse thresholds (`θ*_rad = 0.20`, `θ*_law = 0.29`, " ++
-    "`θ*_SE = 0.40`).",
-    "R4 audit: converted from `axiom` to `theorem`.  Agent J " ++
-    "machine-verified that the axiom's conclusion follows from its " ++
-    "own hypotheses by `rw` + `norm_num` WITHOUT the axiom — the " ++
-    "axiom was redundant.  The derived `theorem` was proved " ++
-    "`refine ⟨?_, ?_, ?_⟩ <;> (rw [h_...]; norm_num)`.  " ++
-    "Reclassified: `status := gapClosed`, `inputCategory := " ++
-    "notInput` (derived theorem composing `norm_num` / Mathlib " ++
-    "arithmetic), `cat3SubType := notCat3`.  The R4 `theorem` " ++
-    "retained the legacy identifier `gap_cor_quant_predictions_OPEN`.",
-    "R6 audit: renamed the underlying Collapse.lean `theorem` from " ++
-    "`gap_cor_quant_predictions_OPEN` to a status-suffixed " ++
-    "identifier — the `_OPEN` suffix was stale (the entry is " ++
-    "`gapClosed`, a derived `theorem`, not an open gap).",
-    "R8 audit: renamed the underlying Collapse.lean `theorem` to " ++
-    "the clean mathematical identifier `cor_quant_predictions_" ++
-    "calibration` — a ledger-bookkeeping-style name (`gap_..._" ++
-    "CLOSED`) is not an appropriate identifier for a Lean theorem.  " ++
-    "The `GapEntry.name` field and the AxiomAudit.lean `#print " ++
-    "axioms` reference were updated to match."
-  ]
+  attackHistory := []
   scope :=
     "Derived theorem (`notInput`).  Numerical predictions " ++
     "(θ*_rad = 0.20, θ*_law = 0.29, θ*_SE = 0.40).  The Lean " ++
@@ -2208,26 +1434,7 @@ def gap_Economy_carrier : GapEntry := {
   cat3SubType := Cat3SubType.carrier
   paperSource := "Li 2026, `\\label{def:gve}` " ++
     "(Generation-Verification production economy)"
-  attackHistory := [
-    "R1 (2026-05-14) Cat 3 reductionism review: " ++
-    "Round 1 Cat 1? NO (paper-novel structure, not Mathlib-defined). " ++
-    "Round 2 Cat 2? NO (paper-original packaging, not external).",
-    "R4 audit: corrected the `paperSource` tuple description.  The " ++
-    "paper `\\label{def:gve}` introduces the economy as the tuple " ++
-    "`(F, G, V, θ, K_AI, λ, ν, T, T_j, τ*, h)`; the Lean `Economy` " ++
-    "structure is NOT a literal transcription of that tuple.  It " ++
-    "carries 9 scalar fields — `LG`, `KAI`, `lam`, `nu`, `T`, `Tj`, " ++
-    "`tauStar`, `eta`, `rho` — plus the paper's positivity / range " ++
-    "constraints as proof fields; the production function `F` is " ++
-    "FIXED to the CES form (paper Eq. `\\eqref{eq:ces}`, parametric " ++
-    "in `(η, ρ, λ)`) rather than carried as a field, `G`/`V` are " ++
-    "θ-parametrized derived quantities (`def G`, the verification " ++
-    "stock `Vinf`), `θ` ranges as a free argument, and `h` is " ++
-    "passed as an explicit function argument to `Vinf`.  Prior " ++
-    "`paperSource` claimed a \"10-tuple\" — a count matching " ++
-    "neither the paper's 11-element tuple nor the Lean structure's " ++
-    "9 scalar fields; the bare count is dropped."
-  ]
+  attackHistory := []
   scope := "Paper's primitive economy structure (`\\label{def:gve}`).  " ++
     "The Lean `Economy` structure carries 9 scalar fields " ++
     "`(L_G, K_AI, λ, ν, T, T_j, τ*, η, ρ)` plus positivity / range " ++
@@ -2245,29 +1452,7 @@ def gap_IsCRS_predicate : GapEntry := {
   inputCategory := InputCategory.cat3PaperNovel
   cat3SubType := Cat3SubType.hypothesisPredicate
   paperSource := "Li 2026, `\\label{thm:decomp}` (CRS hypothesis)"
-  attackHistory := [
-    "Audit (2026-05-14) introduced this predicate as the Cat 3 " ++
-    "hypothesisPredicate antecedent of `axiom_euler_crs` to close " ++
-    "soundness gap (previously axiom universally quantified over " ++
-    "any `F`).",
-    "Phase 0 hostile reductionism: Round 1 Cat 1? NO — Mathlib has " ++
-    "no `IsHomogeneousOfDegreeOne` predicate primitive for binary " ++
-    "real-valued functions; the closest concept is positively " ++
-    "homogeneous on normed vector spaces (`IsPosHom`), but the " ++
-    "paper's `F : ℝ → ℝ → ℝ` shape with `0 < t` factor scaling has " ++
-    "no direct Mathlib match.  Round 2 Cat 2? Constant-returns-to-" ++
-    "scale is from classical microeconomics (Euler 1755 homogeneous-" ++
-    "function theorem) — could be encoded as a Cat 2 def. " ++
-    "CLASSIFIED Cat 3 paper-novel hypothesisPredicate because: " ++
-    "(i) the predicate is the paper's stipulated shape constraint " ++
-    "on the production function `F` that anchors the Euler-identity " ++
-    "decomposition argument; (ii) typing `IsCRS F` ties `F` to the " ++
-    "paper's parameter binding in `axiom_euler_crs`, not to a free-" ++
-    "floating Euler 1755 form.  The predicate as a paper-stipulated " ++
-    "shape-predicate is the paper-novel content; the underlying " ++
-    "Euler-identity argument (which IS Euler 1755) lives in " ++
-    "`axiom_euler_crs` as Cat 2."
-  ]
+  attackHistory := []
   scope := "Predicate `IsCRS F : Prop := ∀ t G V, 0 < t → " ++
     "F (t * G) (t * V) = t * F G V`. Constant-returns-to-scale " ++
     "hypothesis on production function `F : ℝ → ℝ → ℝ`. " ++
@@ -2291,29 +1476,7 @@ def gap_IsCobbDouglas_predicate : GapEntry := {
   inputCategory := InputCategory.cat3PaperNovel
   cat3SubType := Cat3SubType.hypothesisPredicate
   paperSource := "Li 2026, `\\label{thm:credential}` (CD regime)"
-  attackHistory := [
-    "Audit (2026-05-14) introduced this predicate as the Cat 3 " ++
-    "hypothesisPredicate antecedent of " ++
-    "`axiom_cobb_douglas_factor_share` to close soundness gap.",
-    "Phase 0 hostile reductionism: Round 1 Cat 1? NO — Mathlib has " ++
-    "`Real.rpow` infrastructure but no `IsCobbDouglas` predicate " ++
-    "primitive; predicate of shape `F G V = G^η · (λV)^(1-η)` is " ++
-    "not a Mathlib-named concept.  Round 2 Cat 2? Cobb-Douglas form " ++
-    "is from Cobb-Douglas 1928 (*American Economic Review* 18, " ++
-    "139-165); could be encoded as a Cat 2 def referencing that " ++
-    "paper.  CLASSIFIED Cat 3 paper-novel hypothesisPredicate " ++
-    "because: (i) the predicate is named and used by Li 2026 " ++
-    "specifically as the shape antecedent of `axiom_cobb_douglas_" ++
-    "factor_share`; (ii) the shape is parametric in `(η, λ)` which " ++
-    "are Li 2026's specific parameters threaded through the " ++
-    "downstream paper-novel cohort accounting; (iii) typing " ++
-    "`IsCobbDouglas F η lam` ties `F` to the paper's parameter " ++
-    "binding, not to a free-floating Cobb-Douglas 1928 form.  Re-" ++
-    "classification to Cat 2 would require dropping the `(η, λ)` " ++
-    "parameters from the predicate, which would lose the paper's " ++
-    "binding to the Economy parameters.  The predicate as a paper-" ++
-    "stipulated shape-predicate is the paper-novel content."
-  ]
+  attackHistory := []
   scope := "Predicate `IsCobbDouglas F η lam := ∀ G V, 0 < G → " ++
     "0 < V → F G V = G^η · (lam · V)^(1-η)`. Cobb-Douglas shape " ++
     "hypothesis. Definitional atom; 永不 close."
@@ -2327,28 +1490,7 @@ def gap_IsCES_predicate : GapEntry := {
   inputCategory := InputCategory.cat3PaperNovel
   cat3SubType := Cat3SubType.hypothesisPredicate
   paperSource := "Li 2026, Eq. `\\eqref{eq:ces}`"
-  attackHistory := [
-    "Audit (2026-05-14) introduced this predicate as the Cat 3 " ++
-    "hypothesisPredicate antecedent of `axiom_ces_wage_ratio` to " ++
-    "close soundness gap.",
-    "Phase 0 hostile reductionism: Round 1 Cat 1? NO — Mathlib " ++
-    "lacks a CES-form predicate primitive (`Real.rpow` exists but " ++
-    "no named CES typing).  Round 2 Cat 2? CES form is from Arrow, " ++
-    "Chenery, Minhas, Solow 1961 (*Review of Economics and " ++
-    "Statistics* 43, 225-250, the original CES production function " ++
-    "paper); could be encoded as a Cat 2 def referencing ACMS 1961.  " ++
-    "CLASSIFIED Cat 3 paper-novel hypothesisPredicate because: " ++
-    "(i) the predicate is named and used by Li 2026 specifically " ++
-    "as the shape antecedent of `axiom_ces_wage_ratio`; (ii) the " ++
-    "shape is parametric in `(η, ρ, λ)` which are Li 2026's specific " ++
-    "parameters bound to the Economy `(eta, rho, lam)` fields; " ++
-    "(iii) typing `IsCES F η rho lam` ties `F` to the paper's " ++
-    "parameter binding, not to a free-floating ACMS 1961 form.  " ++
-    "Re-classification to Cat 2 would require dropping the `(η, ρ, " ++
-    "λ)` parameters from the predicate, losing the paper's binding " ++
-    "to the Economy parameters.  The predicate as a paper-stipulated " ++
-    "shape-predicate is the paper-novel content."
-  ]
+  attackHistory := []
   scope := "Predicate `IsCES F η rho lam := ∀ G V, 0 < G → 0 < V → " ++
     "F G V = (η · G^ρ + (1-η) · (lam · V)^ρ)^(1/ρ)`. CES shape " ++
     "hypothesis. Definitional atom; 永不 close."
@@ -2368,9 +1510,7 @@ def gap_IsCES_predicate : GapEntry := {
   a `structuralEquation` Cat 3 atom is an OPAQUE primitive carrying
   a STATED defining axiom (e.g. `V_dyn` opaque + `axiom V_dyn_def`);
   a concrete `def` is settled definitional NOTATION, neither a "gap"
-  nor an "input atom".  (Per-entry attack history of this
-  reclassification lives in the `attackHistory` fields of the
-  affected parent theorem entries.)
+  nor an "input atom".
 
   These closed-form `def`s are therefore NOT tracked as standalone
   Ledger entries.  Each is definitional infrastructure built FROM
@@ -2453,24 +1593,7 @@ def gap_thm_externality_residual_identity_CLOSED : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:externality}` " ++
     "(residual identity)"
-  attackHistory := [
-    "R3 audit: added dedicated Ledger entry and classified as " ++
-    "Cat 3 `gapDefinitional structuralEquation`, on the reasoning " ++
-    "that `MPsoc` is paper-DEFINED as `MPpriv + wV·gE·hE·Λ` so the " ++
-    "residual identity was paper-stipulative structural content.",
-    "R4 audit: reclassified `gapDefinitional structuralEquation " ++
-    "cat3PaperNovel` → `gapClosed notInput notCat3`.  The Lean " ++
-    "theorem `thm_externality_residual_identity` " ++
-    "(`MP_J^S - MP_J^P = externalityResidual`) is a DERIVED " ++
-    "theorem proved by `unfold MPsoc MPpriv externalityResidual; " ++
-    "ring` — it composes the concrete `MPsoc` / `MPpriv` / " ++
-    "`externalityResidual` `def`s (themselves definitional " ++
-    "infrastructure, no longer standalone Cat 3 atoms after the " ++
-    "R4 Cat 3 ratio guard) via Mathlib `ring`.  Per spec §0 a " ++
-    "derived theorem composing Mathlib lemmas is `notInput` / " ++
-    "`notCat3` / `gapClosed`, not a Cat 3 definitional atom.  " ++
-    "Parallel to the R4 treatment of `prop_internalization`."
-  ]
+  attackHistory := []
   scope := "Derived theorem (`notInput`).  Identity " ++
     "`MPsoc wG wV gE hE Lambda θ - MPpriv wG θ = " ++
     "externalityResidual wV gE hE Lambda`.  Proved by `unfold " ++
@@ -2491,43 +1614,7 @@ def gap_V2_TacitAccumulation_predicate : GapEntry := {
   inputCategory := InputCategory.cat3PaperNovel
   cat3SubType := Cat3SubType.hypothesisPredicate
   paperSource := "Li 2026, `\\label{def:diagnostic}` (V2 condition)"
-  attackHistory := [
-    "Cat 3 reductionism: Round 1 Cat 1? NO — Mathlib has " ++
-    "`Monotone` and equality-at-zero but no named `V2_TacitAccumulation` " ++
-    "predicate.  Round 2 Cat 2? NO — paper's specific V2 condition " ++
-    "naming (Li 2026 `def:diagnostic`).",
-    "R2 (2026-05-14) added Ledger entry; at that round the " ++
-    "predicate had no downstream Lean consumer.  Documented as " ++
-    "paper's V2 predicate (h(0) = 0 ∧ Monotone h); V1/V3 are " ++
-    "absorbed into the carrier types `Vinf` and `eBar` per " ++
-    "def:diagnostic structural reformulation; V2 remains a " ++
-    "constraint on the apprenticeship technology `h`.",
-    "R14 (2026-05-15) Phase 4 phantom-downstream patch: fresh " ++
-    "audit flagged the Cat 3 hypothesisPredicate semantics " ++
-    "tension — spec §3.4.2 says hypothesisPredicates are 'used as " ++
-    "antecedent in downstream theorems', but the V2 predicate had " ++
-    "no Lean consumer (only paper-section anchoring).  Resolution: " ++
-    "added the consuming theorem " ++
-    "`Vinf_zero_at_theta_one_under_V2` (Basic.lean) — under V2, " ++
-    "`V_∞(θ=1, g, h) = 0` because `eBar 1 = 0` and " ++
-    "`V2.h_zero_at_zero : h 0 = 0`.  This is paper-meaningful: at " ++
-    "full AI substitution junior experience drops to zero, and " ++
-    "V2's tacit-accumulation requirement forces accumulated " ++
-    "verification capability also to zero.  V2 is now genuinely " ++
-    "Lean-load-bearing, verifiable by `#print axioms " ++
-    "Vinf_zero_at_theta_one_under_V2`.",
-    "R16 (2026-05-15) Phase 4 field-consumption audit: fresh " ++
-    "audit observed that R14's consumer used only the " ++
-    "`h_zero_at_zero` field; the `h_monotone` field remained " ++
-    "declared-but-unconsumed.  Resolution: added a second " ++
-    "consuming theorem `h_eBar_nonneg_under_V2` (Basic.lean) " ++
-    "that consumes `h_monotone` (and `h_zero_at_zero` as a " ++
-    "secondary): for `θ ≤ 1`, `ē(θ) ≥ 0`, so `h_monotone` gives " ++
-    "`h(0) ≤ h(ē(θ))`, and `h_zero_at_zero` rewrites `h(0) = 0` " ++
-    "to deliver `0 ≤ h(ē(θ))`.  Both V2 fields are now " ++
-    "independently Lean-load-bearing, verifiable by " ++
-    "`#print axioms` on each consumer."
-  ]
+  attackHistory := []
   scope := "Predicate `V2_TacitAccumulation h : Prop` with fields " ++
     "`h_zero_at_zero : h 0 = 0` and `h_monotone : Monotone h`.  " ++
     "Encodes paper's `def:diagnostic` V2 condition. Definitional " ++
@@ -2697,8 +1784,7 @@ def gapCrossTable : List (GapStatus × InputCategory × Nat) :=
     integer (× 1000, rounded down).  The denominator is the count of
     genuine atomic-input entries (Cat 1 + Cat 2 + Cat 3); `notInput`
     derived theorems and `notInput` deferred-derived-result entries
-    are excluded since they are not atomic inputs.  The spec flags
-    a ratio above 500‰ for a ≥2-round hostile reduction.
+    are excluded since they are not atomic inputs.
 
     This project's ratio is genuinely high: the atomic-input layer
     is dominated by the paper-novel `Economy` carrier + the four
