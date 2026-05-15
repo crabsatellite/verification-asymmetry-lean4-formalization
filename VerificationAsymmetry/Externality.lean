@@ -43,14 +43,17 @@
   `K_AI ≥ L_G`, `ρ ≤ 0` ∨ `ρ ∈ (0, 1/a)`).  The unbounded-as-θ→1
   claim is a limit statement we record as a parametric inequality.
 
-  ## Audit note (post-audit 2026-05)
+  ## Cat 2 axiom dependency note
 
   The composite Cobb-Douglas-factor-share + steady-state-stock
-  identity used in Part 3 (Pigouvian subsidy formula) was formerly
-  carried as a *hypothesis* of `thm_externality_pigouvian_cobb_douglas`.
-  An axiom-discharged form `_from_axioms` is now provided alongside,
-  using `axiom_cobb_douglas_factor_share` (Cat 2) + the definitional
-  unfolding of `Vinf`.
+  identity used in Part 3 (Pigouvian subsidy formula) is reduced to
+  the Cat 2 axiom `axiom_cobb_douglas_factor_share` in the
+  `_from_axioms` companion theorems, routed through
+  `cobb_douglas_steady_state_identity_from_axiom` (Axioms.lean).
+  The parametric form (`thm_externality_pigouvian_cobb_douglas`)
+  carries the composite identity as a hypothesis; the `_from_axioms`
+  form discharges it via the Cat 2 axiom (verifiable by
+  `#print axioms thm_externality_pigouvian_cobb_douglas_from_axioms`).
 -/
 
 import VerificationAsymmetry.Basic
@@ -90,22 +93,24 @@ lemma Lambda_pos {r : ℝ} (hr : 0 < r) : 0 < E.Lambda r := by
 /-- *Private marginal product of a junior* at rate `θ`:
     `MP_J^P(θ) = (1-θ) w_G(θ)`.
 
-    *Implementation note.*  Bound to `_E : Economy` so that Lean
-    auto-namespaces the def into `Economy.MPpriv : Economy → ℝ → ℝ → ℝ`,
-    enabling dot-notation `E.MPpriv` uniformly with `E.G`, `E.eBar`,
-    etc.  The `_E` parameter is unused in the body (the private
-    marginal product is `Economy`-independent in this paper). -/
-def MPpriv (_E : Economy) (wG θ : ℝ) : ℝ := (1 - θ) * wG
+    Economy-independent definition: takes `wG` as an external
+    parameter rather than threading through Economy fields, since
+    the marginal-product wage is determined by the underlying CES
+    production function and the paper's narrative treats it as a
+    given by the time MP_J^P enters the externality calculation.
+    Downstream call sites use the bare `MPpriv` (no dot-notation). -/
+def MPpriv (wG θ : ℝ) : ℝ := (1 - θ) * wG
 
 /-- *Social marginal product of a junior* at rate `θ`:
     `MP_J^S(θ) = MP_J^P(θ) + w_V g(ē) h(ē) Λ`. -/
 def MPsoc (wG wV gE hE Lambda θ : ℝ) : ℝ :=
-  E.MPpriv wG θ + wV * gE * hE * Lambda
+  MPpriv wG θ + wV * gE * hE * Lambda
 
 /-- *Externality residual* `s*(θ) := MP_J^S - MP_J^P =
-    w_V g(ē) h(ē) Λ`.  Stored with explicit `Economy` parameter to
-    enable `E.externalityResidual` dot-notation. -/
-def externalityResidual (_E : Economy) (wV gE hE Lambda : ℝ) : ℝ :=
+    w_V g(ē) h(ē) Λ`.  Economy-independent definition: takes
+    the relevant marginal products and tacit-technology values as
+    external parameters, matching the paper's narrative treatment. -/
+def externalityResidual (wV gE hE Lambda : ℝ) : ℝ :=
   wV * gE * hE * Lambda
 
 /-! ### Theorem~\ref{thm:externality} — algebraic identities. -/
@@ -115,8 +120,8 @@ def externalityResidual (_E : Economy) (wV gE hE Lambda : ℝ) : ℝ :=
     `w_V g(ē) h(ē) Λ`. -/
 theorem thm_externality_residual_identity
     (wG wV gE hE Lambda θ : ℝ) :
-    E.MPsoc wG wV gE hE Lambda θ - E.MPpriv wG θ
-      = E.externalityResidual wV gE hE Lambda := by
+    MPsoc wG wV gE hE Lambda θ - MPpriv wG θ
+      = externalityResidual wV gE hE Lambda := by
   unfold MPsoc MPpriv externalityResidual
   ring
 
@@ -126,7 +131,7 @@ theorem thm_externality_residual_identity
 theorem thm_externality_residual_nonneg
     (wV gE hE Lambda : ℝ) (hwV : 0 ≤ wV) (hgE : 0 ≤ gE)
     (hhE : 0 ≤ hE) (hLambda : 0 ≤ Lambda) :
-    0 ≤ E.externalityResidual wV gE hE Lambda := by
+    0 ≤ externalityResidual wV gE hE Lambda := by
   unfold externalityResidual
   have h1 : 0 ≤ wV * gE := mul_nonneg hwV hgE
   have h2 : 0 ≤ wV * gE * hE := mul_nonneg h1 hhE
@@ -138,7 +143,7 @@ theorem thm_externality_residual_nonneg
 theorem thm_externality_residual_pos
     (wV gE hE Lambda : ℝ) (hwV : 0 < wV) (hgh : 0 < gE * hE)
     (hLambda : 0 < Lambda) :
-    0 < E.externalityResidual wV gE hE Lambda := by
+    0 < externalityResidual wV gE hE Lambda := by
   unfold externalityResidual
   have : 0 < wV * (gE * hE) := mul_pos hwV hgh
   have h_eq : wV * gE * hE = wV * (gE * hE) := by ring
@@ -150,14 +155,14 @@ theorem thm_externality_residual_pos
 /-- *Apprenticeship wedge* `W_E(θ) := (MP_J^S - MP_J^P)/MP_J^P`,
     paper Eq.~\eqref{eq:wedge}. -/
 noncomputable def wedge (wG wV gE hE Lambda θ : ℝ) : ℝ :=
-  E.externalityResidual wV gE hE Lambda / E.MPpriv wG θ
+  externalityResidual wV gE hE Lambda / MPpriv wG θ
 
 /-- **Theorem~\ref{thm:externality} (wedge identity).** The
     wedge `W_E(θ)` rearranges to
     `(w_V/w_G) · g(ē) h(ē) Λ / (1-θ)`. -/
 theorem thm_externality_wedge_identity
     (wG wV gE hE Lambda θ : ℝ) (hwG : 0 < wG) (hθ_lt : θ < 1) :
-    E.wedge wG wV gE hE Lambda θ
+    wedge wG wV gE hE Lambda θ
       = (wV / wG) * (gE * hE * Lambda) / (1 - θ) := by
   unfold wedge externalityResidual MPpriv
   have h1mθ : 0 < 1 - θ := by linarith
@@ -187,7 +192,7 @@ noncomputable def pigouvianSubsidy_CD (Y Lambda : ℝ) : ℝ :=
 theorem thm_externality_pigouvian_cobb_douglas
     (Y wV gE hE Lambda : ℝ)
     (hY : (1 - E.eta) * Y = wV * (E.nu * E.Ts * gE * hE)) :
-    E.externalityResidual wV gE hE Lambda
+    externalityResidual wV gE hE Lambda
       = E.pigouvianSubsidy_CD Y Lambda := by
   unfold externalityResidual pigouvianSubsidy_CD
   have hnu : E.nu ≠ 0 := ne_of_gt E.nu_pos
@@ -203,36 +208,87 @@ theorem thm_externality_pigouvian_cobb_douglas
 /-- **Theorem~\ref{thm:externality} Part 3 — axiom-discharged form.**
     Same as `thm_externality_pigouvian_cobb_douglas` but with the
     composite Cobb-Douglas-factor-share + steady-state-stock identity
-    derived from `axiom_cobb_douglas_factor_share` (Cat 2) + the
-    `Vinf` definition. -/
+    discharged via `axiom_cobb_douglas_factor_share` (Cat 2,
+    MWG 1995 §5.B.2) routed through
+    `cobb_douglas_steady_state_identity_from_axiom`.
+
+    Verifiable by `#print axioms thm_externality_pigouvian_cobb_douglas_from_axioms`
+    which surfaces `axiom_cobb_douglas_factor_share`. -/
 theorem thm_externality_pigouvian_cobb_douglas_from_axioms
-    (Y wV Lambda : ℝ) (g h : ℝ → ℝ) (θ : ℝ) :
-    E.externalityResidual wV (g (E.eBar θ)) (h (E.eBar θ)) Lambda
+    (F : ℝ → ℝ → ℝ) (η lam G Y wV Lambda : ℝ) (g h : ℝ → ℝ) (θ : ℝ)
+    (hCD : IsCobbDouglas F η lam)
+    (h_wV : HasDerivAt (fun y => F G y) wV (E.Vinf θ g h))
+    (hY : Y = F G (E.Vinf θ g h))
+    (hG_pos : 0 < G) (hVinf_pos : 0 < E.Vinf θ g h)
+    (hη_pos : 0 < η) (hη_lt : η < 1)
+    (hlam_pos : 0 < lam)
+    (hEta : η = E.eta) :
+    externalityResidual wV (g (E.eBar θ)) (h (E.eBar θ)) Lambda
       = E.pigouvianSubsidy_CD Y Lambda :=
   E.thm_externality_pigouvian_cobb_douglas
     Y wV (g (E.eBar θ)) (h (E.eBar θ)) Lambda
-    (E.cobb_douglas_steady_state_identity Y wV g h θ)
+    (E.cobb_douglas_steady_state_identity_from_axiom
+      F η lam G Y wV g h θ hCD h_wV hY hG_pos hVinf_pos
+      hη_pos hη_lt hlam_pos hEta)
 
-/-! ### Proposition~\ref{prop:internalization}: within-firm internalization. -/
+/-! ### Proposition~\ref{prop:internalization}: within-firm internalization.
+
+  The paper's Proposition~\ref{prop:internalization} establishes
+  that internalizing fraction `ζ ∈ [0, 1]` of the future
+  verification rent rescales the paper's externality wedge `W_E(θ)`
+  by `(1-ζ)`.
+
+  The Lean encoding mirrors this by *defining* the internalized
+  wedge as `(1-ζ) · W_E(θ)`; `prop_internalization` is then the
+  definitional unfolding identifying the def with the unrolled
+  form `(1-ζ) · (residual / MP_priv)`.
+
+  *Substantive content.*  The substantive economic interpretation
+  of this proposition lives in the paper narrative around
+  `\label{prop:internalization}`: a fully-internalizing firm
+  (`ζ = 1`) faces zero effective externality wedge — captured
+  directly by the def, `internalizedWedge 1 ... = 0 · wedge ... = 0`
+  — and a partially-internalizing firm (`ζ < 1`) retains a strictly
+  positive residual wedge.  The Lean rfl is the algebraic identity
+  for the def, not the economic content. -/
+
+/-- *Internalized wedge.*  Definitional infrastructure: internalizing
+    fraction `ζ ∈ [0, 1]` of the future verification rent rescales
+    the effective externality wedge to `(1-ζ) · W_E(θ)` (paper
+    Proposition~\ref{prop:internalization}).  The
+    full-internalization corner `ζ = 1` yields zero effective wedge:
+    `internalizedWedge 1 ... = 0 · wedge ... = 0` directly from the
+    def.
+
+    A concrete `def` whose defining equation holds by `rfl` —
+    definitional notation built on `wedge`, not a standalone Cat 3
+    atom.  Documented under `gap_prop_internalization_CLOSED`
+    in `Ledger.lean`. -/
+noncomputable def internalizedWedge
+    (zeta wG wV gE hE Lambda θ : ℝ) : ℝ :=
+  (1 - zeta) * wedge wG wV gE hE Lambda θ
 
 /-- **Proposition~\ref{prop:internalization} (within-firm
-    internalization).** Internalizing fraction `ζ ∈ [0, 1]` of the
-    future verification rent reduces the effective wedge to
-    `(1-ζ) W_E(θ)`. -/
+    internalization — unfolding identity).** The internalized
+    wedge equals `(1 - ζ) · (residual / MP_priv)` — the
+    definitional unfolding of `internalizedWedge` against the
+    paper's wedge definition `W_E(θ) = residual / MP_priv`.
+
+    Derived definitional-unfolding identity: the paper derives the
+    internalized wedge as `(1-ζ) · W_E` in a one-line step, and the
+    Lean theorem is the `rfl` identification of the
+    `internalizedWedge` def composed with the `wedge` def with the
+    unrolled form `(1-ζ) · (residual / MP_priv)`.
+
+    See `gap_prop_internalization_CLOSED` in `Ledger.lean`
+    for the canonical record. -/
 theorem prop_internalization
     (zeta wG wV gE hE Lambda θ : ℝ) :
-    (1 - zeta) * E.externalityResidual wV gE hE Lambda / E.MPpriv wG θ
-      = (1 - zeta) * E.wedge wG wV gE hE Lambda θ := by
-  unfold wedge
-  rw [mul_div_assoc]
-
-/-- **Proposition~\ref{prop:internalization} (full internalization
-    eliminates externality).** For `ζ = 1`, the effective wedge is
-    zero. -/
-theorem prop_internalization_full
-    (wV gE hE Lambda : ℝ) :
-    (1 - (1 : ℝ)) * E.externalityResidual wV gE hE Lambda = 0 := by
-  ring
+    internalizedWedge zeta wG wV gE hE Lambda θ
+      = (1 - zeta) *
+          (externalityResidual wV gE hE Lambda / MPpriv wG θ) := by
+  unfold internalizedWedge wedge
+  rfl
 
 /-! ### Proposition~\ref{prop:decentralized-theta}: social vs. private. -/
 
@@ -272,7 +328,7 @@ theorem prop_decentralized_theta_overshoots
     (h_strict : wG theta_eq < wG theta_soc) :
     theta_soc < theta_eq := by
   by_contra hcon
-  push_neg at hcon
+  push Not at hcon
   rcases lt_or_eq_of_le hcon with hlt | heq
   · -- theta_eq < theta_soc would give wG theta_soc < wG theta_eq,
     -- contradicting h_strict.

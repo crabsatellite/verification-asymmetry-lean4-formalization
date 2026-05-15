@@ -90,12 +90,12 @@ lemma eBar_lt_tauStar_iff_theta_gt_thetaStar (θ : ℝ) :
   constructor
   · intro h
     by_contra hcon
-    push_neg at hcon
+    push Not at hcon
     have := (E.eBar_ge_tauStar_iff_theta_le_thetaStar θ).mpr hcon
     linarith
   · intro h
     by_contra hcon
-    push_neg at hcon
+    push Not at hcon
     have := (E.eBar_ge_tauStar_iff_theta_le_thetaStar θ).mp hcon
     linarith
 
@@ -143,13 +143,18 @@ theorem thm_collapse_jump_magnitude (a : ℝ) :
     ring
   rw [hBelow, heBar_eq]
 
-/-- **Theorem~\ref{thm:collapse} Part 2 (jump statement).** The
-    jump magnitude is exactly `ν T_s (τ*)^a`:
-    `V_∞(θ*) - lim_{θ ↘ θ*} V_∞(θ) = ν T_s (τ*)^a`.
+/-- **Theorem~\ref{thm:collapse} Part 2 (jump statement, discrete-
+    difference form).** For any `θ_above > θ*`, the difference
+    `V_∞(θ*) - V_∞(θ_above)` equals `ν T_s (τ*)^a`.
 
-    *Lean form:* the "right limit" is replaced by the value at any
-    `θ > θ*`, all of which equal zero (Part 3).  So the difference
-    is `V_∞(θ*) - 0 = V_∞(θ*) = ν T_s (τ*)^a`. -/
+    *Scope.* This is the discrete-difference form of the paper's
+    one-sided-limit claim `V_∞(θ*) - lim_{θ ↘ θ*} V_∞(θ) =
+    ν T_s (τ*)^a`.  Since `V_∞(θ_above) = 0` uniformly for every
+    `θ_above > θ*` (Part 3), the one-sided limit reduces to `0`,
+    and the discrete difference equals the limit difference.  The
+    continuous right-limit machinery is not invoked because the
+    paper claim follows directly from the uniform vanishing of
+    `V_∞` above `θ*`. -/
 theorem thm_collapse_jump_diff
     (a : ℝ) {θ_above : ℝ} (h : E.thetaStar < θ_above) :
     E.VinfHard a E.thetaStar - E.VinfHard a θ_above
@@ -191,9 +196,15 @@ theorem thm_collapse_transient_at_Ts (Vinf_init : ℝ) :
 
 /-- **Theorem~\ref{thm:collapse} Part 4 (transient decay is linear
     on `[0, T_s]`).** For `t ∈ [0, T_s]`, the transient stock is
-    `V_∞(θ₀) · (1 - t/T_s)`. -/
+    `V_∞(θ₀) · (1 - t/T_s)`.
+
+    The `_ht_nonneg` hypothesis (`0 ≤ t`) is carried for paper-
+    faithful signature parity (the paper states the linear regime
+    on `[0, T_s]`) but is `_`-prefixed: the `max`-branch evaluation
+    `max 0 (1 - t/T_s) = 1 - t/T_s` follows from `t ≤ T_s` alone
+    (which gives `1 - t/T_s ≥ 0`). -/
 theorem thm_collapse_transient_linear
-    (Vinf_init t : ℝ) (ht_nonneg : 0 ≤ t) (ht_le_Ts : t ≤ E.Ts) :
+    (Vinf_init t : ℝ) (_ht_nonneg : 0 ≤ t) (ht_le_Ts : t ≤ E.Ts) :
     E.transientStock Vinf_init t = Vinf_init * (1 - t / E.Ts) := by
   unfold transientStock
   have hTs_pos : 0 < E.Ts := E.Ts_pos
@@ -216,12 +227,20 @@ theorem thm_collapse_transient_zero_after_Ts
 
 /-! ### Theorem~\ref{thm:collapse} Part 5: lower bound generalization. -/
 
-/-- **Theorem~\ref{thm:collapse} Part 5 (general `h`).** For any
-    non-decreasing tacit technology `h` with `h(τ*) > 0` and the
-    hard promotion threshold, the jump at `θ*` has magnitude
-    exactly `ν T_s h(τ*)`. -/
-theorem thm_collapse_jump_general_h
-    (h : ℝ → ℝ) (_hh_at_tauStar : h E.tauStar ≥ 0) :
+/-- **Theorem~\ref{thm:collapse} Part 5 (general `h` value at θ*).**
+    For any tacit technology `h` (taken as an arbitrary `ℝ → ℝ`
+    function) and the hard promotion threshold, the steady-state
+    stock at the collapse threshold equals exactly `ν T_s h(τ*)`.
+
+    Combined with the uniform vanishing `V_∞ ≡ 0` above `θ*`
+    (`thm_collapse_above_threshold`), the jump magnitude at `θ*`
+    equals `ν T_s h(τ*)` for any `h`.  The lower-bound form of
+    Part 5 follows when `h(τ*) > 0` (monotone-`h` regime); the
+    Lean theorem captures the exact value identity, with the
+    sign/positivity of the jump traced from positivity of
+    `h(τ*)` separately by the consumer. -/
+theorem thm_collapse_value_at_thetaStar_general_h
+    (h : ℝ → ℝ) :
     E.Vinf E.thetaStar E.gHard h = E.nu * E.Ts * h E.tauStar := by
   unfold Vinf
   -- At θ = θ*, ē(θ*) = τ*; g_hard(τ*) = 1.
@@ -270,6 +289,43 @@ theorem prop_smooth_collapse_above
   -- The `if` branch evaluates to (eBar θ / τ*)^b since ē < τ*.
   have hbranch : ¬ (E.tauStar ≤ E.eBar θ) := not_le.mpr h'
   simp [hbranch]
+
+/-! ### Corollary~\ref{cor:quant-predictions}: numerical calibration.
+
+  The paper's Corollary~\ref{cor:quant-predictions} reports numerical
+  collapse thresholds (radiology `θ* = 0.20`, legal practice
+  `θ* = 0.29`, software engineering `θ* = 0.40`) obtained by
+  substituting the calibration parameters of
+  Tables~\ref{tab:calibration-thresholds}--\ref{tab:calibration-pigouvian}
+  into the already-closed closed form `θ* = 1 - τ*/T_j`.
+
+  This is direct numerical substitution into an already-closed
+  closed form: given the calibrated `τ*/T_j` ratios, the collapse
+  thresholds follow by `rw` + `norm_num`.  Encoded below as a
+  derived `theorem`. -/
+
+/-- **Corollary~\ref{cor:quant-predictions} (numerical calibration).**
+    Paper `\label{cor:quant-predictions}`: under the calibration
+    `τ*/T_j` ratios of Table~\ref{tab:calibration-thresholds}
+    (radiology `0.80`, legal practice `0.71`, software engineering
+    `0.60`), the closed form `θ* = 1 - τ*/T_j` yields the collapse
+    thresholds `θ*_rad = 0.20`, `θ*_law = 0.29`, `θ*_SE = 0.40`.
+
+    Derived `theorem` (`notInput`): direct numerical substitution
+    into the already-closed closed form `θ* = 1 - τ*/T_j`, closed by
+    `rw` of the calibration hypotheses followed by `norm_num`. -/
+theorem cor_quant_predictions_calibration
+    (tauStarRad TjRad tauStarLaw TjLaw tauStarSE TjSE : ℝ)
+    (h_rad : tauStarRad / TjRad = 0.80)
+    (h_law : tauStarLaw / TjLaw = 0.71)
+    (h_se : tauStarSE / TjSE = 0.60) :
+    (1 - tauStarRad / TjRad = 0.20)
+      ∧ (1 - tauStarLaw / TjLaw = 0.29)
+      ∧ (1 - tauStarSE / TjSE = 0.40) := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [h_rad]; norm_num
+  · rw [h_law]; norm_num
+  · rw [h_se]; norm_num
 
 end Economy
 

@@ -5,64 +5,141 @@
 
   ## Trust policy
 
-  Every paper-level theorem in this project should depend on:
+  Every paper-level theorem in this project depends on:
     * the Lean kernel — `propext`, `Classical.choice`, `Quot.sound`;
     * the Cat 2 axioms declared in `Axioms.lean`, identified below.
 
-  ## Inventory by category (post-audit 2026-05)
+  ## Inventory by category
 
   Cat 1 (Mathlib-derivable theorems).  Closed via `Real.rpow_*` and
                                        Mathlib real-analysis.
 
   Cat 2 (external textbook axioms).  Three atomic axioms:
     * `axiom_euler_crs` — Euler's identity for CRS production.
-      Used by: `thm_decomp`.
-      Citation: Mas-Colell, Whinston, Green (1995) §5.B.2.
+      Consumed by: `thm_decomp`.
+      Citations: Euler 1755 (original) / Mas-Colell, Whinston,
+      Green 1995 §5.B.2 (modern textbook).
     * `axiom_ces_wage_ratio` — CES marginal-product wage ratio
       admits the closed form `((1-η)/η) λ^ρ (G/V)^{1-ρ}`.
-      Used by: identification of the `wageRatio` definition with
-      the CES wage ratio (paper Eq.~\eqref{eq:wage-ratio}).
-      Citation: Acemoglu (2009) §15.
+      Consumed by: `wageRatio_eq_ces_marginal_product_ratio`
+      (which establishes that the Lean `wageRatio` closed-form def
+      IS the CES marginal-product wage ratio for a generic CES `F`)
+      — genuinely Lean-load-bearing.
+      Citations: Arrow-Chenery-Minhas-Solow 1961 (original CES
+      paper) / Acemoglu 2009 Ch. 15 (modern textbook).
     * `axiom_cobb_douglas_factor_share` — Cobb-Douglas verification
       factor share `w_V V = (1-η) Y`.
-      Used by: `cobb_douglas_steady_state_identity`, which the
-      `_from_axioms` versions of the Cobb-Douglas-regime theorems
-      consume.
-      Citation: Mas-Colell, Whinston, Green (1995) §5.B.2.
+      Consumed by (via `cobb_douglas_steady_state_identity_from_axiom`
+      bridge):
+        - `thm_credential_cobb_douglas_reduction_from_axioms`
+        - `prop_junior_senior_wage_from_axioms`
+        - `thm_externality_pigouvian_cobb_douglas_from_axioms`
+      Citations: Cobb-Douglas 1928 (original Cobb-Douglas paper) /
+      Mas-Colell, Whinston, Green 1995 §5.B.2 (modern textbook).
 
-  Cat 3 (paper-novel atomic axioms).  ZERO.  Every paper-novel
-                                      structural object (`Economy`,
-                                      `Vinf`, `eBar`, `gHard`,
-                                      `wageRatio`, `Vreq`, …) is
-                                      encoded as a Lean *definition*,
-                                      not an axiom.
+  Cat 3 (paper-novel atomic axioms).  ZERO Lean axioms for the
+                                      definitional atoms.  The
+                                      genuine Cat 3 atomic inputs
+                                      tracked as standalone Ledger
+                                      `GapEntry` records are the
+                                      `Economy` carrier and the four
+                                      production-function-shape /
+                                      diagnostic-regime
+                                      hypothesisPredicates `IsCRS`,
+                                      `IsCobbDouglas`, `IsCES`,
+                                      `V2_TacitAccumulation`; each
+                                      is encoded as a Lean
+                                      `structure` (the carrier) or
+                                      `Prop` (the predicates), NOT
+                                      as an `axiom`.  The paper's
+                                      derived closed-form notation
+                                      (`Vinf`, `eBar`, `gHard`,
+                                      `wageRatio`, `Gstar`, `Vreq`,
+                                      ...) is definitional
+                                      infrastructure (concrete
+                                      `def`s holding by `rfl`), NOT
+                                      standalone Cat 3 atomic
+                                      inputs.  The Ledger.lean
+                                      entries are the canonical
+                                      record for both layers.
 
-  ## Audit history
-
-  The 2026-05 audit refactored four theorems from substance-in-
-  hypothesis form to honest axiom-discharged form:
-    * `thm_decomp` (Decomp.lean) — previously took the Euler identity
-      as a hypothesis; now derived from `axiom_euler_crs`.
-    * `thm_credential_cobb_douglas_reduction`,
-      `prop_junior_senior_wage`,
-      `thm_externality_pigouvian_cobb_douglas` — previously took
-      the composite Cobb-Douglas-factor-share identity as a
-      hypothesis; now have `_from_axioms` companion theorems that
-      discharge via `axiom_cobb_douglas_factor_share` + the
-      definitional unfolding of `Vinf`.
-    * `cor_bounded_AI_threshold_at_rBarZero`, `_at_rBarMax` —
-      previously took the endpoint identity `Gstar V (rBarZero V) =
-      L_G` as a hypothesis; now derived from `Real.rpow_mul` via
-      `Gstar_at_rBarZero`, `Gstar_at_rBarMax`.
+  Cat 3 (paper claims tracked as Ledger-only entries).  Five paper
+                                      claims have NO Lean
+                                      `axiom`/`def`/`theorem`
+                                      declaration.  Group A — four
+                                      claims with Lean derivation
+                                      deferred for out-of-scope
+                                      Mathlib infrastructure: window
+                                      invariance
+                                      (`gap_window_invariance_OPEN`),
+                                      aggregation sequential kinks
+                                      (`gap_aggregation_sequential_kinks_OPEN`),
+                                      intermediate-regime elasticity
+                                      (`gap_aggregation_intermediate_regime_OPEN`),
+                                      narrative endogenous-AI-
+                                      verification residual bound
+                                      (`gap_prop_adjustment_narrative_OPEN`).
+                                      A faithful sound STATEMENT of
+                                      each requires Mathlib
+                                      infrastructure (MeasureTheory
+                                      integrals; continuity / kink
+                                      analysis; residual
+                                      non-codifiability semantics)
+                                      beyond this formalization's
+                                      structural scope.  Group B —
+                                      one claim satisfied by
+                                      construction:
+                                      `gap_thm_recursive_invariance_OPEN`
+                                      records that `thetaStar` /
+                                      `VinfHard` are defined without
+                                      a μ parameter, so the paper's
+                                      μ-invariance commitment of
+                                      `\label{thm:recursive}` Part 3
+                                      is satisfied by the Lean code's
+                                      type-signature structure (no
+                                      Lean theorem can be written —
+                                      no μ-dependence to quantify
+                                      over).  Encoding as
+                                      `axiom` is unsound
+                                      (`False`-injectable); encoding
+                                      as `def : Prop` with a
+                                      constraining predicate that
+                                      equals the conclusion is
+                                      vacuous (tautological).  The
+                                      honest encoding is the Ledger
+                                      `GapEntry` record itself — a
+                                      typed, `#eval`-retrievable
+                                      declaration tracking the gap,
+                                      its status, its paper source,
+                                      and the reason it is not
+                                      Lean-derived.  See the
+                                      Ledger-only-entry exemption in
+                                      the `Ledger.lean` top
+                                      docstring.  Nothing is
+                                      `#check`ed or `#print axioms`ed
+                                      for these here — correctly, as
+                                      there is no Lean declaration.
+                                      The numerical-calibration
+                                      corollary
+                                      `cor_quant_predictions_calibration`
+                                      is a derived `theorem`
+                                      (`rw` + `norm_num`) and IS
+                                      `#print axioms`-checked below.
 
   ## Trust profile
 
   Any axiom outside this list — i.e. anything beyond the Lean kernel
-  plus the three declared Cat 2 axioms — is a RED FLAG, investigate.
+  and the three declared Cat 2 axioms — is a RED FLAG, investigate.
+  No Ledger-only entry is an `axiom`: the closed numerical
+  calibration is a derived `theorem`, and the five Ledger-only paper
+  claims (four with Lean derivation deferred for out-of-scope Mathlib
+  infrastructure + one satisfied by construction via the μ-free
+  carrier signatures) are `gapOpen` `GapEntry` records with no Lean
+  declaration at all.
 
   Per-axiom citations live in the docstrings of `Axioms.lean`.
-  Round-history (prior retracted citations, refactor steps) lives
-  in `gap_*.attackHistory` fields inside `Ledger.lean`.
+  Attack history (citation revisions, refactor steps) lives in
+  `gap_*.attackHistory` fields inside `Ledger.lean`.
 
   Usage:
     lake exe cache get
@@ -79,17 +156,18 @@ import VerificationAsymmetry
 -- Derived steady-state identity (definitional unfolding of Vinf).
 #print axioms VerificationAsymmetry.Economy.steady_state_stock_identity
 #print axioms VerificationAsymmetry.Economy.cobb_douglas_steady_state_identity
+#print axioms VerificationAsymmetry.Economy.cobb_douglas_steady_state_identity_from_axiom
 
 -- Theorem~\ref{thm:decomp}
-#print axioms VerificationAsymmetry.thm_decomp_euler_identity
 #print axioms VerificationAsymmetry.thm_decomp
-#print axioms VerificationAsymmetry.thm_decomp_factor_share
-#print axioms VerificationAsymmetry.thm_decomp_cobb_douglas_shares
 
 -- Theorem~\ref{thm:inversion}
 #print axioms VerificationAsymmetry.Economy.thm_inversion_threshold_closed_form
 #print axioms VerificationAsymmetry.Economy.thm_inversion_threshold_in_unit_interval
 #print axioms VerificationAsymmetry.Economy.thm_inversion_wage_ratio_monotone
+-- Closed form IS the CES marginal-product wage ratio — consumes
+-- `axiom_ces_wage_ratio` (Cat 2).
+#print axioms VerificationAsymmetry.Economy.wageRatio_eq_ces_marginal_product_ratio
 #print axioms VerificationAsymmetry.Economy.thm_inversion_threshold_monotone_in_rBar
 #print axioms VerificationAsymmetry.Economy.Gstar_at_rBarZero
 #print axioms VerificationAsymmetry.Economy.Gstar_at_rBarMax
@@ -107,7 +185,7 @@ import VerificationAsymmetry
 #print axioms VerificationAsymmetry.Economy.thm_collapse_transient_at_Ts
 #print axioms VerificationAsymmetry.Economy.thm_collapse_transient_linear
 #print axioms VerificationAsymmetry.Economy.thm_collapse_transient_zero_after_Ts
-#print axioms VerificationAsymmetry.Economy.thm_collapse_jump_general_h
+#print axioms VerificationAsymmetry.Economy.thm_collapse_value_at_thetaStar_general_h
 
 -- Proposition~\ref{prop:smooth-collapse}
 #print axioms VerificationAsymmetry.Economy.prop_smooth_collapse_below
@@ -135,8 +213,10 @@ import VerificationAsymmetry
 #print axioms VerificationAsymmetry.Economy.thm_externality_pigouvian_cobb_douglas_from_axioms
 
 -- Proposition~\ref{prop:internalization}
+-- (The full-internalization corner ζ = 1 yielding 0 wedge is
+-- captured by `internalizedWedge 1 ... = 0 · wedge ... = 0`
+-- directly from the def; no separate Lean theorem is provided.)
 #print axioms VerificationAsymmetry.Economy.prop_internalization
-#print axioms VerificationAsymmetry.Economy.prop_internalization_full
 
 -- Proposition~\ref{prop:decentralized-theta}
 #print axioms VerificationAsymmetry.Economy.prop_decentralized_theta_foc
@@ -144,15 +224,28 @@ import VerificationAsymmetry
 #print axioms VerificationAsymmetry.Economy.prop_decentralized_theta_overshoots
 
 -- Theorem~\ref{thm:recursive}
+-- (Part 3 μ-invariance of thetaStar and VinfHard is satisfied by
+-- construction — the carriers carry no μ argument; no Lean theorem
+-- is provided.  See `gap_thm_recursive_invariance_OPEN` in
+-- Ledger.lean.)
 #print axioms VerificationAsymmetry.Economy.thm_recursive_threshold_closed_form
 #print axioms VerificationAsymmetry.Economy.thm_recursive_threshold_ratio
 #print axioms VerificationAsymmetry.Economy.thm_recursive_threshold_leftward
-#print axioms VerificationAsymmetry.Economy.thm_recursive_thetaStar_invariant
-#print axioms VerificationAsymmetry.Economy.thm_recursive_VinfHard_invariant
 #print axioms VerificationAsymmetry.Economy.thm_recursive_wage_ratio_amplification
 
 -- Proposition~\ref{prop:boundary}
 #print axioms VerificationAsymmetry.Economy.prop_boundary_collapse_iff
+
+-- Definition~\ref{def:diagnostic} V2 consequences (Cat 3
+-- hypothesisPredicate `V2_TacitAccumulation` Lean-load-bearing
+-- consumers).  Both V2 fields are consumed:
+--   * `Vinf_zero_at_theta_one_under_V2` consumes `h_zero_at_zero`
+--     (under V2, `V_∞(θ=1, g, h) = 0`);
+--   * `h_eBar_nonneg_under_V2` consumes `h_monotone`
+--     (and `h_zero_at_zero` as a secondary): on `θ ≤ 1`,
+--     `0 ≤ h(ē(θ))`.
+#print axioms VerificationAsymmetry.Economy.Vinf_zero_at_theta_one_under_V2
+#print axioms VerificationAsymmetry.Economy.h_eBar_nonneg_under_V2
 
 -- Theorem~\ref{thm:aggregation}
 #print axioms VerificationAsymmetry.Economy.thm_aggregation_cobb_douglas_zero
@@ -174,3 +267,26 @@ import VerificationAsymmetry
 #print axioms VerificationAsymmetry.Economy.thm_endogenous_ai_recovery_at_Tj
 #print axioms VerificationAsymmetry.Economy.thm_endogenous_ai_full_recovery_at_T
 #print axioms VerificationAsymmetry.Economy.thm_endogenous_ai_recovery_takes_full_career
+
+-- Paper claims tracked as Ledger-only entries.  Five paper claims
+-- have NO Lean `axiom`/`def`/`theorem` declaration.  Group A: four
+-- claims (window invariance; aggregation sequential kinks;
+-- intermediate-regime elasticity; the narrative endogenous-AI-
+-- verification residual bound) with Lean derivation deferred — a
+-- faithful sound statement of each requires Mathlib infrastructure
+-- beyond this formalization's structural scope.  Group B: one
+-- claim satisfied by construction
+-- (`gap_thm_recursive_invariance_OPEN`) — `thetaStar` / `VinfHard`
+-- are defined without a μ parameter, so the paper's μ-invariance
+-- commitment is encoded in the type signatures themselves.  All
+-- five are tracked as `gapOpen` Ledger `GapEntry` records — see
+-- `Ledger.lean` for the canonical records (and the Ledger-only-
+-- entry exemption in its top docstring).  Nothing to `#check` or
+-- `#print axioms` here, which is correct: there is no Lean
+-- declaration to inspect.
+-- Numerical calibration corollary: derived `theorem` (`rw` +
+-- `norm_num`), so `#print axioms` it.
+#print axioms VerificationAsymmetry.Economy.cor_quant_predictions_calibration
+-- Derivable threshold-reduction conjunct split out of the
+-- adjustment-margins narrative (real theorem).
+#print axioms VerificationAsymmetry.Economy.prop_adjustment_threshold_reduction_floor

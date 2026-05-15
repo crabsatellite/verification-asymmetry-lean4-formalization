@@ -45,7 +45,7 @@
                                              min-theorem; perfect-
                                              substitutes survival)
     VerificationAsymmetry/EndogenousAI.lean  Theorem~\ref{thm:endogenous-ai}
-                                             (Brouwer fixed point;
+                                             (1-D Brouwer via IVT;
                                              hysteresis recovery bound)
 
   Soundness audit:
@@ -64,11 +64,15 @@
   Gap ledger:
     VerificationAsymmetry/Ledger.lean — typed record of every closed
     top-level result and every paper claim deferred to economic
-    narrative.  Two orthogonal classifications per entry:
-      * 5-tier status: gapOpen / gapPartial / gapBlocked / gapDeadEnd /
-        gapClosed
-      * 3-input-category: cat1Mathlib / cat2External / cat3PaperNovel /
+    narrative.  Two orthogonal classifications per entry plus a Cat 3
+    sub-type refinement:
+      * 7-tier status: gapOpen / gapPartial / gapBlocked / gapDeadEnd /
+        gapClosed / gapClosedConditional / gapDefinitional
+      * 4-input-category: cat1Mathlib / cat2External / cat3PaperNovel /
         notInput
+      * Cat 3 sub-type: carrier / hypothesisPredicate /
+        structuralEquation / workingAssumption /
+        conditionalHypothesis / phenomenologicalConjecture / notCat3
 
   Companion paper.  This formalization is parallel to (and separate
   from) the Karpowicz/Einstein-Test companion at

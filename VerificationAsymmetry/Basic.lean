@@ -51,13 +51,24 @@ namespace VerificationAsymmetry
 /-! ### Definition `def:gve`: Generation-Verification production economy. -/
 
 /--
-  A *generation-verification production economy* is the tuple
-  `(F, L_G, K_AI, λ, ν, T, T_j, τ*, η, ρ)` of Definition~\ref{def:gve},
-  with the convention that:
-    * `F` is fixed to the CES form (Equation~\eqref{eq:ces}) parametrized
-      by `(η, ρ, λ)`,
-    * `T_s = T - T_j` is the senior career length (derived field, not
-      a free parameter).
+  A *generation-verification production economy*.  The paper's
+  Definition~\ref{def:gve} introduces the economy as the tuple
+  `(F, G, V, θ, K_AI, λ, ν, T, T_j, τ*, h)`.  This Lean `structure`
+  is not a literal transcription of that tuple; it carries the nine
+  scalar parameters `(L_G, K_AI, λ, ν, T, T_j, τ*, η, ρ)` together
+  with the paper's positivity / range constraints, under the
+  conventions:
+    * `F` is fixed to the CES form (Equation~\eqref{eq:ces})
+      parametrized by `(η, ρ, λ)` — not carried as a structure
+      field;
+    * `G` and `V` are θ-parametrized derived quantities — generation
+      supply `G(θ)` (`def G`) and steady-state verification stock
+      `V_∞` (`def Vinf`) — not structure fields;
+    * `θ` ranges as a free argument of the derived quantities;
+    * the tacit accumulation technology `h` is passed as an explicit
+      function argument to `Vinf` rather than carried as a field;
+    * `T_s = T - T_j` is the senior career length (derived field,
+      not a free parameter).
 
   We carry `K_AI` as a (positive) real number; the paper's `K_AI = ∞`
   limit is treated by allowing `K_AI` to grow in parametric arguments
@@ -272,37 +283,85 @@ lemma VinfHard_eq_zero_of_eBar_lt_tauStar
   unfold VinfHard Vinf
   rw [gHard_of_lt E h]; ring
 
-/-! ### Definition `def:diagnostic`: V1/V2/V3 structural conditions. -/
+/-! ### Definition `def:diagnostic`: V1/V2/V3 structural conditions.
 
-/--
-  Structural conditions (V1) Verification non-substitutability,
-  (V2) Tacit accumulation, (V3) Generation displacement.
+  V1 (non-substitutability) and V3 (experience displacement) are
+  baked into the carrier-type design itself — `Vinf θ g h` makes no
+  reference to AI supply, and `eBar θ = (1 - θ) T_j` IS the V3
+  defining equation already proved above.  V2 (tacit accumulation)
+  becomes a constraint on the apprenticeship technology `h`: zero
+  at the origin, monotone non-decreasing.
 
-  (V1) and (V2) are baked into the carrier-type design: `V` is a free
-  factor not produced by AI (`Vinf` is the cohort-level stock with no
-  AI contribution), and `h` is a function with `h(0) = 0` and
-  non-decreasing.  (V3) is the equation `ē(θ) = (1-θ) T_j` already
-  proven above (`eBar` definition).
+  The V1/V3 narrative is captured by the carrier types themselves
+  (`Vinf` makes no reference to AI supply; `eBar` IS the V3
+  defining equation).  The `V2_TacitAccumulation` predicate below
+  encodes V2 as an explicit `Prop`-structure for use as a hypothesis
+  in `h`-parametric theorems. -/
 
-  This structural-condition record carries them in one place so
-  downstream theorems can reference `E.satisfiesDiagnostic` as a
-  hypothesis (although in practice the conditions are immediate from
-  the carrier type and unused as hypotheses; included for narrative
-  alignment with paper Definition~\ref{def:diagnostic}). -/
-structure SatisfiesDiagnostic (g h : ℝ → ℝ) : Prop where
-  /-- (V1) `V` is the residual stock; no AI contribution.  Captured
-       structurally: `Vinf θ g h` makes no reference to `θ` through
-       an AI-supply channel — `θ` enters only through `ē(θ)`,
-       the human-side experience accumulation. -/
-  V1_no_ai_in_verification : True
-  /-- (V2) Tacit accumulation: `h(0) = 0` and `h` non-decreasing. -/
-  V2_h_zero_at_zero : h 0 = 0
-  /-- (V2) `h` non-decreasing. -/
-  V2_h_monotone : Monotone h
-  /-- (V3) Generation displacement: junior experience drops by factor
-       `(1-θ)` under AI substitution at rate `θ`.  Captured by the
-       defining equation `eBar θ = (1-θ) T_j`. -/
-  V3_experience_displacement : True
+/-- The V2 (tacit accumulation) constraint on the apprenticeship
+    technology `h`: `h(0) = 0` and `h` is monotone non-decreasing.
+    V1 and V3 are structural properties of the carrier types
+    (`Vinf`/`eBar`) and are not separately encoded.
+
+    Both V2 fields are Lean-load-bearing:
+    `h_zero_at_zero` is consumed by `Vinf_zero_at_theta_one_under_V2`
+    (collapse-at-`θ=1` structural consequence), and `h_monotone` is
+    consumed by `h_eBar_nonneg_under_V2` (non-negativity of the
+    accumulated apprenticeship stock on the admissible range
+    `θ ∈ [0,1]`). -/
+structure V2_TacitAccumulation (h : ℝ → ℝ) : Prop where
+  /-- `h(0) = 0`. -/
+  h_zero_at_zero : h 0 = 0
+  /-- `h` is non-decreasing. -/
+  h_monotone : Monotone h
+
+/-- Paper `\label{def:diagnostic}` V2 consequence: under the V2 tacit-
+    accumulation constraint on `h`, the steady-state verification stock
+    `V_∞` vanishes at `θ = 1` (full AI substitution).
+
+    *Mathematical content.*  At `θ = 1`, `eBar 1 = (1 - 1) · T_j = 0`,
+    so `Vinf 1 g h = ν · T_s · g(0) · h(0)`.  V2's `h_zero_at_zero`
+    field gives `h 0 = 0`, collapsing the product to zero.  This is
+    the structural consequence that makes V2 paper-load-bearing: at
+    full substitution junior experience drops to zero (eBar = 0) and
+    the V2 tacit-accumulation requirement (h(0) = 0) forces the
+    accumulated verification capability to also be zero.
+
+    *Lean role.*  Genuine downstream consumer of the
+    `V2_TacitAccumulation.h_zero_at_zero` field — makes the
+    zero-at-origin component of V2 Lean-load-bearing. -/
+theorem Vinf_zero_at_theta_one_under_V2
+    (g h : ℝ → ℝ) (hV2 : V2_TacitAccumulation h) :
+    E.Vinf 1 g h = 0 := by
+  have heBar : E.eBar 1 = 0 := by
+    unfold Economy.eBar; ring
+  unfold Economy.Vinf
+  rw [heBar, hV2.h_zero_at_zero]
+  ring
+
+/-- Paper `\label{def:diagnostic}` V2 consequence: under the V2 tacit-
+    accumulation constraint on `h`, the accumulated apprenticeship-
+    technology output `h(ē(θ))` is non-negative on the admissible
+    substitution range `θ ∈ [0, 1]`.
+
+    *Mathematical content.*  For `θ ≤ 1`, `ē(θ) = (1-θ) T_j ≥ 0`
+    (`eBar_nonneg`).  V2's `h_monotone` applied to `0 ≤ ē(θ)` gives
+    `h(0) ≤ h(ē(θ))`, and V2's `h_zero_at_zero` rewrites `h(0) = 0`
+    on the left to deliver `0 ≤ h(ē(θ))`.
+
+    *Lean role.*  Genuine downstream consumer of the
+    `V2_TacitAccumulation.h_monotone` field (and a secondary
+    consumer of `h_zero_at_zero`) — makes the monotonicity
+    component of V2 Lean-load-bearing alongside the
+    zero-at-origin component. -/
+theorem h_eBar_nonneg_under_V2
+    (h : ℝ → ℝ) (hV2 : V2_TacitAccumulation h)
+    {θ : ℝ} (hθ : θ ≤ 1) :
+    0 ≤ h (E.eBar θ) := by
+  have h_eBar_nn : 0 ≤ E.eBar θ := E.eBar_nonneg hθ
+  have h_mono : h 0 ≤ h (E.eBar θ) := hV2.h_monotone h_eBar_nn
+  have h0 : h 0 = 0 := hV2.h_zero_at_zero
+  linarith
 
 end Economy
 end VerificationAsymmetry

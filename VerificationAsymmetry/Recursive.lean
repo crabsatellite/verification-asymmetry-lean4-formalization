@@ -55,13 +55,15 @@ variable (E : Economy)
     paper Eq.~\eqref{eq:V-req-recursive}. -/
 def Vreq (μ θ : ℝ) : ℝ := (1 - θ) * E.LG + μ * θ * E.KAI
 
-@[simp] lemma Vreq_zero (μ : ℝ) : E.Vreq μ 0 = E.LG := by simp [Vreq]
+@[simp] lemma Vreq_at_theta_zero (μ : ℝ) : E.Vreq μ 0 = E.LG := by
+  simp [Vreq]
 
-@[simp] lemma Vreq_one (μ : ℝ) : E.Vreq μ 1 = μ * E.KAI := by
+@[simp] lemma Vreq_at_theta_one (μ : ℝ) : E.Vreq μ 1 = μ * E.KAI := by
   unfold Vreq; ring
 
-/-- `V_req(θ) = G(θ)` when `μ = 1` (recovery of baseline). -/
-theorem Vreq_one_eq_G (θ : ℝ) : E.Vreq 1 θ = E.G θ := by
+/-- `V_req(θ) = G(θ)` when `μ = 1` (recovery of baseline; recursive
+    factor `μ = 1` collapses to plain `G`). -/
+theorem Vreq_at_mu_one (θ : ℝ) : E.Vreq 1 θ = E.G θ := by
   unfold Vreq G; ring
 
 /-! ### Recursive inversion threshold. -/
@@ -132,24 +134,23 @@ theorem thm_recursive_threshold_leftward
   -- a/x < a/y when 0 < a, 0 < y < x.
   exact div_lt_div_of_pos_left hNumer_pos hKAI_LG_pos hDenom_lt
 
-/-! ### Theorem~\ref{thm:recursive} Part 3: pipeline-collapse invariance. -/
+/-! ### Theorem~\ref{thm:recursive} Part 3: pipeline-collapse invariance.
 
-/-- **Theorem~\ref{thm:recursive} Part 3 (pipeline collapse
-    invariance).** The cohort experience accumulation rate `1-θ`
-    is invariant in `μ` (the recursive verification operates on
-    the demand side, not the supply side).  Hence `ē(θ)` is
-    independent of `μ`, and so is `θ* = 1 - τ*/T_j`.
+  Per paper `\label{thm:recursive}` Part 3, the cohort experience
+  accumulation rate `1-θ` is invariant in `μ`: recursive verification
+  operates on the demand side (`Vreq`), not the supply side (`eBar`,
+  `Vinf`).  Hence `ē(θ) = (1-θ) T_j` is independent of `μ`, and so
+  is `θ* = 1 - τ*/T_j`.
 
-    Formal content: `eBar` and `thetaStar` make no reference to
-    `μ`.  Stated here as a structural triviality. -/
-theorem thm_recursive_thetaStar_invariant (μ : ℝ) :
-    E.thetaStar = E.thetaStar := rfl
+  This invariance is satisfied by construction in this Lean
+  formalization: the carriers `thetaStar`, `eBar`, `VinfHard` are
+  all defined without any `μ` argument, so there is no μ-dependent
+  quantity to prove invariant in the first place.  Cat 3
+  `structuralEquation` content (the absence of μ-dependence is the
+  paper's structural commitment); no Lean theorem is provided.
 
-/-- **Theorem~\ref{thm:recursive} Part 3 (V_∞ invariance).** The
-    steady-state verification stock under hard threshold is
-    invariant in `μ`. -/
-theorem thm_recursive_VinfHard_invariant (μ a θ : ℝ) :
-    E.VinfHard a θ = E.VinfHard a θ := rfl
+  See `gap_thm_recursive_invariance_OPEN` in `Ledger.lean`
+  for the canonical record. -/
 
 /-! ### Theorem~\ref{thm:recursive} Part 2 + 4: wedge amplification. -/
 

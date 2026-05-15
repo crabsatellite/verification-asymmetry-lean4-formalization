@@ -111,16 +111,20 @@ theorem brouwer_1d
   linarith
 
 /-- **Theorem~\ref{thm:endogenous-ai} Part 1 (existence of low-AI
-    equilibrium).** Under continuity of Φ and the bounded-range
-    assumption `Φ([0, θ*-ε]) ⊆ [0, θ*-ε]`, the joint endogenous-`K_AI`
-    system has at least one fixed point.
+    equilibrium — abstract Brouwer wrapper).** Under continuity of
+    an abstract self-map `Φ : [a, b] → ℝ` with `Φ([a, b]) ⊆ [a, b]`
+    (encoded as `a ≤ Φ a ∧ Φ b ≤ b`), Φ has at least one fixed
+    point in `[a, b]`.
 
-    *Lean form:* direct application of `brouwer_1d` to the abstract
-    map `Φ`.  We carry `Φ` as an arbitrary continuous function and
-    the range bounds as separate hypotheses; the substantive content
-    of the paper's argument is the construction of `Φ` from `Ψ` and
-    the verification-stock decomposition `V_∞ = V_prod + V_AI`,
-    which is recorded in the docstring and not unrolled here. -/
+    *Scope.* This Lean theorem is the *abstract* 1-D Brouwer
+    wrapper, applied to an arbitrary continuous Φ.  The paper's
+    full Part 1 additionally constructs Φ from Ψ and the
+    verification-stock decomposition `V_∞ = V_prod + V_AI` and
+    proves its continuity from the primitives; that construction is
+    *not* formalized in this Lean theorem — only the abstract
+    fixed-point existence applied at the Φ level.  See Ledger entry
+    `gap_thm_endogenous_ai_existence_PARTIAL.scope` for the explicit
+    scope. -/
 theorem thm_endogenous_ai_existence
     {Φ : ℝ → ℝ} {a b : ℝ} (hab : a ≤ b)
     (hΦ_cont : ContinuousOn Φ (Set.Icc a b))
@@ -161,31 +165,46 @@ theorem thm_endogenous_ai_uniqueness
 
 /-- **Theorem~\ref{thm:endogenous-ai} Part 3 (corner self-
     consistency under exogenous θ).** If `θ ≥ θ*` is held
-    exogenously, the corner `(θ, 0, 0)` is a self-consistent
-    steady state of the cohort + AI-supply dynamics:
-    `V_∞ = 0` (by `thm_collapse_above_threshold`), and
-    `K_AI = Ψ(0) = 0` from the assumption `Ψ(0) = 0`. -/
+    exogenously, the verification stock vanishes: `V_∞(θ) = 0`.
+    Combined with the assumption `Ψ(0) = 0` (paper-stipulated
+    Ψ-shape), the corner `(θ, 0, 0)` is a self-consistent steady
+    state of the cohort + AI-supply dynamics.
+
+    *Substantive content of the Lean theorem:* the vanishing of
+    `V_∞` above `θ*` is the substantive part; `Ψ(0) = 0` is the
+    paper's stipulation on the Ψ shape, recorded in the hypothesis
+    and not re-derived as a conclusion. -/
 theorem thm_endogenous_ai_corner_exogenous
-    (a θ : ℝ) (h_above : E.thetaStar < θ) (Ψ : ℝ → ℝ)
-    (hΨ_zero : Ψ 0 = 0) :
-    E.VinfHard a θ = 0 ∧ Ψ 0 = 0 := by
-  exact ⟨E.thm_collapse_above_threshold a θ h_above, hΨ_zero⟩
+    (a θ : ℝ) (h_above : E.thetaStar < θ) :
+    E.VinfHard a θ = 0 :=
+  E.thm_collapse_above_threshold a θ h_above
+
+/-- *Endogenous θ map under capacity-share rule.* The paper's
+    endogenous θ in Theorem~\ref{thm:endogenous-ai} Part 3 is
+    `θ_endo(K_AI) := K_AI / (L_G + K_AI)`. -/
+noncomputable def thetaEndo (KAI : ℝ) : ℝ := KAI / (E.LG + KAI)
+
+/-- *Endogenous θ at `K_AI = 0`.*  `θ_endo(0) = 0`. -/
+lemma thetaEndo_zero : E.thetaEndo 0 = 0 := by
+  unfold thetaEndo
+  simp
 
 /-- **Theorem~\ref{thm:endogenous-ai} Part 3 (corner self-
-    inconsistency under endogenous θ).** Under endogenous
+    inconsistency witness under endogenous θ).** Under endogenous
     θ = K_AI/(L_G + K_AI), the corner with `K_AI = 0` yields
-    `θ = 0`, which contradicts `θ ≥ θ*` whenever `θ* > 0`.
+    `θ_endo(0) = 0`.  When `τ* < T_j` (so `θ* > 0`), the
+    endogenous output `θ_endo(0) = 0` lies STRICTLY BELOW the
+    corner requirement `θ ≥ θ* > 0`, witnessing the inconsistency:
+    the K_AI=0 corner is NOT a fixed point of the endogenous map
+    (any θ ≥ θ* would need K_AI > 0, but K_AI = 0 yields θ = 0).
 
-    *Lean form:* `0 = (0 : ℝ) / (E.LG + 0)` simplifies to `0`,
-    which is strictly below `θ*` whenever `θ*` is strictly positive.
-
-    *Note.*  `θ* > 0` requires `τ* < T_j`; under the standing
-    hypothesis `τ* ≤ T_j` of `Economy`, this is the strict version.
-    The boundary case `τ* = T_j` gives `θ* = 0` and the corner
-    inconsistency degenerates. -/
+    *Formal content:* the strict inequality `θ_endo(0) < θ*` is
+    the inconsistency witness: the corner needs `θ ≥ θ*` but the
+    endogenous map at `K_AI = 0` returns `0 < θ*`. -/
 theorem thm_endogenous_ai_corner_endogenous_inconsistent
     (h_tauStar_lt_Tj : E.tauStar < E.Tj) :
-    (0 : ℝ) < E.thetaStar := by
+    E.thetaEndo 0 < E.thetaStar := by
+  rw [E.thetaEndo_zero]
   unfold thetaStar
   have hTj : 0 < E.Tj := E.Tj_pos
   have h_div_lt : E.tauStar / E.Tj < 1 :=
@@ -253,13 +272,40 @@ theorem thm_endogenous_ai_full_recovery_at_T
   rw [hTs_eq, min_self]
 
 /-- **Theorem~\ref{thm:endogenous-ai} Part 5 (asymmetric recovery
-    timeline).** Recovery requires the full career length `T`,
-    while collapse can occur in arbitrary disturbance windows.
-    Quantified as `T_j + T_s = T > 0`. -/
-theorem thm_endogenous_ai_recovery_takes_full_career :
-    0 < E.Tj + E.Ts := by
-  have := E.Ts_pos
-  linarith [E.Tj_pos]
+    timeline).** Recovery to the steady-state stock requires the
+    FULL career length `T = T_j + T_s` to elapse beyond the corner
+    exit `t_1`.  For any earlier `t < t_1 + T`, the recovery stock
+    is strictly below the steady-state value (the linear ramp
+    `ν · (t - t_1 - T_j) · ē^a` has not yet hit its `ν T_s ē^a`
+    ceiling).
+
+    Formal content: for `t_1 + T_j ≤ t < t_1 + T`, the recovery
+    stock `recoveryStock a θL t t₁` is `< ν · T_s · ((1-θL) T_j)^a`. -/
+theorem thm_endogenous_ai_recovery_takes_full_career
+    (a θL t t₁ : ℝ)
+    (h_after_juniors : t₁ + E.Tj ≤ t) (h_before_full : t < t₁ + E.T)
+    (h_eBar_pos : 0 < ((1 - θL) * E.Tj) ^ a) :
+    E.recoveryStock a θL t t₁
+      < E.nu * E.Ts * ((1 - θL) * E.Tj) ^ a := by
+  unfold recoveryStock
+  have hTs_pos : 0 < E.Ts := E.Ts_pos
+  -- t - t₁ - T_j < T - T_j = T_s
+  have h_lt : t - t₁ - E.Tj < E.Ts := by
+    unfold Ts; linarith
+  -- t - t₁ - T_j ≥ 0
+  have h_ge : 0 ≤ t - t₁ - E.Tj := by linarith
+  -- min(t - t₁ - T_j, T_s) = t - t₁ - T_j  (since t - t₁ - T_j ≤ T_s).
+  have h_min : min (t - t₁ - E.Tj) E.Ts = t - t₁ - E.Tj :=
+    min_eq_left h_lt.le
+  rw [h_min]
+  -- Goal: ν * (t - t₁ - T_j) * ē^a < ν * T_s * ē^a.
+  have hnu : 0 < E.nu := E.nu_pos
+  have h_left  : 0 ≤ E.nu * (t - t₁ - E.Tj) :=
+    mul_nonneg hnu.le h_ge
+  have h_mul_lt : E.nu * (t - t₁ - E.Tj) < E.nu * E.Ts := by
+    have := h_lt
+    nlinarith
+  nlinarith [h_eBar_pos]
 
 end Economy
 

@@ -35,7 +35,7 @@
   `G(θ) = (1-θ) L_G + θ K_AI` against the critical generation level
   `G*`.  Both are pure real-arithmetic identities.
 
-  ## Audit note (post-audit 2026-05)
+  ## Cat 2 axiom dependency note
 
   The closed-form `wageRatio` defined below packages the CES
   marginal-product ratio
@@ -43,17 +43,27 @@
   (Eq.~\eqref{eq:wage-ratio}) as a Lean *definition*, sidestepping
   the formal derivation from `w_V = ∂F/∂V`, `w_G = ∂F/∂G` of the
   CES function `F(G, V) = (η G^ρ + (1-η)(λ V)^ρ)^{1/ρ}`.  The
-  identification of the closed form with the CES wage ratio is
-  carried by `axiom_ces_wage_ratio` in `Axioms.lean` (Cat 2,
-  Acemoglu 2009 §15).
+  identification of the closed form with the CES marginal-product
+  wage ratio is the Cat 2 axiom `axiom_ces_wage_ratio` in
+  `Axioms.lean` (ACMS 1961 / Acemoglu 2009 §15).  The theorem
+  `wageRatio_eq_ces_marginal_product_ratio` below CONSUMES that
+  axiom: it establishes that the `wageRatio` def equals the CES
+  marginal-product wage ratio `w_V / w_G` for a generic CES `F`.
+  The axiom is therefore genuinely Lean-load-bearing — verifiable
+  by `#print axioms wageRatio_eq_ces_marginal_product_ratio`.
+
+  The substantive monotonicity claim of Part 1
+  (`thm_inversion_wage_ratio_monotone`) operates directly on the
+  closed-form def via `Real.rpow_le_rpow` and does not itself
+  invoke the axiom; the axiom enters through the
+  closed-form-identification theorem.
 
   The endpoint-identification lemmas
   (`cor_bounded_AI_threshold_at_rBarZero`,
-  `cor_bounded_AI_threshold_at_rBarMax`) formerly took
-  `hGstar_eq : E.Gstar V (E.rBarZero V) = E.LG` as a hypothesis.
-  The current version derives this from `Real.rpow_mul` and the
-  algebraic identity `(x^(1-ρ))^(1/(1-ρ)) = x` (Mathlib-derivable),
-  eliminating the hidden-hypothesis form.
+  `cor_bounded_AI_threshold_at_rBarMax`) derive the endpoint
+  identities `Gstar V (rBarZero V) = L_G` and `Gstar V (rBarMax V)
+  = K_AI` from `Real.rpow_mul` and the algebraic identity
+  `(x^(1-ρ))^(1/(1-ρ)) = x` (Mathlib-derivable).
 -/
 
 import VerificationAsymmetry.Basic
@@ -114,9 +124,14 @@ theorem thm_inversion_threshold_closed_form
   ring
 
 /-- **Theorem~\ref{thm:inversion} Part 2 (range).** When
-    `L_G < G*(r̄) < K_AI`, the inversion threshold lies in `(0, 1)`. -/
+    `L_G < G*(r̄) < K_AI`, the inversion threshold lies in `(0, 1)`.
+
+    The `_hKAI_gt` hypothesis (`L_G < K_AI`) is carried for paper-
+    faithful signature parity but is `_`-prefixed: the range bounds
+    `0 < θ_inv < 1` follow from `hGstar_lo` / `hGstar_hi` alone
+    (which jointly already imply `L_G < K_AI`). -/
 theorem thm_inversion_threshold_in_unit_interval
-    (V rBar : ℝ) (hKAI_gt : E.LG < E.KAI)
+    (V rBar : ℝ) (_hKAI_gt : E.LG < E.KAI)
     (hGstar_lo : E.LG < E.Gstar V rBar)
     (hGstar_hi : E.Gstar V rBar < E.KAI) :
     0 < E.thetaInv V rBar ∧ E.thetaInv V rBar < 1 := by
@@ -149,6 +164,44 @@ theorem thm_inversion_threshold_in_unit_interval
     follows from `Economy.G_pos` whenever `θ ∈ [0, 1]`. -/
 noncomputable def wageRatio (V θ : ℝ) : ℝ :=
   ((1 - E.eta) / E.eta) * E.lam ^ E.rho * (E.G θ / V) ^ (1 - E.rho)
+
+/-- **Theorem~\ref{thm:inversion} Part 1 (CES marginal-product wage
+    ratio, closed form).** For a generic CES production function `F`
+    with competitive marginal-product wages `w_G = ∂F/∂G`,
+    `w_V = ∂F/∂V`, the ratio `w_V / w_G` equals the closed-form
+    algebraic expression `((1-η)/η) · λ^ρ · (G/V)^(1-ρ)`.
+
+    *Relation to the `wageRatio` def.*  When the consumer specializes
+    `G := E.G θ`, the right-hand side `((1-η)/η) · λ^ρ · (G/V)^(1-ρ)`
+    is exactly the body of the `wageRatio` def above, so
+    `E.wageRatio V θ = w_V / w_G` follows by `rfl` after the
+    specialization.  This theorem does not perform the
+    specialization itself; it states the ratio identity for arbitrary
+    positive `G`, leaving the `G := E.G θ` substitution to the
+    consumer.
+
+    *Lean role.*  Consumes `axiom_ces_wage_ratio` (Cat 2,
+    ACMS 1961 / Acemoglu 2009 §15) — making the axiom genuinely
+    Lean-load-bearing.  Verifiable by
+    `#print axioms wageRatio_eq_ces_marginal_product_ratio`, which
+    surfaces `axiom_ces_wage_ratio` in the dependency chain.
+
+    `ρ < 1` is taken as an explicit hypothesis (the paper's
+    `\label{thm:inversion}` Part 1 regime); the Economy carrier
+    only stipulates `ρ ≤ 1`, and the CES wage-ratio closed form
+    requires the strict bound. -/
+theorem wageRatio_eq_ces_marginal_product_ratio
+    (F : ℝ → ℝ → ℝ) (G V wG wV : ℝ)
+    (hCES : IsCES F E.eta E.rho E.lam)
+    (h_wG : HasDerivAt (fun x => F x V) wG G)
+    (h_wV : HasDerivAt (fun y => F G y) wV V)
+    (h_wG_pos : 0 < wG)
+    (hG : 0 < G) (hV : 0 < V)
+    (hrho_lt : E.rho < 1) (hrho_ne : E.rho ≠ 0) :
+    wV / wG
+      = ((1 - E.eta) / E.eta) * E.lam ^ E.rho * (G / V) ^ (1 - E.rho) :=
+  axiom_ces_wage_ratio F E.eta E.rho E.lam G V wG wV hCES h_wG h_wV
+    h_wG_pos hG hV E.eta_pos E.eta_lt_one hrho_lt hrho_ne E.lam_pos
 
 /-- **Theorem~\ref{thm:inversion} Part 1 (monotonicity).** Under
     `K_AI ≥ L_G`, the wage ratio `w_V/w_G` is non-decreasing in
@@ -224,11 +277,7 @@ noncomputable def rBarMax (V : ℝ) : ℝ :=
   The endpoint identifications are pure `Real.rpow` arithmetic.
   Key fact used: `Real.rpow_mul (hx : 0 ≤ x) (y z : ℝ)` gives
   `x ^ (y * z) = (x ^ y) ^ z`, so for `x > 0` and `a ≠ 0`,
-  `(x^a)^(1/a) = x^(a * (1/a)) = x^1 = x`.
-
-  Post-audit: these were formerly carried as hypotheses
-  `hGstar_eq`, which is exactly the kind of substance-in-hypothesis
-  hiding the audit identified.  Replaced by derivations. -/
+  `(x^a)^(1/a) = x^(a * (1/a)) = x^1 = x`. -/
 
 /-- *Endpoint identity at `r̄_0`.*  `G*(r̄_0) = L_G`.
 
@@ -292,14 +341,17 @@ theorem Gstar_at_rBarMax (V : ℝ) (hV_pos : 0 < V)
 
 /-- **Corollary~\ref{cor:bounded-AI} (endpoint identification).**
     At the baseline wage ratio `r̄ = r̄_0`, the inversion threshold
-    is `0`:  `θ_inv(r̄_0) = 0`.
+    is `0`:  `θ_inv(r̄_0) = 0`.  Derived from `Gstar_at_rBarZero`
+    via `Real.rpow_mul`.
 
-    *Post-audit form.*  Previously took `hGstar_eq` as hypothesis;
-    now derived from `Gstar_at_rBarZero` using `Real.rpow_mul` —
-    no hidden hypothesis. -/
+    The `_hKAI_gt` hypothesis (`L_G < K_AI`) is carried for paper-
+    faithful signature parity but is `_`-prefixed: at `r̄ = r̄_0`,
+    `G*(r̄_0) = L_G`, so `θ_inv = (L_G - L_G)/(K_AI - L_G) = 0`
+    holds regardless of the `K_AI - L_G` sign (the numerator is
+    `0`). -/
 theorem cor_bounded_AI_threshold_at_rBarZero
     (V : ℝ) (hV_pos : 0 < V) (hLG_pos : 0 < E.LG)
-    (hKAI_gt : E.LG < E.KAI) (hrho_lt : E.rho < 1) :
+    (_hKAI_gt : E.LG < E.KAI) (hrho_lt : E.rho < 1) :
     E.thetaInv V (E.rBarZero V) = 0 := by
   unfold thetaInv
   rw [E.Gstar_at_rBarZero V hV_pos hLG_pos hrho_lt]
@@ -307,10 +359,8 @@ theorem cor_bounded_AI_threshold_at_rBarZero
 
 /-- **Corollary~\ref{cor:bounded-AI} (endpoint identification).**
     At the maximum reachable wage ratio `r̄ = r̄_max`, the inversion
-    threshold is `1`.
-
-    *Post-audit form.*  Previously took `hGstar_eq` as hypothesis;
-    now derived from `Gstar_at_rBarMax`. -/
+    threshold is `1`.  Derived from `Gstar_at_rBarMax` via
+    `Real.rpow_mul`. -/
 theorem cor_bounded_AI_threshold_at_rBarMax
     (V : ℝ) (hV_pos : 0 < V) (hKAI_gt : E.LG < E.KAI)
     (hrho_lt : E.rho < 1) :

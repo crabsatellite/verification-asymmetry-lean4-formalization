@@ -26,23 +26,12 @@
   identity at the level of marginal-product values.
 
   Window invariance (Proposition~\ref{prop:stock-flow-asymptotics}
-  Part 4) is *not* formalized here because it is a path-dependent
-  statement about the integral `V(t) = ∫_{t-T}^{t-T_j} ν g h dc`
-  whose path-dependent form is not captured by the steady-state
-  `Vinf` carrier in `Basic.lean`.  The Lean statement would require
-  function-space machinery (paper integrand over a window) that
-  inflates the formalization without adding new mathematical content.
-  Recorded as a `gapBlocked` entry in `Ledger.lean`.
-
-  ## Audit note (post-audit 2026-05)
-
-  The Euler identity `F(G, V) = w_G G + w_V V` for CRS production
-  was formerly carried as a *hypothesis* of `thm_decomp`, leaving
-  the proof body a one-line `rfl`.  The current version derives
-  the identity from `axiom_euler_crs` in `Axioms.lean` (Cat 2,
-  Mas-Colell-Whinston-Green §5.B.2).  The proof body is now a
-  honest application of the textbook fact, and the hypothesis-
-  hiding has been eliminated.
+  Part 4) is *not* formalized in this file.  A faithful Lean
+  statement of the paper's window-integral identity requires Mathlib
+  `MeasureTheory` integral infrastructure beyond this formalization's
+  structural scope; the claim is tracked as a `gapOpen` Ledger
+  `GapEntry` record (`gap_window_invariance_OPEN` in `Ledger.lean`)
+  WITHOUT a corresponding Lean `axiom`/`def`/`theorem` declaration.
 -/
 
 import VerificationAsymmetry.Basic
@@ -54,22 +43,6 @@ open Economy
 
 /-! ### Euler decomposition for CRS production. -/
 
-/-- *Euler decomposition (algebraic identity).* For any reals
-    `wG, wV, G, V`, defining the factor incomes as
-    `Wflow := wG · G` and `Wstock := wV · V`, we have the exact
-    identity `Wflow + Wstock = wG · G + wV · V`.
-
-    Under CRS production with `wG = F_G`, `wV = F_V`, Euler's
-    identity gives `F(G, V) = F_G · G + F_V · V`, hence
-    `Wflow + Wstock = W`.  This lemma is the pure algebraic
-    identity; the CRS link (`F = F_G · G + F_V · V`) is the
-    Euler identity hypothesis that the caller must supply for the
-    specific `F`.
-
-    Paper Eq.~\eqref{eq:decomp}. -/
-theorem thm_decomp_euler_identity (wG wV G V : ℝ) :
-    wG * G + wV * V = (wG * G) + (wV * V) := rfl
-
 /-- *Stock-flow decomposition.* Define `Wflow := w_G · G` and
     `Wstock := w_V · V`.  Then for any CRS production function `F`
     with marginal-product wages `w_G, w_V`,
@@ -80,47 +53,41 @@ theorem thm_decomp_euler_identity (wG wV G V : ℝ) :
     referenced from `Credential.lean` and `Externality.lean`.
 
     *Lean form:* derived from `axiom_euler_crs` (Cat 2, textbook
-    Euler identity for CRS production).  The axiom encodes the
-    paper's narrative claim "for `F` homogeneous of degree one,
-    Euler's theorem gives `F = F_G G + F_V V`".  Previously this
-    claim was carried as a hypothesis `hEuler : F G V = wG·G + wV·V`,
-    masking the textbook content; the explicit-axiom version is
-    the honest reduction. -/
-theorem thm_decomp (F : ℝ → ℝ → ℝ) (G V wG wV : ℝ) :
+    Euler identity for CRS production).  The axiom requires explicit
+    antecedents: `IsCRS F`, `HasDerivAt`-bound `wG`, `wV`, and
+    positivity of `G, V`. -/
+theorem thm_decomp (F : ℝ → ℝ → ℝ) (G V wG wV : ℝ)
+    (hCRS : IsCRS F)
+    (h_wG : HasDerivAt (fun x => F x V) wG G)
+    (h_wV : HasDerivAt (fun y => F G y) wV V)
+    (hG_pos : 0 < G) (hV_pos : 0 < V) :
     F G V = (wG * G) + (wV * V) :=
-  axiom_euler_crs F G V wG wV
+  axiom_euler_crs F G V wG wV hCRS h_wG h_wV hG_pos hV_pos
 
-/-- *Factor-share form of the decomposition.* Defining the
-    verification factor share `s_V := Wstock / W`, the additive
-    split reads `W = s_V W + (1 - s_V) W`, recovering the paper's
-    `Wstock = s_V W`, `Wflow = (1 - s_V) W` form.
+/-! ### Proposition~\ref{prop:stock-flow-asymptotics} Part 4: window
+    invariance — Ledger-only `gapOpen`, not Lean-encoded.
 
-    Given `W ≠ 0`, the factor-share form is immediate. -/
-theorem thm_decomp_factor_share (W Wstock : ℝ) (hW : W ≠ 0) :
-    W = (Wstock / W) * W + (1 - Wstock / W) * W := by
-  field_simp
-  ring
+  The paper's window-invariance result
+  (Proposition~\ref{prop:stock-flow-asymptotics} Part 4) states that,
+  for a time-varying AI-substitution path `θ(·)` held CONSTANT at
+  `θ_old` on the cohort-formation window `[t-T, t-T_j]`, the
+  verification stock `V(t)` depends ONLY on `θ_old` — in particular
+  it is invariant to the current substitution rate `θ(t)`.  The paper
+  derives this from the cohort integral
+  `V(t) = ∫_{t-T}^{t-T_j} ν g(e_J(c)) h(e_J(c)) dc`
+  (Def~\ref{def:cohort}), whose integrand depends only on `θ(s)` for
+  `s` in the window.
 
-/-- *Cobb-Douglas factor-share special case.* For the Cobb-Douglas
-    production `F G V = G^η · (λ V)^(1-η)`, the factor shares are
-    constants `s_G = η`, `s_V = 1 - η`.
-
-    Paper Proposition~\ref{prop:stock-flow-asymptotics} Part 2
-    (Cobb-Douglas).  We formalize the factor-share identity
-    `Wstock = (1 - η) W`, `Wflow = η W` for any positive output `W`. -/
-theorem thm_decomp_cobb_douglas_shares (W : ℝ) (eta : ℝ)
-    (heta_pos : 0 < eta) (heta_lt_one : eta < 1) :
-    W = eta * W + (1 - eta) * W := by
-  ring
-
-/-- *Stock-flow decomposition holds for any `F = CRS·`.* This
-    corollary records the paper's narrative claim: the additive
-    decomposition `W = Wflow + Wstock` follows from the CRS
-    property by Euler's identity.  As a structural statement
-    independent of the specific production form, we record it as
-    the algebraic identity proved by `thm_decomp_euler_identity`. -/
-theorem thm_decomp_holds_for_crs (G V wG wV : ℝ) :
-    wG * G + wV * V = (wG * G) + (wV * V) :=
-  thm_decomp_euler_identity wG wV G V
+  A faithful sound STATEMENT of this claim requires Mathlib
+  `MeasureTheory` integral infrastructure (to even express the
+  cohort-integral form) that is beyond this formalization's
+  structural scope.  No Lean `axiom`/`def`/`theorem` declaration is
+  provided: an `axiom` over a free `windowedStock` functional is
+  unsound (`False`-injectable), and a `def : Prop` whose constraining
+  predicate equals the asserted conclusion is vacuous (tautological).
+  The honest encoding is the Ledger `GapEntry`
+  `gap_window_invariance_OPEN` (`Ledger.lean`): a typed,
+  `#eval`-retrievable record tracking the gap's status, paper source,
+  and the reason it is not Lean-derived. -/
 
 end VerificationAsymmetry
