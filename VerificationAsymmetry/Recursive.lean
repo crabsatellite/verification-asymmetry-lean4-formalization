@@ -1,18 +1,16 @@
 /-
   VerificationAsymmetry/Recursive.lean
 
-  Theorem~\ref{thm:recursive} (Recursive Verification) and
-  Proposition~\ref{prop:boundary} (Generation-Verification
-  Separability and Pipeline Collapse).
+  Theorem~\ref{thm:recursive} (Verification-Pressure Reduced Form) and
+  Proposition~\ref{prop:boundary} (Technological Reachability Boundary).
 
-  Companion to: "Generation--Verification Asymmetry Inversion and
-  Apprenticeship Pipeline Collapse Under AI Substitution" (Li, 2026).
+  Companion to: "Generation--Verification Asymmetry and
+  Apprenticeship-Pipeline Thresholds Under AI Substitution" (Li, 2026).
 
   Statement.
 
-    AI output requires `μ ≥ 1` units of verification per unit of
-    generation; human output requires `1` unit.  Effective
-    verification demand is
+    The paper DECLARES a reduced-form verification-pressure index in
+    which AI output receives weight `μ ≥ 1` and human output weight 1:
         V_req(θ) = (1-θ) L_G + μ θ K_AI.
 
     Part 1.  Inversion threshold under recursive verification:
@@ -24,16 +22,21 @@
         W_E^{rec}(θ) / W_E(θ) = (V_req(θ)/G(θ))^{1-ρ}
                               → μ^{1-ρ} as K_AI → ∞.
 
-    Part 3.  Pipeline-collapse threshold θ* unchanged by μ
+    Part 3.  Conditional log-slope acceleration inside the declared
+              reduced form:
+        ∂θ log r_μ - ∂θ log r_1
+          = (1-ρ)(μ-1)L_G K_AI / (V_req G) > 0.
+
+    Part 4.  Pipeline-collapse threshold θ* unchanged by μ
               (cohort dynamics depend on supply side, not
               recursive-verification demand side).
 
-    Part 4.  Wage-ratio acceleration: w_V/w_G under recursive
-              verification rises at rate ≥ μ^{1-ρ} of the baseline.
+    Part 5.  Pointwise amplification is bounded between 1 and
+              μ^{1-ρ}; the upper endpoint is attained at θ = 1.
 
-  Lean strategy.  All four parts are real-arithmetic identities
-  given the definition of `V_req` and the closed-form inversion
-  threshold from `Inversion.lean`.  Part 3 is a definitional
+  Lean strategy.  The algebraic parts are real-arithmetic consequences
+  of the DECLARED `V_req` and `wageRatioRec` reduced forms; Lean does
+  not derive those forms from the baseline CES technology.  Part 3 is a definitional
   observation (recursion-θ* invariance is by-construction since
   μ does not appear in `Vinf` / `eBar`).
 -/
@@ -48,9 +51,9 @@ namespace Economy
 
 variable (E : Economy)
 
-/-! ### Effective verification demand `V_req(θ)`. -/
+/-! ### Declared verification-pressure index `V_req(θ)`. -/
 
-/-- *Effective verification demand* under recursive verification:
+/-- *Verification-pressure index* in the recursive reduced form:
     `V_req(θ) = (1-θ) L_G + μ θ K_AI`,
     paper Eq.~\eqref{eq:V-req-recursive}. -/
 def Vreq (μ θ : ℝ) : ℝ := (1 - θ) * E.LG + μ * θ * E.KAI
@@ -65,6 +68,29 @@ def Vreq (μ θ : ℝ) : ℝ := (1 - θ) * E.LG + μ * θ * E.KAI
     factor `μ = 1` collapses to plain `G`). -/
 theorem Vreq_at_mu_one (θ : ℝ) : E.Vreq 1 θ = E.G θ := by
   unfold Vreq G; ring
+
+/-- For `μ ≥ 1` and a feasible substitution share, the declared pressure
+    ratio lies in `[1, μ]`.  This is the exact finite-capacity bound used
+    by the paper. -/
+theorem Vreq_ratio_bounds
+    (μ θ : ℝ) (hμ : 1 ≤ μ) (hθ0 : 0 ≤ θ) (hθ1 : θ ≤ 1) :
+    1 ≤ E.Vreq μ θ / E.G θ ∧ E.Vreq μ θ / E.G θ ≤ μ := by
+  have hG : 0 < E.G θ := E.G_pos hθ0 hθ1
+  have hA : 0 ≤ (μ - 1) * θ * E.KAI :=
+    mul_nonneg (mul_nonneg (sub_nonneg.mpr hμ) hθ0) E.KAI_pos.le
+  have hB : 0 ≤ (μ - 1) * (1 - θ) * E.LG :=
+    mul_nonneg
+      (mul_nonneg (sub_nonneg.mpr hμ) (sub_nonneg.mpr hθ1)) E.LG_pos.le
+  have hLower : E.G θ ≤ E.Vreq μ θ := by
+    unfold G Vreq
+    nlinarith
+  have hUpper : E.Vreq μ θ ≤ μ * E.G θ := by
+    unfold G Vreq
+    nlinarith
+  constructor
+  · apply (le_div_iff₀ hG).2
+    simpa using hLower
+  · exact (div_le_iff₀ hG).2 hUpper
 
 /-! ### Recursive inversion threshold. -/
 
@@ -136,7 +162,7 @@ theorem thm_recursive_threshold_leftward
 
 /-! ### Theorem~\ref{thm:recursive} Part 3: pipeline-collapse invariance.
 
-  Per paper `\label{thm:recursive}` Part 3, the cohort experience
+  Per paper `\label{thm:recursive}` Part 3, the maintained cohort experience
   accumulation rate `1-θ` is invariant in `μ`: recursive verification
   operates on the demand side (`Vreq`), not the supply side (`eBar`,
   `Vinf`).  Hence `ē(θ) = (1-θ) T_j` is independent of `μ`, and so
@@ -145,17 +171,17 @@ theorem thm_recursive_threshold_leftward
   This invariance is satisfied by construction in this Lean
   formalization: the carriers `thetaStar`, `eBar`, `VinfHard` are
   all defined without any `μ` argument, so there is no μ-dependent
-  quantity to prove invariant in the first place.  Cat 3
-  `structuralEquation` content (the absence of μ-dependence is the
-  paper's structural commitment); no Lean theorem is provided.
+  quantity to prove invariant in the first place.  This is a
+  definitional separation built into the model, not a derived
+  robustness result; no Lean theorem is needed.
 
-  See `gap_thm_recursive_invariance_OPEN` in `Ledger.lean`
+  See `gap_thm_recursive_invariance_DEFINITIONAL` in `Ledger.lean`
   for the canonical record. -/
 
 /-! ### Theorem~\ref{thm:recursive} Part 2 + 4: wedge amplification. -/
 
-/-- *Recursive wage-ratio function* (analogous to `wageRatio`):
-    `w_V/w_G under recursive verification = ((1-η)/η) λ^ρ
+/-- *Declared recursive wage-ratio schedule* (analogous to `wageRatio`):
+    `w_V/w_G in the recursive reduced form = ((1-η)/η) λ^ρ
     (V_req(θ)/V)^{1-ρ}`. -/
 noncomputable def wageRatioRec (μ V θ : ℝ) : ℝ :=
   ((1 - E.eta) / E.eta) * E.lam ^ E.rho * (E.Vreq μ θ / V) ^ (1 - E.rho)
@@ -195,12 +221,79 @@ theorem thm_recursive_wage_ratio_amplification
     field_simp
   rw [hInnerEq]
 
-/-! ### Proposition~\ref{prop:boundary}: which professions collapse. -/
+/-- The amplification factor generated by the declared reduced form is
+    pointwise bounded by `1` and `μ^(1-ρ)` for feasible `θ` and `μ ≥ 1`. -/
+theorem thm_recursive_amplification_bounds
+    (μ θ : ℝ) (hμ : 1 ≤ μ) (hθ0 : 0 ≤ θ) (hθ1 : θ ≤ 1) :
+    1 ≤ (E.Vreq μ θ / E.G θ) ^ (1 - E.rho) ∧
+      (E.Vreq μ θ / E.G θ) ^ (1 - E.rho) ≤ μ ^ (1 - E.rho) := by
+  have hratio := E.Vreq_ratio_bounds μ θ hμ hθ0 hθ1
+  have hexp : 0 ≤ 1 - E.rho := by linarith [E.rho_le_one]
+  constructor
+  · simpa using Real.rpow_le_rpow (show (0 : ℝ) ≤ 1 by norm_num) hratio.1 hexp
+  · exact Real.rpow_le_rpow (by linarith [hratio.1]) hratio.2 hexp
 
-/-- **Proposition~\ref{prop:boundary} (separability condition).**
-    A profession with bundling share `ζ_V ∈ [0, 1]` exhibits the
-    pipeline collapse iff `ζ_V < τ*/T_j`, equivalently
-    `1 - ζ_V > θ* = 1 - τ*/T_j`.
+/-! ### Theorem~\ref{thm:recursive} Part 3: conditional log-slope
+    acceleration. -/
+
+/-- **Theorem~\ref{thm:recursive} Part 3 (log-slope difference,
+    algebraic core).** Direct differentiation of the declared schedules gives
+    the two log-slope forms on the left.  Their difference simplifies exactly
+    to the expression on the right.
+
+    This theorem machine-checks that simplification.  It remains conditional
+    on the paper's declared `wageRatioRec` reduced form; it does not derive that
+    schedule from a constrained-production problem. -/
+theorem thm_recursive_log_slope_difference
+    (μ θ : ℝ) (hμ : 1 ≤ μ) (hθ0 : 0 ≤ θ) (hθ1 : θ ≤ 1) :
+    (1 - E.rho) * (μ * E.KAI - E.LG) / E.Vreq μ θ
+        - (1 - E.rho) * (E.KAI - E.LG) / E.G θ
+      = (1 - E.rho) * (μ - 1) * E.LG * E.KAI /
+          (E.Vreq μ θ * E.G θ) := by
+  have hG_pos : 0 < E.G θ := E.G_pos hθ0 hθ1
+  have hratio := E.Vreq_ratio_bounds μ θ hμ hθ0 hθ1
+  have hVreq_pos : 0 < E.Vreq μ θ := by
+    have hVG : E.G θ ≤ E.Vreq μ θ := by
+      simpa using (le_div_iff₀ hG_pos).mp hratio.1
+    linarith
+  have hG_ne : E.G θ ≠ 0 := ne_of_gt hG_pos
+  have hVreq_ne : E.Vreq μ θ ≠ 0 := ne_of_gt hVreq_pos
+  field_simp
+  unfold Vreq G
+  ring
+
+/-- **Theorem~\ref{thm:recursive} Part 3 (strict acceleration).**
+    For `μ > 1` and `ρ < 1`, the exact log-slope difference from
+    `thm_recursive_log_slope_difference` is strictly positive.  This is an
+    additive comparison, not a claim that derivatives have the constant ratio
+    `μ^(1-ρ)`. -/
+theorem thm_recursive_log_slope_acceleration
+    (μ θ : ℝ) (hμ : 1 < μ) (hρ : E.rho < 1)
+    (hθ0 : 0 ≤ θ) (hθ1 : θ ≤ 1) :
+    0 < (1 - E.rho) * (μ * E.KAI - E.LG) / E.Vreq μ θ
+        - (1 - E.rho) * (E.KAI - E.LG) / E.G θ := by
+  rw [E.thm_recursive_log_slope_difference μ θ hμ.le hθ0 hθ1]
+  have hG_pos : 0 < E.G θ := E.G_pos hθ0 hθ1
+  have hratio := E.Vreq_ratio_bounds μ θ hμ.le hθ0 hθ1
+  have hVreq_pos : 0 < E.Vreq μ θ := by
+    have hVG : E.G θ ≤ E.Vreq μ θ := by
+      simpa using (le_div_iff₀ hG_pos).mp hratio.1
+    linarith
+  have hnum_pos :
+      0 < (1 - E.rho) * (μ - 1) * E.LG * E.KAI := by
+    have hρpos : 0 < 1 - E.rho := sub_pos.mpr hρ
+    have hμpos : 0 < μ - 1 := sub_pos.mpr hμ
+    exact mul_pos (mul_pos (mul_pos hρpos hμpos) E.LG_pos) E.KAI_pos
+  exact div_pos hnum_pos (mul_pos hVreq_pos hG_pos)
+
+/-! ### Proposition~\ref{prop:boundary}: technological reachability. -/
+
+/-- **Proposition~\ref{prop:boundary} (reachability condition).**
+    A profession with bundling share `ζ_V ∈ [0, 1]` admits SOME
+    technologically feasible substitution share above the collapse
+    threshold iff `ζ_V < τ*/T_j`, equivalently
+    `1 - ζ_V > θ* = 1 - τ*/T_j`.  It does not assert that an
+    equilibrium or observed path reaches that share.
 
     *Formal content:* the equivalence
     `(1 - ζ_V > θ*) ↔ (ζ_V < τ*/T_j)`. -/

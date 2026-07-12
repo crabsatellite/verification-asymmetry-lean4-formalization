@@ -63,11 +63,11 @@
                                       entries are the canonical
                                       record for both layers.
 
-  Cat 3 (paper claims tracked as Ledger-only entries).  Five paper
-                                      claims have NO Lean
+  Paper claims tracked as Ledger-only entries.  Four open claims
+                                      have NO Lean
                                       `axiom`/`def`/`theorem`
-                                      declaration.  Group A — four
-                                      claims with Lean derivation
+                                      declaration.  These four
+                                      claims have Lean derivation
                                       deferred for out-of-scope
                                       Mathlib infrastructure: window
                                       invariance
@@ -79,6 +79,10 @@
                                       narrative endogenous-AI-
                                       verification residual bound
                                       (`gap_prop_adjustment_narrative_OPEN`).
+                                      One paper-proved limit is partial:
+                                      `gap_thm_aggregation_near_cd_limit_PARTIAL`
+                                      records the near-Cobb--Douglas
+                                      variable-exponent limit pending Lean.
                                       A faithful sound STATEMENT of
                                       each requires Mathlib
                                       infrastructure (MeasureTheory
@@ -86,15 +90,15 @@
                                       analysis; residual
                                       non-codifiability semantics)
                                       beyond this formalization's
-                                      structural scope.  Group B —
-                                      one claim satisfied by
-                                      construction:
-                                      `gap_thm_recursive_invariance_OPEN`
+                                      structural scope.  A separate
+                                      definitional claim is satisfied
+                                      by construction:
+                                      `gap_thm_recursive_invariance_DEFINITIONAL`
                                       records that `thetaStar` /
                                       `VinfHard` are defined without
                                       a μ parameter, so the paper's
                                       μ-invariance commitment of
-                                      `\label{thm:recursive}` Part 3
+                                      `\label{thm:recursive}` Part 4
                                       is satisfied by the Lean code's
                                       type-signature structure (no
                                       Lean theorem can be written —
@@ -107,7 +111,7 @@
                                       equals the conclusion is
                                       vacuous (tautological).  The
                                       honest encoding is the Ledger
-                                      `GapEntry` record itself — a
+                                      `gapDefinitional` `GapEntry` record — a
                                       typed, `#eval`-retrievable
                                       declaration tracking the gap,
                                       its status, its paper source,
@@ -131,11 +135,9 @@
   Any axiom outside this list — i.e. anything beyond the Lean kernel
   and the three declared Cat 2 axioms — is a RED FLAG, investigate.
   No Ledger-only entry is an `axiom`: the closed numerical
-  calibration is a derived `theorem`, and the five Ledger-only paper
-  claims (four with Lean derivation deferred for out-of-scope Mathlib
-  infrastructure + one satisfied by construction via the μ-free
-  carrier signatures) are `gapOpen` `GapEntry` records with no Lean
-  declaration at all.
+  calibration is a derived `theorem`.  Four Ledger-only paper claims
+  are `gapOpen`; the μ-free carrier observation is `gapDefinitional`.
+  None is an added Lean axiom.
 
   Per-axiom citations live in the docstrings of `Axioms.lean`; the
   per-entry scope and notes for each closed result or deferred claim
@@ -195,6 +197,9 @@ import VerificationAsymmetry
 #print axioms VerificationAsymmetry.Economy.thm_credential_cobb_douglas_reduction
 #print axioms VerificationAsymmetry.Economy.thm_credential_cobb_douglas_reduction_from_axioms
 #print axioms VerificationAsymmetry.Economy.thm_credential_closed_form
+#print axioms VerificationAsymmetry.Economy.thetaGrossPeak_in_unit
+#print axioms VerificationAsymmetry.Economy.thm_credential_finite_capacity_peak_foc
+#print axioms VerificationAsymmetry.Economy.thm_credential_finite_capacity_peak_unique
 #print axioms VerificationAsymmetry.Economy.thm_credential_leontief_pre_collapse
 #print axioms VerificationAsymmetry.Economy.thm_credential_leontief_post_collapse
 #print axioms VerificationAsymmetry.Economy.thm_credential_multiplicative_decay
@@ -226,12 +231,16 @@ import VerificationAsymmetry
 -- Theorem~\ref{thm:recursive}
 -- (Part 3 μ-invariance of thetaStar and VinfHard is satisfied by
 -- construction — the carriers carry no μ argument; no Lean theorem
--- is provided.  See `gap_thm_recursive_invariance_OPEN` in
+-- is provided.  See `gap_thm_recursive_invariance_DEFINITIONAL` in
 -- Ledger.lean.)
 #print axioms VerificationAsymmetry.Economy.thm_recursive_threshold_closed_form
 #print axioms VerificationAsymmetry.Economy.thm_recursive_threshold_ratio
 #print axioms VerificationAsymmetry.Economy.thm_recursive_threshold_leftward
+#print axioms VerificationAsymmetry.Economy.Vreq_ratio_bounds
 #print axioms VerificationAsymmetry.Economy.thm_recursive_wage_ratio_amplification
+#print axioms VerificationAsymmetry.Economy.thm_recursive_amplification_bounds
+#print axioms VerificationAsymmetry.Economy.thm_recursive_log_slope_difference
+#print axioms VerificationAsymmetry.Economy.thm_recursive_log_slope_acceleration
 
 -- Proposition~\ref{prop:boundary}
 #print axioms VerificationAsymmetry.Economy.prop_boundary_collapse_iff
@@ -268,18 +277,20 @@ import VerificationAsymmetry
 #print axioms VerificationAsymmetry.Economy.thm_endogenous_ai_full_recovery_at_T
 #print axioms VerificationAsymmetry.Economy.thm_endogenous_ai_recovery_takes_full_career
 
--- Paper claims tracked as Ledger-only entries.  Five paper claims
--- have NO Lean `axiom`/`def`/`theorem` declaration.  Group A: four
+-- Paper claims tracked as Ledger-only entries.  Four open paper claims
+-- have NO Lean `axiom`/`def`/`theorem` declaration:
 -- claims (window invariance; aggregation sequential kinks;
 -- intermediate-regime elasticity; the narrative endogenous-AI-
 -- verification residual bound) with Lean derivation deferred — a
 -- faithful sound statement of each requires Mathlib infrastructure
--- beyond this formalization's structural scope.  Group B: one
--- claim satisfied by construction
--- (`gap_thm_recursive_invariance_OPEN`) — `thetaStar` / `VinfHard`
+-- beyond this formalization's structural scope.  The paper-proved
+-- near-Cobb--Douglas variable-exponent limit is separately tracked as
+-- `gap_thm_aggregation_near_cd_limit_PARTIAL`.  One separate
+-- definitional claim is satisfied by construction
+-- (`gap_thm_recursive_invariance_DEFINITIONAL`) — `thetaStar` / `VinfHard`
 -- are defined without a μ parameter, so the paper's μ-invariance
--- commitment is encoded in the type signatures themselves.  All
--- five are tracked as `gapOpen` Ledger `GapEntry` records — see
+-- commitment is encoded in the type signatures themselves.  It is
+-- tracked as `gapDefinitional`; the other four are `gapOpen` — see
 -- `Ledger.lean` for the canonical records (and the Ledger-only-
 -- entry exemption in its top docstring).  Nothing to `#check` or
 -- `#print axioms` here, which is correct: there is no Lean

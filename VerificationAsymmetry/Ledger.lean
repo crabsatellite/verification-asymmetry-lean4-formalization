@@ -52,7 +52,7 @@
 
   One further `cat3PaperNovel` entry has sub-type
   `phenomenologicalConjecture` — the endogenous-AI-verification
-  residual bound `δ(θ) < 1` of the adjustment-margins narrative — a
+  residual-floor premise `δ(θ) ≤ 1-ε` for an explicit `ε>0` — a
   substantive empirical claim about the Polanyi verification residual,
   with a cohort-study resolution path.  Tracked as `gapOpen` and
   Ledger-only (no Lean declaration).
@@ -84,11 +84,10 @@
 
   ## Ledger-only entries (paper claims tracked without a Lean declaration)
 
-  Five paper claims are tracked as `gapOpen` Ledger `GapEntry`
+  Four paper claims are tracked as `gapOpen` Ledger `GapEntry`
   records WITHOUT a corresponding Lean `axiom`/`def`/`theorem`.
-  They split into two groups:
 
-  Group A — four claims with distinct deferred-resolution paths.
+  These four claims have distinct deferred-resolution paths.
   Window invariance (`gap_window_invariance_OPEN`), sequential
   aggregation kinks (`gap_aggregation_sequential_kinks_OPEN`), and
   intermediate-regime elasticity
@@ -101,12 +100,18 @@
   empirical (cohort-study evidence per `\label{sec:predictions}`),
   not Mathlib derivation.
 
-  Group B — one claim satisfied by construction:
-  `gap_thm_recursive_invariance_OPEN` records the μ-invariance
-  commitment of `\label{thm:recursive}` Part 3.  `thetaStar`,
+  One additional paper-proved limit claim is tracked as `gapPartial`:
+  `gap_thm_aggregation_near_cd_limit_PARTIAL` records the
+  near-Cobb--Douglas variable-exponent finite-sum limit.  Its endpoint
+  ingredients are Lean-closed, while the full limit is not yet encoded.
+
+  A separate `gapDefinitional` record,
+  `gap_thm_recursive_invariance_DEFINITIONAL`, records the μ-invariance
+  commitment of `\label{thm:recursive}` Part 4.  `thetaStar`,
   `VinfHard`, and `eBar` take no μ argument, so the paper claim is
   satisfied by the type-signature structure of the Lean code with no
-  μ-dependence to quantify over.  Tagged
+  μ-dependence to quantify over.  It is not an independently proved
+  robustness theorem.  Tagged
   `inputCategory := notInput` + `cat3SubType := notCat3`.
 
   Rationale.  Encoding such a claim as `axiom` would universally
@@ -573,11 +578,11 @@ def gap_thm_collapse_above_CLOSED : GapEntry := {
     "`VinfHard_eq_zero_of_eBar_lt_tauStar`."
 }
 
-/-- Theorem~\ref{thm:collapse} Part 4: transient linear decay
-    (bundle covering four pointwise theorems). -/
-def gap_thm_collapse_transient_CLOSED : GapEntry := {
+/-- Theorem~\ref{thm:collapse} Part 4: only the pre-shock-senior
+    component of the transient path is currently formalized. -/
+def gap_thm_collapse_transient_PARTIAL : GapEntry := {
   name := "thm_collapse_transient_decay (bundle)"
-  status := GapStatus.gapClosed
+  status := GapStatus.gapPartial
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:collapse}` Part 4, " ++
@@ -587,9 +592,12 @@ def gap_thm_collapse_transient_CLOSED : GapEntry := {
     "Bundle entry covering four pointwise theorems: " ++
     "`thm_collapse_transient_at_zero`, `thm_collapse_transient_at_Ts`, " ++
     "`thm_collapse_transient_linear`, `thm_collapse_transient_zero_after_Ts`. " ++
-    "Each is a `gapClosed`-via-`notInput` derived theorem.  Transient " ++
-    "stock `V(t) = V_∞(θ_0) · (1 - t/T_s)_+` formalized via " ++
-    "`transientStock` def."
+    "These close the linear decay of the PRE-SHOCK SENIOR COMPONENT " ++
+    "`V_pre(t) = V_∞(θ_0) · (1 - t/T_s)_+`, formalized via " ++
+    "`transientStock`.  They do NOT formalize the paper's complete " ++
+    "post-step cohort integral, the straddling-cohort experience path, " ++
+    "or the exact full-stock clearing time.  The paper claim is therefore " ++
+    "`gapPartial`, not closed."
 }
 
 /-- Theorem~\ref{thm:collapse} Part 5: general-`h` value at θ*. -/
@@ -603,9 +611,9 @@ def gap_thm_collapse_general_h_CLOSED : GapEntry := {
   scope :=
     "For ANY function `h : ℝ → ℝ`, the steady-state stock at " ++
     "`θ*` equals exactly `ν T_s h(τ*)`.  Algebraic identity once " ++
-    "`ē(θ*) = τ*` is substituted.  Paper Part 5's lower-bound claim " ++
-    "(jump ≥ ν T_s h(τ*) for monotone h with h(τ*) > 0) follows " ++
-    "from this value combined with the uniform vanishing above `θ*`."
+    "`ē(θ*) = τ*` is substituted.  The theorem does not establish a " ++
+    "left limit for arbitrary `h`; the paper now conditions that limit " ++
+    "on the required one-sided continuity."
 }
 
 /-- Proposition~\ref{prop:smooth-collapse}: smooth-threshold collapse
@@ -651,16 +659,29 @@ def gap_thm_credential_CLOSED : GapEntry := {
     "Cat 2 dependency (via `_from_axioms` form): " ++
     "`axiom_cobb_douglas_factor_share`. Verifiable by " ++
     "`#print axioms thm_credential_cobb_douglas_reduction_from_axioms`.  " ++
-    "Paper `\\label{thm:credential}` Part 2 (Cobb-Douglas regime " ++
-    "non-monotonicity of `R(θ)` with peak at `θ† = η/(η + a(1-η))`) " ++
-    "is silently omitted from the Lean formalization — the " ++
-    "non-monotonicity peak is a differential-calculus statement " ++
-    "(first-order condition on a closed form), and the formalization " ++
-    "covers the closed-form reduction (Part 1 / `eq:R-senior-rent`) " ++
-    "plus the Leontief decay (Part 1+4) and multiplicative decay " ++
-    "(Part 3); the Part 2 peak location is not separately tracked.  " ++
-    "Disclosed here parallel to the `thm:inversion` Parts 3+4 " ++
-    "omission note in `gap_thm_inversion_threshold_CLOSED.notes`."
+    "The finite-capacity Part 2 peak is now tracked separately by " ++
+    "`gap_thm_credential_finite_peak_CLOSED`."
+}
+
+/-- Theorem~\ref{thm:credential} Part 2: finite-capacity gross peak. -/
+def gap_thm_credential_finite_peak_CLOSED : GapEntry := {
+  name := "thm_credential_finite_capacity_peak (Part 2 bundle)"
+  status := GapStatus.gapClosed
+  inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
+  paperSource := "Li 2026, `\\label{thm:credential}` Part 2, " ++
+    "Eq. `\\eqref{eq:finite-gross-peak}`"
+  attackHistory := []
+  scope :=
+    "Bundle entry covering `thetaGrossPeak_in_unit`, " ++
+    "`thm_credential_finite_capacity_peak_foc`, and " ++
+    "`thm_credential_finite_capacity_peak_unique`.  Lean proves the exact " ++
+    "closed form lies in `(0,1)` under the displayed interior condition, " ++
+    "solves `η(K_AI-L_G)/G = a(1-η)/(1-θ)`, and is the unique solution " ++
+    "of that FOC on `(0,1)`.  The paper's sign calculation for the strictly " ++
+    "decreasing affine derivative numerator then identifies it as the unique " ++
+    "below-threshold gross-component maximum when `θ† < θ*`.  This is not a " ++
+    "claim about the net return after subtracting junior cost."
 }
 
 /-- Theorem~\ref{thm:credential} Part 1 (Leontief decay rate
@@ -770,7 +791,7 @@ def gap_thm_externality_nonneg_CLOSED : GapEntry := {
     "`g · h > 0` and `wV, Λ > 0`)."
 }
 
-/-- Theorem~\ref{thm:externality} Part 3: Cobb-Douglas Pigouvian
+/-- Theorem~\ref{thm:externality} Part 3: Cobb-Douglas residual-transfer
     formula bundle (parametric + `_from_axioms`). -/
 def gap_thm_externality_pigouvian_CLOSED : GapEntry := {
   name := "thm_externality_pigouvian_cobb_douglas (bundle)"
@@ -780,7 +801,7 @@ def gap_thm_externality_pigouvian_CLOSED : GapEntry := {
   paperSource := "Li 2026, `\\label{thm:externality}` Part 3 " ++
     "(the formula `s*(θ) = (1-η) Y Λ / (ν T_s)` is derived inside " ++
     "`\\label{thm:externality}` Part 3 and later relabeled " ++
-    "`\\label{eq:s-star}` for the Pigouvian-subsidy " ++
+    "`\\label{eq:s-star}` for the residual-transfer " ++
     "discussion in `\\label{sec:policy}`)"
   attackHistory := []
   scope :=
@@ -788,8 +809,8 @@ def gap_thm_externality_pigouvian_CLOSED : GapEntry := {
     "(parametric) and `thm_externality_pigouvian_cobb_douglas_from_axioms` " ++
     "(axiom-discharged via `axiom_cobb_douglas_factor_share`).  Under " ++
     "Cobb-Douglas factor share and `g · h > 0`, " ++
-    "`s*(θ) = (1-η) Y(θ) Λ / (ν T_s)`. Closed-form Pigouvian " ++
-    "subsidy per junior."
+    "`s*(θ) = (1-η) Y(θ) Λ / (ν T_s)`.  This is a closed-form " ++
+    "residual-equalizing transfer per junior, not a first-best policy theorem."
   notes :=
     "Cat 2 dependency (via `_from_axioms` form): " ++
     "`axiom_cobb_douglas_factor_share`.  Verifiable by " ++
@@ -827,9 +848,9 @@ def gap_prop_internalization_CLOSED : GapEntry := {
 
 /-- Proposition~\ref{prop:decentralized-theta} (social overshoot
     bundle: FOC + wG strict + overshoots). -/
-def gap_prop_decentralized_theta_CLOSED : GapEntry := {
+def gap_prop_decentralized_theta_CONDITIONAL : GapEntry := {
   name := "prop_decentralized_theta (bundle)"
-  status := GapStatus.gapClosed
+  status := GapStatus.gapClosedConditional
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{prop:decentralized-theta}`, " ++
@@ -847,13 +868,9 @@ def gap_prop_decentralized_theta_CLOSED : GapEntry := {
   notes :=
     "Parametric bridge — `prop_decentralized_theta_overshoots` " ++
     "takes `wG` anti-monotonicity as a bare hypothesis " ++
-    "(`∀ x y, x < y → wG y < wG x`); the anti-monotonicity itself " ++
-    "is derived from the CES inversion structure in " ++
-    "`thm_inversion_wage_ratio_monotone` / paper " ++
-    "`\\label{thm:inversion}` (wage ratio strictly increasing in " ++
-    "`θ`, hence `wG` strictly decreasing as the AI substitution " ++
-    "rate rises).  The Lean encoding chains this dependency " ++
-    "conceptually; the bridge theorem proves the `θ_soc < θ_eq` " ++
+    "(`∀ x y, x < y → wG y < wG x`).  This is an INDEPENDENT " ++
+    "reduced-form premise: an increasing wage ratio does not imply " ++
+    "that `wG` itself is decreasing.  The bridge theorem proves the `θ_soc < θ_eq` " ++
     "overshoot GIVEN anti-monotonicity.  `prop_decentralized_theta_foc` " ++
     "is similarly a parametric bridge: it derives the FOC identity " ++
     "`wG(θ_soc) = wG(θ_eq) + s*` by linear arithmetic from the " ++
@@ -869,9 +886,9 @@ def gap_prop_decentralized_theta_CLOSED : GapEntry := {
 
 /-- Theorem~\ref{thm:recursive} Part 1: closed-form recursive
     threshold (bundle: closed-form + ratio + leftward). -/
-def gap_thm_recursive_threshold_CLOSED : GapEntry := {
+def gap_thm_recursive_threshold_CONDITIONAL : GapEntry := {
   name := "thm_recursive_threshold (Part 1 bundle)"
-  status := GapStatus.gapClosed
+  status := GapStatus.gapClosedConditional
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:recursive}` Part 1, " ++
@@ -883,58 +900,80 @@ def gap_thm_recursive_threshold_CLOSED : GapEntry := {
     "`V_req(θ_inv^{rec}) = G*(r̄)`), `thm_recursive_threshold_ratio` " ++
     "(ratio `θ_inv^{rec}/θ_inv = (K_AI - L_G)/(μ K_AI - L_G)`), and " ++
     "`thm_recursive_threshold_leftward` (strict `θ_inv^{rec} < " ++
-    "θ_inv` for `μ > 1`).  Strict leftward shift for `μ > 1`."
+    "θ_inv` for `μ > 1`).  Strict leftward shift for `μ > 1`.  " ++
+    "This is conditional on the declared recursive verification-pressure " ++
+    "wage schedule; that schedule is not derived from the baseline CES block."
 }
 
 /-- Theorem~\ref{thm:recursive} Part 2 wedge amplification (Part 4
     asymptotic scaling subsumed by `μ^{1-ρ}` scope claim). -/
-def gap_thm_recursive_wedge_CLOSED : GapEntry := {
+def gap_thm_recursive_wedge_CONDITIONAL : GapEntry := {
   name := "thm_recursive_wage_ratio_amplification"
-  status := GapStatus.gapClosed
+  status := GapStatus.gapClosedConditional
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:recursive}` Part 2 wedge " ++
     "amplification ratio, Eq. `\\eqref{eq:wedge-recursive}`"
   attackHistory := []
   scope :=
-    "`w_V^{rec}/w_V = (V_req/G)^(1-ρ)`. Captures the Part 2 wedge " ++
-    "amplification claim.  Paper Part 4 (asymptotic wage-ratio " ++
-    "acceleration `μ^{1-ρ}` as `K_AI → ∞`) follows from this " ++
-    "Part 2 identity composed with `V_req(θ)/G(θ) → μ` for " ++
-    "`K_AI → ∞`; the closed-form Lean identity covers both."
+    "`w_V^{rec}/w_V = (V_req/G)^(1-ρ)`.  `Vreq_ratio_bounds` proves " ++
+    "`1 ≤ V_req/G ≤ μ`, and `thm_recursive_amplification_bounds` " ++
+    "therefore proves the finite pointwise bound " ++
+    "`1 ≤ (V_req/G)^(1-ρ) ≤ μ^(1-ρ)`.  These Lean results are exact " ++
+    "only within the separately declared reduced-form wage schedule."
   notes :=
     "Scope clarification: `thm_recursive_wage_ratio_amplification` " ++
-    "captures Part 2 closed-form claim (`(V_req/G)^(1-ρ)`) directly; " ++
-    "Part 4 asymptotic claim (`μ^{1-ρ}`) is a limit consequence, " ++
-    "not separately formalized (would require Mathlib limit " ++
-    "infrastructure for `K_AI → ∞`)."
+    "captures the closed-form amplification identity directly; the " ++
+    "new finite-capacity bound avoids relying on an unformalized " ++
+    "`K_AI → ∞` limit."
 }
 
-/-- Theorem~\ref{thm:recursive} Part 3 (collapse threshold
-    μ-invariance) — Ledger-only by-construction structural
-    commitment; no Lean declaration. -/
-def gap_thm_recursive_invariance_OPEN : GapEntry := {
-  name :=
-    "thm:recursive Part 3 (μ-invariance) — by-construction; " ++
-    "Ledger-only; no Lean declaration"
-  status := GapStatus.gapOpen
+/-- Theorem~\ref{thm:recursive} Part 3: conditional log-slope acceleration. -/
+def gap_thm_recursive_log_slope_CONDITIONAL : GapEntry := {
+  name := "thm_recursive_log_slope_acceleration"
+  status := GapStatus.gapClosedConditional
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
-  paperSource := "Li 2026, `\\label{thm:recursive}` Part 3"
+  paperSource := "Li 2026, `\\label{thm:recursive}` Part 3, " ++
+    "Eq. `\\eqref{eq:recursive-log-slope}`"
   attackHistory := []
   scope :=
-    "Paper Theorem 3 Part 3 (μ-invariance of θ* and V_∞) is " ++
+    "Conditional on the declared reduced-form schedule, " ++
+    "`thm_recursive_log_slope_difference` proves the exact algebraic " ++
+    "difference between the two directly differentiated log-slope forms, " ++
+    "and `thm_recursive_log_slope_acceleration` proves it is strictly " ++
+    "positive for `μ>1`, `ρ<1`, and feasible `θ`.  This is an additive " ++
+    "slope comparison; it does not assert a derivative multiplier of " ++
+    "`μ^(1-ρ)` and does not close the constrained-production microfoundation."
+}
+
+/-- Theorem~\ref{thm:recursive} Part 4 (collapse threshold
+    μ-invariance) — Ledger-only by-construction structural
+    commitment; no Lean declaration. -/
+def gap_thm_recursive_invariance_DEFINITIONAL : GapEntry := {
+  name :=
+    "thm:recursive Part 4 (μ-invariance) — by-construction; " ++
+    "Ledger-only; no Lean declaration"
+  status := GapStatus.gapDefinitional
+  inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
+  paperSource := "Li 2026, `\\label{thm:recursive}` Part 4"
+  attackHistory := []
+  scope :=
+    "Paper Theorem 3 Part 4 (μ-invariance of θ* and V_∞) is " ++
     "satisfied by construction in this formalization: " ++
     "`thetaStar = 1 - τ*/T_j` and `VinfHard a θ = ν T_s ((1-θ)T_j)^a` " ++
     "contain no μ.  μ-invariance holds by construction because " ++
     "`thetaStar` / `VinfHard` are defined without a μ parameter; " ++
     "no Lean declaration exists or is needed — there is no " ++
     "μ-dependence to quantify over, so the absence of a μ " ++
-    "parameter in the carrier type signatures IS the claim.  Not " ++
+    "parameter in the carrier type signatures IS the claim.  It is " ++
+    "therefore `gapDefinitional`, not an independently proved dynamic " ++
+    "result.  Not " ++
     "an atomic input (`notInput` / `notCat3`): it records the " ++
     "ABSENCE of a parameter in the separately-tracked `thetaStar` " ++
     "/ `Vinf` carriers, not a standalone paper-stated structural " ++
-    "equation.  Tracked as a `gapOpen` Ledger-only `GapEntry` (no " ++
+    "equation.  Tracked as a `gapDefinitional` Ledger-only `GapEntry` (no " ++
     "Lean declaration; the paper claim is satisfied by the Lean " ++
     "code's type-signature structure, which is the honest encoding " ++
     "given the absence of a μ-dependence to derive)."
@@ -949,7 +988,7 @@ def gap_thm_recursive_invariance_OPEN : GapEntry := {
     "`allGaps`, not by `#print axioms`."
 }
 
-/-- Proposition~\ref{prop:boundary}: separability characterization. -/
+/-- Proposition~\ref{prop:boundary}: technological reachability characterization. -/
 def gap_prop_boundary_CLOSED : GapEntry := {
   name := "prop_boundary_collapse_iff"
   status := GapStatus.gapClosed
@@ -958,8 +997,10 @@ def gap_prop_boundary_CLOSED : GapEntry := {
   paperSource := "Li 2026, `\\label{prop:boundary}`"
   attackHistory := []
   scope :=
-    "Pipeline collapse iff `ζ_V < τ*/T_j`, equivalently " ++
-    "`1 - ζ_V > θ*`. Algebraic equivalence."
+    "There EXISTS a feasible substitution rate above the hard-collapse " ++
+    "threshold iff `ζ_V < τ*/T_j`, equivalently `1 - ζ_V > θ*`. " ++
+    "This is an algebraic reachability result, not a claim that an " ++
+    "equilibrium or observed path actually crosses the boundary."
 }
 
 /-- Theorem~\ref{thm:aggregation} Part 2: Cobb-Douglas zero-product
@@ -997,6 +1038,31 @@ def gap_thm_aggregation_PS_CLOSED : GapEntry := {
     "residual identity: `∑_{i ∈ s} ω_i Y_i = ∑_{i ∈ s.erase i₀} " ++
     "ω_i Y_i` when `Y_{i₀} = 0`).  Standard sum-positivity / sum-" ++
     "erase arguments."
+}
+
+/-- Theorem~\ref{thm:aggregation} Part 4: the near-Cobb--Douglas
+    limit from above.  The paper proof is complete; faithful Lean
+    formalization of the finite-sum / variable-exponent limit is pending. -/
+def gap_thm_aggregation_near_cd_limit_PARTIAL : GapEntry := {
+  name :=
+    "thm:aggregation Part 4 (near-Cobb-Douglas limit from above) — " ++
+    "paper-proved; Lean limit pending"
+  status := GapStatus.gapPartial
+  inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
+  paperSource := "Li 2026, `\\label{thm:aggregation}` Part 4, " ++
+    "Eq. `\\eqref{eq:near-cd-fragility}`"
+  attackHistory := []
+  scope :=
+    "For fixed component outputs with at least one positive-weight zero " ++
+    "component and at least one positive survivor, every fixed `σ_a>1` " ++
+    "gives positive CES output, but that output tends to zero as " ++
+    "`σ_a ↓ 1`.  The manuscript proves this by setting " ++
+    "`q=(σ_a-1)/σ_a`, observing the inner finite sum tends to the surviving " ++
+    "weight mass `p<1`, and bounding by `c^(1/q)→0` for `p<c<1`.  Lean " ++
+    "already closes the exact Cobb-Douglas zero endpoint and the perfect-" ++
+    "substitutes endpoint; the variable-exponent finite-sum limit itself " ++
+    "is not yet encoded, so this entry remains `gapPartial`."
 }
 
 /-- Proposition~\ref{prop:adjustment-margins} (career extension portion;
@@ -1060,9 +1126,9 @@ def gap_thm_endogenous_ai_existence_PARTIAL : GapEntry := {
 }
 
 /-- Theorem~\ref{thm:endogenous-ai} Part 2: uniqueness under monotonicity. -/
-def gap_thm_endogenous_ai_uniqueness_CLOSED : GapEntry := {
+def gap_thm_endogenous_ai_uniqueness_CONDITIONAL : GapEntry := {
   name := "thm_endogenous_ai_uniqueness"
-  status := GapStatus.gapClosed
+  status := GapStatus.gapClosedConditional
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:endogenous-ai}` Part 2"
@@ -1070,14 +1136,15 @@ def gap_thm_endogenous_ai_uniqueness_CLOSED : GapEntry := {
   scope :=
     "Strictly anti-monotone map on ℝ has at most one fixed point. " ++
     "Used to upgrade Part 1's existence to existence-and-uniqueness " ++
-    "under the paper's monotonicity assumption on `V_prod^*`."
+    "only when the COMPLETE composite fixed-point map is strictly " ++
+    "anti-monotone.  Coordinate monotonicity of one component is not enough."
 }
 
 /-- Theorem~\ref{thm:endogenous-ai} Part 3: corner self-consistency
     (bundle covering exogenous + endogenous theorems). -/
-def gap_thm_endogenous_ai_corner_CLOSED : GapEntry := {
+def gap_thm_endogenous_ai_corner_CONDITIONAL : GapEntry := {
   name := "thm_endogenous_ai_corner (bundle)"
-  status := GapStatus.gapClosed
+  status := GapStatus.gapClosedConditional
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:endogenous-ai}` Part 3"
@@ -1091,18 +1158,18 @@ def gap_thm_endogenous_ai_corner_CLOSED : GapEntry := {
     "`θ_endo(K_AI) = K_AI/(L_G + K_AI)`, the corner `K_AI = 0` " ++
     "yields `θ_endo(0) = 0`, which lies STRICTLY BELOW the collapse " ++
     "threshold `θ* > 0` (when `τ* < T_j`).  This strict inequality " ++
-    "IS the paper's substantive Part 3 claim: it contradicts the " ++
-    "`θ ≥ θ*` corner premise, so the `K_AI = 0` corner is not a " ++
-    "fixed point of the endogenous map — the inconsistency is " ++
+    "is only a conditional incompatibility with the imposed " ++
+    "`θ ≥ θ*` premise; it does not by itself prove that a full " ++
+    "endogenous equilibrium cannot be a corner.  The inconsistency is " ++
     "`thetaEndo 0 < thetaStar` set against `thetaEndo 0 ≥ thetaStar`, " ++
     "not a Lean `False` derivation."
 }
 
-/-- Theorem~\ref{thm:endogenous-ai} Parts 4–5: hysteresis recovery rate
-    (bundle covering four theorems). -/
-def gap_thm_endogenous_ai_hysteresis_CLOSED : GapEntry := {
+/-- Theorem~\ref{thm:endogenous-ai} Parts 4–5: direct-form recovery
+    accounting.  The cohort derivation of those forms remains open. -/
+def gap_thm_endogenous_ai_hysteresis_PARTIAL : GapEntry := {
   name := "thm_endogenous_ai_recovery (bundle)"
-  status := GapStatus.gapClosed
+  status := GapStatus.gapPartial
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:endogenous-ai}` Parts 4–5, " ++
@@ -1116,9 +1183,11 @@ def gap_thm_endogenous_ai_hysteresis_CLOSED : GapEntry := {
     "horizon), `thm_endogenous_ai_full_recovery_at_T` (full recovery " ++
     "at `t = t_1 + T`), `thm_endogenous_ai_recovery_takes_full_career` " ++
     "(strict below steady-state ceiling for `t < t_1 + T`).  " ++
-    "Hysteresis deficit `ν · |overlap| · ((1-θ_L) T_j)^a`; " ++
-    "recovery stock `V_∞(t) = ν · min(t - t_1 - T_j, T_s) · " ++
-    "((1-θ_L) T_j)^a`. Asymmetry: full recovery requires `t ≥ t_1 + T`."
+    "The algebra of the DECLARED worst-case deficit and recovery-stock " ++
+    "functions is closed: non-negativity, endpoint values, and the full-career " ++
+    "upper bound.  Lean does not derive those functions from the paper's " ++
+    "cohort integral or prove that the actual deficit equals the worst case; " ++
+    "the full paper claim is therefore `gapPartial`."
 }
 
 /-! ### gapOpen deferred-paper-claim entries — Ledger-only records.
@@ -1225,10 +1294,12 @@ def gap_aggregation_sequential_kinks_OPEN : GapEntry := {
     "Eq. `\\eqref{eq:agg-marginal}`"
   attackHistory := []
   scope :=
-    "Sequential phase transitions at order statistics " ++
-    "`θ*_(1) < ... < θ*_(N)` — in the hard-promotion case, a " ++
-    "downward jump of `Y_agg` at each `θ*_(k)`.  Paper-proven " ++
-    "mathematical result (the paper proves the jump structure); " ++
+    "Local aggregate responses at profession-specific threshold order " ++
+    "statistics `θ*_(1) < ... < θ*_(N)`.  Under smooth promotion the paper " ++
+    "gives a share-weighted elasticity kink wherever the aggregate remains " ++
+    "positive; under hard promotion a component jumps, but a distinct aggregate " ++
+    "jump is regime-dependent and is not asserted after aggregate output is " ++
+    "already zero.  Paper-proven mathematical result; " ++
     "Lean derivation deferred.  NOT an atomic input — a derived " ++
     "result built from the profession primitives — hence " ++
     "`notInput` / `notCat3`.  NOT Lean-encoded: a faithful sound " ++
@@ -1249,19 +1320,19 @@ def gap_aggregation_sequential_kinks_OPEN : GapEntry := {
     "it.  Retrievable via `#eval` over `allGaps`."
 }
 
-/-- Theorem~\ref{thm:aggregation} Part 4 (intermediate-regime
+/-- Theorem~\ref{thm:aggregation} Part 5 (intermediate-regime
     share-weighted elasticity acceleration) — Ledger-only `gapOpen`;
     not Lean-encoded.  A faithful sound statement requires Mathlib
     calculus infrastructure (differentiability of the CES
     aggregator) beyond this formalization's scope. -/
 def gap_aggregation_intermediate_regime_OPEN : GapEntry := {
   name :=
-    "thm:aggregation Part 4 (intermediate-regime elasticity " ++
+    "thm:aggregation Part 5 (intermediate-regime elasticity " ++
     "acceleration) — Ledger-only; not Lean-encoded"
   status := GapStatus.gapOpen
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
-  paperSource := "Li 2026, `\\label{thm:aggregation}` Part 4, " ++
+  paperSource := "Li 2026, `\\label{thm:aggregation}` Part 5, " ++
     "Eq. `\\eqref{eq:agg-decay-precise}`"
   attackHistory := []
   scope :=
@@ -1554,15 +1625,15 @@ def gap_IsCES_predicate : GapEntry := {
     * `pigouvianSubsidy_CD` — `gap_thm_externality_pigouvian_CLOSED`
     * `internalizedWedge` — `gap_prop_internalization_CLOSED`
     * `Vreq`, `thetaInvRec`, `wageRatioRec` —
-      `gap_thm_recursive_threshold_CLOSED`,
-      `gap_thm_recursive_wedge_CLOSED`
+      `gap_thm_recursive_threshold_CONDITIONAL`,
+      `gap_thm_recursive_wedge_CONDITIONAL`
     * `transientStock`, `gSmooth`, `hPow` —
-      `gap_thm_collapse_transient_CLOSED`,
+      `gap_thm_collapse_transient_PARTIAL`,
       `gap_prop_smooth_collapse_CLOSED`,
       `gap_thm_collapse_below_CLOSED`
     * `thetaEndo`, `hysteresisDeficit`, `recoveryStock` —
-      `gap_thm_endogenous_ai_corner_CLOSED`,
-      `gap_thm_endogenous_ai_hysteresis_CLOSED`
+      `gap_thm_endogenous_ai_corner_CONDITIONAL`,
+      `gap_thm_endogenous_ai_hysteresis_PARTIAL`
     * `thetaStarExt` — `gap_prop_adjustment_career_CLOSED`
     * `leontiefSeniorRent` — `gap_thm_credential_leontief_CLOSED`
 
@@ -1682,10 +1753,11 @@ def allGaps : List GapEntry := [
   gap_thm_collapse_jump_CLOSED,
   gap_thm_collapse_jump_diff_CLOSED,
   gap_thm_collapse_above_CLOSED,
-  gap_thm_collapse_transient_CLOSED,
+  gap_thm_collapse_transient_PARTIAL,
   gap_thm_collapse_general_h_CLOSED,
   gap_prop_smooth_collapse_CLOSED,
   gap_thm_credential_CLOSED,
+  gap_thm_credential_finite_peak_CLOSED,
   gap_thm_credential_leontief_CLOSED,
   gap_thm_credential_multiplicative_CLOSED,
   gap_prop_junior_senior_CLOSED,
@@ -1694,18 +1766,19 @@ def allGaps : List GapEntry := [
   gap_thm_externality_pigouvian_CLOSED,
   gap_thm_externality_residual_identity_CLOSED,
   gap_prop_internalization_CLOSED,
-  gap_prop_decentralized_theta_CLOSED,
-  gap_thm_recursive_threshold_CLOSED,
-  gap_thm_recursive_wedge_CLOSED,
+  gap_prop_decentralized_theta_CONDITIONAL,
+  gap_thm_recursive_threshold_CONDITIONAL,
+  gap_thm_recursive_wedge_CONDITIONAL,
+  gap_thm_recursive_log_slope_CONDITIONAL,
   gap_prop_boundary_CLOSED,
   gap_thm_aggregation_CD_CLOSED,
   gap_thm_aggregation_PS_CLOSED,
   gap_prop_adjustment_career_CLOSED,
   gap_prop_adjustment_threshold_reduction_CLOSED,
   gap_thm_endogenous_ai_existence_PARTIAL,
-  gap_thm_endogenous_ai_uniqueness_CLOSED,
-  gap_thm_endogenous_ai_corner_CLOSED,
-  gap_thm_endogenous_ai_hysteresis_CLOSED,
+  gap_thm_endogenous_ai_uniqueness_CONDITIONAL,
+  gap_thm_endogenous_ai_corner_CONDITIONAL,
+  gap_thm_endogenous_ai_hysteresis_PARTIAL,
   -- numerical calibration: derived `theorem` (`rw` + `norm_num`),
   -- `gapClosed notInput`
   gap_cor_quant_predictions_CLOSED,
@@ -1720,9 +1793,10 @@ def allGaps : List GapEntry := [
   -- μ parameter; no Lean theorem is or can be written).
   gap_window_invariance_OPEN,
   gap_aggregation_sequential_kinks_OPEN,
+  gap_thm_aggregation_near_cd_limit_PARTIAL,
   gap_aggregation_intermediate_regime_OPEN,
   gap_prop_adjustment_narrative_OPEN,
-  gap_thm_recursive_invariance_OPEN
+  gap_thm_recursive_invariance_DEFINITIONAL
 ]
 
 /-- Canonical status-count function.  Returns counts in the
@@ -1839,14 +1913,14 @@ def cat3RatioPerMille : Nat :=
     the `Economy` carrier and the hypothesisPredicates `IsCRS`,
     `IsCobbDouglas`, `IsCES`, `V2_TacitAccumulation` — the genuine
     Cat 3 paper-novel atomic inputs, each a standalone Ledger
-    `GapEntry`.  One further `gapOpen` Ledger-only entry — the
+    `GapEntry`.  One further `gapDefinitional` Ledger-only entry — the
     by-construction μ-invariance commitment of `\label{thm:recursive}`
-    Part 3 (`gap_thm_recursive_invariance_OPEN`) — has no Lean
+    Part 3 (`gap_thm_recursive_invariance_DEFINITIONAL`) — has no Lean
     declaration and is tagged `notInput` `notCat3` (it records the
     absence of a μ parameter in the `thetaStar` / `VinfHard`
     carriers, a meta-observation, not an atomic input; status
-    `gapOpen` rather than `gapDefinitional` per the §1.1 binding of
-    `gapDefinitional` to Cat 3 sub-types).  The concrete closed-form `def`s — `eBar`
+    `gapDefinitional`, because the claim is true only by the selected
+    carrier design).  The concrete closed-form `def`s — `eBar`
     (`\label{def:cohort}`), `Vinf` (`\label{lem:steady-state}`),
     `thetaStar` (`\label{eq:thetastar}`), and the further derived
     `def`s (`wageRatio`, `Gstar`, `Lambda`, `wedge`, ...) — are

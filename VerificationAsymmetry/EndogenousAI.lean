@@ -1,11 +1,10 @@
 /-
   VerificationAsymmetry/EndogenousAI.lean
 
-  Theorem~\ref{thm:endogenous-ai} (Endogenous AI Capacity:
-  Multi-Equilibrium and Hysteresis).
+  Theorem~\ref{thm:endogenous-ai} (Fixed Point and Recovery Accounting).
 
-  Companion to: "Generation--Verification Asymmetry Inversion and
-  Apprenticeship Pipeline Collapse Under AI Substitution" (Li, 2026).
+  Companion to: "Generation--Verification Asymmetry and
+  Apprenticeship-Pipeline Thresholds Under AI Substitution" (Li, 2026).
 
   Statement.
 
@@ -13,19 +12,20 @@
     Ψ(0) = 0, Ψ(V) → K_AI^max as V → ∞.  Verification labor splits
     as V_∞ = V_prod + V_AI.
 
-    Part 1.  (Existence of low-AI equilibrium.)  Φ : [0, θ*-ε] →
+    Part 1.  (Conditional fixed-point existence.)  Φ : [0, θ*-ε] →
               [0, θ*-ε] is a continuous self-map of a compact
               interval.  Brouwer's fixed point yields θ_L ∈ [0, θ*-ε].
 
-    Part 2.  (Uniqueness under monotonicity.)  Strict-decreasing Φ
+    Part 2.  (Conditional uniqueness.)  Strict-decreasing Φ
               has a unique fixed point.
 
-    Part 3.  (Corner equilibrium.)  Under exogenous θ ≥ θ*, the
-              corner (θ, 0, 0) is self-consistent; under endogenous
-              θ, the corner is unstable.
+    Part 3.  (Corner accounting.)  Under exogenous θ ≥ θ*, the
+              verification stock is zero.  The special map
+              θ_endo(K_AI)=K_AI/(L_G+K_AI) sends K_AI=0 to θ=0,
+              which is incompatible with an additionally imposed θ≥θ*>0.
 
-    Part 4.  (Hysteresis bound.)  Senior-pool deficit after a
-              transient disturbance is bounded below by
+    Part 4.  (Worst-case deficit form.)  A declared maximum-loss
+              senior-pool deficit after a transient disturbance is
               ν · |[t-T, t-T_j] ∩ [t_0 - T_j, t_1]| · ((1-θ_L) T_j)^a.
 
     Part 5.  (Recovery rate.)  From the corner with θ_L < θ*,
@@ -38,10 +38,11 @@
   Brouwer): a continuous self-map of a compact interval has a
   fixed point.  We formalize this as a real-line statement.
 
-  Parts 4–5 are real-arithmetic identities for the recovery
-  dynamics; they hinge on the linear-cohort accounting from
-  `Collapse.lean` Part 4.  Part 3 is a definitional /
-  self-consistency observation.
+  Parts 4–5 verify real-arithmetic properties of DECLARED deficit and
+  recovery functions.  They do not derive those functions from the full
+  path-dependent cohort integral.  The ledger therefore marks the paper's
+  complete recovery claim `gapPartial`.  Part 3 is a conditional
+  self-consistency observation, not a proof of global instability.
 
   Part 2 (uniqueness) is a structural lemma about strictly-
   decreasing maps on `ℝ`.
@@ -211,9 +212,9 @@ theorem thm_endogenous_ai_corner_endogenous_inconsistent
     (div_lt_one hTj).mpr h_tauStar_lt_Tj
   linarith
 
-/-! ### Theorem~\ref{thm:endogenous-ai} Parts 4 + 5: hysteresis. -/
+/-! ### Theorem~\ref{thm:endogenous-ai} Parts 4 + 5: recovery accounting. -/
 
-/-- *Hysteresis-bound deficit:* the absent senior capacity from
+/-- *Declared worst-case deficit:* the maximum absent senior capacity from
     cohorts whose junior phase intersected the disturbance window.
     Paper Eq.~\eqref{eq:hysteresis-deficit}:
     `ν · |overlap| · ((1-θ_L) T_j)^a`. -/

@@ -4,8 +4,8 @@
   Theorem~\ref{thm:credential} (Credentialing Return Decay) and
   Proposition~\ref{prop:junior-senior} (Junior-Senior Wage Divergence).
 
-  Companion to: "Generation--Verification Asymmetry Inversion and
-  Apprenticeship Pipeline Collapse Under AI Substitution" (Li, 2026).
+  Companion to: "Generation--Verification Asymmetry and
+  Apprenticeship-Pipeline Thresholds Under AI Substitution" (Li, 2026).
 
   Statement.
 
@@ -133,6 +133,103 @@ theorem thm_credential_closed_form
     (hgh_pos : 0 < g * h) (hTs_pos : 0 < E.Ts) :
     E.Ts * g * h * wV - E.Tj * cJ = (1 - E.eta) * Y / E.nu - E.Tj * cJ := by
   rw [E.thm_credential_cobb_douglas_reduction Y wV g h hY hgh_pos hTs_pos]
+
+/-! ### Theorem~\ref{thm:credential} Part 2: finite-capacity gross peak. -/
+
+/-- *Finite-capacity stationary candidate* for the below-threshold
+    Cobb-Douglas gross senior component, paper
+    Eq.~\eqref{eq:finite-gross-peak}. -/
+noncomputable def thetaGrossPeak (a : ℝ) : ℝ :=
+  (E.eta * (E.KAI - E.LG) - a * (1 - E.eta) * E.LG) /
+    ((E.KAI - E.LG) * (E.eta + a * (1 - E.eta)))
+
+/-- Under the paper's strict interior condition, the finite-capacity
+    stationary candidate lies in `(0,1)`. -/
+theorem thetaGrossPeak_in_unit
+    (a : ℝ) (ha : 0 < a) (hK : E.LG < E.KAI)
+    (hInterior :
+      a * (1 - E.eta) * E.LG < E.eta * (E.KAI - E.LG)) :
+    0 < E.thetaGrossPeak a ∧ E.thetaGrossPeak a < 1 := by
+  have hd : 0 < E.KAI - E.LG := sub_pos.mpr hK
+  have hA : 0 < a * (1 - E.eta) :=
+    mul_pos ha (sub_pos.mpr E.eta_lt_one)
+  have hB : 0 < E.eta + a * (1 - E.eta) := add_pos E.eta_pos hA
+  have hden :
+      0 < (E.KAI - E.LG) * (E.eta + a * (1 - E.eta)) :=
+    mul_pos hd hB
+  have hnum :
+      0 < E.eta * (E.KAI - E.LG) - a * (1 - E.eta) * E.LG := by
+    linarith
+  constructor
+  · unfold thetaGrossPeak
+    exact div_pos hnum hden
+  · unfold thetaGrossPeak
+    apply (div_lt_one hden).2
+    have hgap :
+        (E.KAI - E.LG) * (E.eta + a * (1 - E.eta))
+            - (E.eta * (E.KAI - E.LG) - a * (1 - E.eta) * E.LG)
+          = a * (1 - E.eta) * E.KAI := by
+      ring
+    have : 0 < a * (1 - E.eta) * E.KAI := mul_pos hA E.KAI_pos
+    linarith
+
+/-- **Theorem~\ref{thm:credential} Part 2 (finite-capacity peak
+    first-order condition).** The closed-form candidate solves the exact
+    below-threshold Cobb-Douglas log-derivative equation
+    `η (K_AI-L_G)/G = a(1-η)/(1-θ)`.
+
+    Lean checks the algebraic solution of the FOC.  The paper separately uses
+    the strictly decreasing affine numerator of the log derivative to conclude
+    that an interior candidate below `θ*` is the unique gross-component peak. -/
+theorem thm_credential_finite_capacity_peak_foc
+    (a : ℝ) (ha : 0 < a) (hK : E.LG < E.KAI)
+    (hInterior :
+      a * (1 - E.eta) * E.LG < E.eta * (E.KAI - E.LG)) :
+    E.eta * (E.KAI - E.LG) / E.G (E.thetaGrossPeak a)
+      = a * (1 - E.eta) / (1 - E.thetaGrossPeak a) := by
+  have hunit := E.thetaGrossPeak_in_unit a ha hK hInterior
+  have hG : 0 < E.G (E.thetaGrossPeak a) :=
+    E.G_pos hunit.1.le hunit.2.le
+  have hOne : 0 < 1 - E.thetaGrossPeak a := sub_pos.mpr hunit.2
+  have hGne : E.G (E.thetaGrossPeak a) ≠ 0 := ne_of_gt hG
+  have hOnene : 1 - E.thetaGrossPeak a ≠ 0 := ne_of_gt hOne
+  have hd : 0 < E.KAI - E.LG := sub_pos.mpr hK
+  have hA : 0 < a * (1 - E.eta) :=
+    mul_pos ha (sub_pos.mpr E.eta_lt_one)
+  have hB : 0 < E.eta + a * (1 - E.eta) := add_pos E.eta_pos hA
+  have hden :
+      (E.KAI - E.LG) * (E.eta + a * (1 - E.eta)) ≠ 0 :=
+    ne_of_gt (mul_pos hd hB)
+  field_simp
+  unfold thetaGrossPeak G
+  field_simp [hden]
+  ring
+
+/-- The displayed finite-capacity candidate is the unique solution of the
+    first-order equation on `(0,1)`. -/
+theorem thm_credential_finite_capacity_peak_unique
+    (a θ : ℝ) (ha : 0 < a) (hK : E.LG < E.KAI)
+    (hθ0 : 0 < θ) (hθ1 : θ < 1)
+    (hFOC :
+      E.eta * (E.KAI - E.LG) / E.G θ
+        = a * (1 - E.eta) / (1 - θ)) :
+    θ = E.thetaGrossPeak a := by
+  have hd : 0 < E.KAI - E.LG := sub_pos.mpr hK
+  have hA : 0 < a * (1 - E.eta) :=
+    mul_pos ha (sub_pos.mpr E.eta_lt_one)
+  have hB : 0 < E.eta + a * (1 - E.eta) := add_pos E.eta_pos hA
+  have hden :
+      (E.KAI - E.LG) * (E.eta + a * (1 - E.eta)) ≠ 0 :=
+    ne_of_gt (mul_pos hd hB)
+  have hG : 0 < E.G θ := E.G_pos hθ0.le hθ1.le
+  have hOne : 0 < 1 - θ := sub_pos.mpr hθ1
+  have hGne : E.G θ ≠ 0 := ne_of_gt hG
+  have hOnene : 1 - θ ≠ 0 := ne_of_gt hOne
+  field_simp at hFOC
+  unfold G at hFOC
+  unfold thetaGrossPeak
+  apply (eq_div_iff hden).2
+  nlinarith
 
 /-! ### Theorem~\ref{thm:credential} Part 1: Leontief regime decay rate. -/
 

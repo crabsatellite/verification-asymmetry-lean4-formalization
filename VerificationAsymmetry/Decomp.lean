@@ -3,8 +3,8 @@
 
   Theorem~\ref{thm:decomp} (Stock-Flow Welfare Decomposition).
 
-  Companion to: "Generation--Verification Asymmetry Inversion and
-  Apprenticeship Pipeline Collapse Under AI Substitution" (Li, 2026).
+  Companion to: "Generation--Verification Asymmetry and
+  Apprenticeship-Pipeline Thresholds Under AI Substitution" (Li, 2026).
 
   Statement.  For any constant-returns-to-scale `F`, Euler's identity
   gives the additive split

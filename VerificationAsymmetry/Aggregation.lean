@@ -5,8 +5,8 @@
   Professions) and Proposition~\ref{prop:adjustment-margins}
   (Adjustment Margins).
 
-  Companion to: "Generation--Verification Asymmetry Inversion and
-  Apprenticeship Pipeline Collapse Under AI Substitution" (Li, 2026).
+  Companion to: "Generation--Verification Asymmetry and
+  Apprenticeship-Pipeline Thresholds Under AI Substitution" (Li, 2026).
 
   Statement.
 
@@ -14,14 +14,19 @@
     weights ω_i > 0 summing to 1.  Each Y_i depends on θ via
     its profession-specific apprenticeship dynamics.
 
-    Part 2.  Cobb-Douglas aggregation (σ_a → 1): if any Y_i → 0
-              with ω_i > 0, then Y_agg → 0.  Aggregate collapses
-              as soon as the least resilient profession crosses
-              θ*_(1) = min_i θ*_i.
+    Part 2.  Exact Cobb-Douglas aggregation (σ_a = 1): if any Y_i = 0
+              with ω_i > 0, then Y_agg = 0.  This zero-propagation
+              result is specific to the exact Cobb-Douglas endpoint;
+              it is not asserted for every finite σ_a > 1.
 
-    Part 3.  Perfect-substitutes aggregation (σ_a → ∞):
+    Part 3.  Perfect-substitutes endpoint (σ_a = ∞):
               Y_agg = Σ ω_i Y_i.  Collapse of one profession leaves
               Y_agg = Σ_{j ≠ i} ω_j Y_j > 0.
+
+    Part 4.  Near-Cobb-Douglas limit from above: after at least one
+              positive-weight component is zero and at least one survives,
+              every fixed σ_a > 1 gives positive output, but that residual
+              tends to zero as σ_a ↓ 1.
 
   Lean strategy.  Parts 2 and 3 are the substantive mathematical
   content.  Both are statements about real-valued products and sums
@@ -29,13 +34,15 @@
   (Cobb-Douglas zero-product, perfect-substitutes positive-sum)
   using Finset machinery.
 
-  Part 1 (sequential phase transitions) and Part 4 (intermediate
-  regime sigma_a ∈ (1, ∞)) are continuity / kink statements about
-  the CES aggregator.  A faithful sound Lean STATEMENT of each
+  Part 1 (sequential phase transitions), Part 4 (the variable-exponent
+  finite-sum limit), and Part 5 (intermediate regime sigma_a ∈ (1, ∞))
+  require continuity / limit / kink arguments about the CES aggregator.
+  A faithful sound Lean STATEMENT of each
   requires Mathlib continuity / one-sided-limit / calculus
   infrastructure beyond this formalization's structural scope; they
-  are tracked as `gapOpen` Ledger `GapEntry` records
+  are tracked as non-closed Ledger `GapEntry` records
   (`gap_aggregation_sequential_kinks_OPEN`,
+  `gap_thm_aggregation_near_cd_limit_PARTIAL`,
   `gap_aggregation_intermediate_regime_OPEN` in `Ledger.lean`)
   WITHOUT a corresponding Lean `axiom`/`def`/`theorem` declaration.
   Proposition~\ref{prop:adjustment-margins} (career extension,
@@ -67,7 +74,7 @@ variable (E : Economy)
 
 /-- **Theorem~\ref{thm:aggregation} Part 2 (Cobb-Douglas zero-product
     rule).** For the Cobb-Douglas aggregator
-    `Y_agg = ∏ Y_i^{ω_i}` (limit `σ_a → 1`), if any factor `Y_i`
+    `Y_agg = ∏ Y_i^{ω_i}` (the exact `σ_a = 1` case), if any factor `Y_i`
     is zero with positive weight `ω_i`, then `Y_agg = 0`.
 
     *Lean formalization.* The Cobb-Douglas aggregate
@@ -139,13 +146,14 @@ theorem thm_aggregation_perfect_substitutes_residual
   rw [h_Yi₀]
   ring
 
-/-! ### Theorem~\ref{thm:aggregation} Parts 1 + 4: Ledger-only
-    `gapOpen` claims, not Lean-encoded.
+/-! ### Theorem~\ref{thm:aggregation} Parts 1 + 4 + 5: Ledger-only
+    non-closed claims, not Lean-encoded.
 
   Parts 1 (sequential phase-transition kinks at the order statistics
-  `θ*_(k)`) and 4 (intermediate-regime elasticity non-decreasing
-  across transitions) are MATHEMATICAL claims about the CES
-  aggregator's continuity / kink structure.  A faithful sound Lean
+  `θ*_(k)`), 4 (the near-Cobb-Douglas variable-exponent finite-sum
+  limit), and 5 (intermediate-regime elasticity non-decreasing across
+  transitions) are MATHEMATICAL claims about the CES aggregator's
+  continuity / limit / kink structure.  A faithful sound Lean
   STATEMENT of each requires Mathlib continuity / one-sided-limit /
   calculus infrastructure (kink detection across order statistics;
   differentiability of the CES aggregator) beyond this
@@ -156,7 +164,9 @@ theorem thm_aggregation_perfect_substitutes_residual
   predicate equals the asserted conclusion is vacuous (tautological).
   The honest encoding is the Ledger `GapEntry` records
   `gap_aggregation_sequential_kinks_OPEN` and
-  `gap_aggregation_intermediate_regime_OPEN` (`Ledger.lean`): typed,
+  `gap_aggregation_intermediate_regime_OPEN`, together with the
+  paper-proved but Lean-pending
+  `gap_thm_aggregation_near_cd_limit_PARTIAL` (`Ledger.lean`): typed,
   `#eval`-retrievable records tracking each gap's status, paper
   source, and the reason it is not Lean-derived.  The Cobb-Douglas
   and perfect-substitutes limit cases (Parts 2 + 3 above) are the
@@ -210,11 +220,10 @@ theorem prop_adjustment_career_extension_bounded :
       proved below as the `theorem
       prop_adjustment_threshold_reduction_floor`.
 
-  (ii) **Endogenous AI verification** — the substitution rate
-       `δ(θ)` satisfies `δ(θ) < 1` uniformly because the
-       non-codifiable residual (`def:verification`) keeps AI
-       verification from fully substituting human verification.
-       This is a substantive empirical claim whose resolution path
+  (ii) **Endogenous AI verification** — a residual floor may be stated
+       only after imposing an explicit `ε > 0` with `δ(θ) ≤ 1-ε`.
+       Such a floor does not follow from the verbal verification
+       definition alone.  It is a substantive empirical premise whose resolution path
        is cohort-study evidence on AI substitution rates by career
        stage, not a Lean derivation.  No Lean
        `axiom`/`def`/`theorem` declaration is provided: an `axiom`
@@ -257,11 +266,10 @@ theorem prop_adjustment_threshold_reduction_floor
     endogenous-AI-verification residual bound — Ledger-only
     `gapOpen`, not Lean-encoded.
 
-  Paper `\label{prop:adjustment-margins}` clause 3 asserts the
-  uniform bound `δ(θ) < 1` on the endogenous-AI-verification
-  residual substitution-rate function — the non-codifiable
-  residual (`\label{def:verification}`) keeps AI verification from
-  fully substituting human verification.  This is a substantive
+  Paper `\label{prop:adjustment-margins}` now treats the endogenous-AI-
+  verification floor as conditional on an explicit quantitative
+  premise `δ(θ) ≤ 1-ε` for some `ε>0`; it is not implied by
+  `\label{def:verification}`.  Establishing such a floor is a substantive
   empirical claim whose resolution path is cohort-study evidence on
   AI substitution rates by career stage, not a Lean derivation.  No
   Lean `axiom`/`def`/`theorem` declaration is provided: an `axiom`

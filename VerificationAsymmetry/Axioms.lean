@@ -3,8 +3,8 @@
 
   Explicit Cat 2 (textbook-fact) and Cat 3 (paper-novel structural) axioms.
 
-  Companion to: "Generation--Verification Asymmetry Inversion and
-  Apprenticeship Pipeline Collapse Under AI Substitution" (Li, 2026).
+  Companion to: "Generation--Verification Asymmetry and
+  Apprenticeship-Pipeline Thresholds Under AI Substitution" (Li, 2026).
 
   ## Soundness mandate
 

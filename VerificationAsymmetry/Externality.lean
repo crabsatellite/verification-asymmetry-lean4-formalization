@@ -2,12 +2,12 @@
   VerificationAsymmetry/Externality.lean
 
   Theorem~\ref{thm:externality} (Apprenticeship Externality) and
-  Propositions ~\ref{prop:internalization} (Within-Firm
-  Internalization Failure) and ~\ref{prop:decentralized-theta}
-  (Decentralized θ Exceeds Social Optimum).
+  Propositions ~\ref{prop:internalization} (Partial-Internalization
+  Identity) and ~\ref{prop:decentralized-theta}
+  (Conditional Adoption Ordering).
 
-  Companion to: "Generation--Verification Asymmetry Inversion and
-  Apprenticeship Pipeline Collapse Under AI Substitution" (Li, 2026).
+  Companion to: "Generation--Verification Asymmetry and
+  Apprenticeship-Pipeline Thresholds Under AI Substitution" (Li, 2026).
 
   Statement.
 
@@ -23,30 +23,30 @@
         W_E(θ) = (MP_J^S - MP_J^P)/MP_J^P
               = (w_V/w_G) · g(ē) h(ē) Λ(r) / (1-θ).
 
-    Optimal Pigouvian subsidy (Cobb-Douglas, paper Thm
-    Part 3 simplification):
+    Residual-equalizing transfer (Cobb-Douglas, paper Thm
+    Part 3 algebraic simplification):
         s*(θ) = (1-η) Y(θ) Λ(r) / (ν T_s).
 
   Lean strategy.  Both formulae are real-arithmetic identities once
   the marginal-product definitions are in place.  We formalize:
 
     (i)   the explicit algebraic identity for the wedge,
-    (ii)  the Cobb-Douglas simplification of the optimal subsidy,
+    (ii)  the Cobb-Douglas simplification of the residual transfer,
     (iii) the non-negativity of the wedge (Part 2),
     (iv)  the internalization corollary (Proposition~\ref{prop:internalization}),
-    (v)   the social-vs-private FOC inequality (Proposition~\ref{prop:decentralized-theta}).
+    (v)   an anti-monotonicity implication used by the conditional
+          adoption-ordering proposition.
 
-  Part 1 of the theorem (wedge growth on `[0, θ*)`) is a
-  monotonicity statement in `θ` of the product
-  `G(θ)^{1-ρ} · (1-θ)^{aρ-1}`; we formalize the monotonicity of
-  each factor in `θ` separately (under the paper's hypotheses
-  `K_AI ≥ L_G`, `ρ ≤ 0` ∨ `ρ ∈ (0, 1/a)`).  The unbounded-as-θ→1
-  claim is a limit statement we record as a parametric inequality.
+  The paper's Part 1 wedge-growth claim is an elementary monotonicity
+  argument for `G(θ)^{1-ρ} · (1-θ)^{aρ-1}` under displayed parameter
+  restrictions, but it is NOT separately represented by a Lean theorem
+  here.  The formal companion closes the identities and sign result, not
+  the full economic interpretation or a general-equilibrium policy claim.
 
   ## Cat 2 axiom dependency note
 
   The composite Cobb-Douglas-factor-share + steady-state-stock
-  identity used in Part 3 (Pigouvian subsidy formula) is reduced to
+  identity used in Part 3 (residual-transfer formula) is reduced to
   the Cat 2 axiom `axiom_cobb_douglas_factor_share` in the
   `_from_axioms` companion theorems, routed through
   `cobb_douglas_steady_state_identity_from_axiom` (Axioms.lean).
@@ -170,9 +170,9 @@ theorem thm_externality_wedge_identity
   have hwG_ne : wG ≠ 0 := ne_of_gt hwG
   field_simp
 
-/-! ### Theorem~\ref{thm:externality} Part 3: Pigouvian subsidy. -/
+/-! ### Theorem~\ref{thm:externality} Part 3: residual-equalizing transfer. -/
 
-/-- *Optimal Pigouvian subsidy* in Cobb-Douglas:
+/-- *Residual-equalizing transfer* in Cobb-Douglas:
     `s*(θ) = (1-η) Y(θ) Λ(r) / (ν T_s)`,
     paper Theorem~\ref{thm:externality} Part 3.
 
@@ -184,11 +184,12 @@ theorem thm_externality_wedge_identity
 noncomputable def pigouvianSubsidy_CD (Y Lambda : ℝ) : ℝ :=
   (1 - E.eta) * Y * Lambda / (E.nu * E.Ts)
 
-/-- **Theorem~\ref{thm:externality} Part 3 (Cobb-Douglas Pigouvian
+/-- **Theorem~\ref{thm:externality} Part 3 (Cobb-Douglas residual-transfer
     formula).** Under the Cobb-Douglas factor-share identity
-    `(1-η) Y = w_V · ν T_s · g h` and `g h > 0`, the optimal
-    Pigouvian subsidy `s* = w_V g h Λ` simplifies to
-    `(1-η) Y Λ / (ν T_s)`. -/
+    `(1-η) Y = w_V · ν T_s · g h`, the displayed residual
+    `s* = w_V g h Λ` simplifies to `(1-η) Y Λ / (ν T_s)`.
+    The legacy declaration name is retained for API stability; the
+    theorem contains no first-best or financing claim. -/
 theorem thm_externality_pigouvian_cobb_douglas
     (Y wV gE hE Lambda : ℝ)
     (hY : (1 - E.eta) * Y = wV * (E.nu * E.Ts * gE * hE)) :
@@ -305,9 +306,9 @@ theorem prop_decentralized_theta_foc
   linarith
 
 /-- **Proposition~\ref{prop:decentralized-theta} (strict inequality).**
-    Whenever the Pigouvian externality is positive, the social
-    optimum exhibits strictly higher `w_G` than the decentralized
-    equilibrium. -/
+    Given the two stipulated interior first-order equations, a positive
+    residual transfer implies a strictly higher `w_G` at the
+    residual-adjusted solution. -/
 theorem prop_decentralized_theta_wG_strict
     (pAI sStar wG_soc wG_eq : ℝ) (hSoc : pAI + sStar = wG_soc)
     (hEq : pAI = wG_eq) (hsStar : 0 < sStar) :
@@ -316,9 +317,11 @@ theorem prop_decentralized_theta_wG_strict
   linarith
 
 /-- **Proposition~\ref{prop:decentralized-theta} (monotonicity of
-    `w_G`).** Given that `w_G` is strictly decreasing in `θ` (paper
-    inversion theorem), the strict inequality `w_G(θ_soc) >
+    `w_G`).** Given the INDEPENDENT reduced-form premise that `w_G`
+    is strictly decreasing in `θ`, the strict inequality `w_G(θ_soc) >
     w_G(θ_eq)` implies `θ_soc < θ_eq`.
+
+    An increasing ratio `w_V/w_G` does not itself establish this premise.
 
     *Formal content.*  Anti-monotonicity bridge: if `f` is
     strictly anti-monotone and `f(x) > f(y)`, then `x < y`. -/

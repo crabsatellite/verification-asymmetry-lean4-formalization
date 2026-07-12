@@ -2,18 +2,22 @@
 
 Companion machine-checked formalization for
 
-> Li, Alex Chengyu. *Generation--Verification Asymmetry Inversion and
-> Apprenticeship Pipeline Collapse Under AI Substitution.* 2026.
+> Li, Alex Chengyu. *Generation--Verification Asymmetry and
+> Apprenticeship-Pipeline Thresholds Under AI Substitution.* 2026.
 
-**Paper:**
-- SSRN abstract id [6718418](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6718418)
-- Zenodo DOI: [10.5281/zenodo.20038848](https://doi.org/10.5281/zenodo.20038848)
+The current manuscript is an internal reconstruction and is not represented by
+the historical public identifiers listed near the end of this README.
 
 ## Status
 
-This Lean 4 + Mathlib project machine-checks the structural mathematics of the paper.
-Every paper-internal deduction captured here is a genuine Lean 4 theorem with
-**zero `sorry`**. The trust boundary is explicit: each result is either
+This Lean 4 + Mathlib project is a **typed algebraic audit**, not a certificate
+for the complete paper. Every deduction actually captured as a theorem here is
+checked with **zero `sorry`**, but several paper claims are only conditional,
+partial, definitional, or open. In particular, the complete path-dependent
+cohort dynamics and the economic microfoundation of several reduced forms are
+not machine-checked.
+
+The trust boundary is explicit: each ledger entry is either
 
 - a derived theorem composing Lean kernel primitives, Mathlib lemmas, and the
   external textbook axioms below; or
@@ -74,35 +78,35 @@ The paper's derived closed-form notation (`eBar`, `Vinf`, `thetaStar`,
 defining equations hold by `rfl`. They are definitional infrastructure, not
 standalone Cat 3 atoms.
 
-### Open paper claims tracked without a Lean declaration
+### Non-closed paper claims
 
-A small number of paper claims are tracked as `gapOpen` Ledger entries without a
-corresponding Lean `axiom` / `def` / `theorem`. They split into two groups:
+The authoritative classification is the live `allGaps` inventory in
+`Ledger.lean`. Important limitations include:
 
-*Group A* — out-of-scope Mathlib infrastructure or empirical resolution path:
+- The complete post-step cohort path is **partial**. Lean proves the linear
+  decay of the pre-shock senior component, not the complete stock including
+  straddling cohorts or its exact clearing time.
+- The endogenous-AI fixed-point construction is **partial**. Lean proves an
+  abstract one-dimensional fixed-point lemma, but does not derive the paper's
+  selected inner map from primitives.
+- The disturbance deficit and recovery functions are **partial**: endpoint
+  arithmetic is checked for declared functions, while their derivation from
+  the cohort integral remains open.
+- Recursive pressure and endogenous uniqueness claims are **conditional** on
+  explicitly declared reduced-form schedules or composite-map properties.
+- The recursive log-slope comparison is machine-checked **conditional** on the
+  declared pressure schedule; the constrained-production derivation of that
+  schedule remains open.
+- The near-Cobb--Douglas limit from above is **partial**: the manuscript proves
+  the variable-exponent finite-sum limit, while its Lean formalization remains
+  pending.
+- Window invariance, sequential aggregation kinks, the intermediate-CES
+  regime, and an empirical residual-floor claim remain **open**.
+- The μ-invariance of the cohort threshold is **definitional**: the relevant
+  carriers have no μ argument. It is not an independently proved robustness
+  theorem.
 
-- `gap_window_invariance_OPEN` (measure-theoretic statement, Proposition
-  Stock-Flow-Asymptotics Part 4);
-- `gap_aggregation_sequential_kinks_OPEN` (continuity / kink analysis,
-  Theorem Aggregation Part 1);
-- `gap_aggregation_intermediate_regime_OPEN` (calculus on the intermediate
-  regime, Theorem Aggregation Part 4);
-- `gap_prop_adjustment_narrative_OPEN` (substantive phenomenological claim
-  about the Polanyi verification residual; resolution path is empirical
-  cohort-study evidence).
-
-*Group B* — satisfied by carrier construction:
-
-- `gap_thm_recursive_invariance_OPEN` — paper Theorem Recursive Part 3's
-  μ-invariance commitment is satisfied by the type-signature structure
-  (`thetaStar` / `VinfHard` / `eBar` take no μ argument), so there is no
-  μ-dependence to derive.
-
-These claims are deferred honestly rather than encoded as unsound `axiom`s or
-as vacuous tautologies. The numerical calibration corollary
-`cor_quant_predictions_calibration` and the threshold-reduction conjunct
-`prop_adjustment_threshold_reduction_floor` of the adjustment-margins
-narrative are derived Lean `theorem`s.
+These claims are not converted into axioms merely to make a proof pass.
 
 The authoritative inventory of theorem names and per-theorem axiom
 dependencies is the output of
@@ -117,12 +121,12 @@ dependencies is the output of
 | [`VerificationAsymmetry/Axioms.lean`](VerificationAsymmetry/Axioms.lean) | Cat 2 textbook atomic axioms: `axiom_euler_crs`, `axiom_ces_wage_ratio`, `axiom_cobb_douglas_factor_share`; bridge theorems composing them with `steady_state_stock_identity` |
 | [`VerificationAsymmetry/Decomp.lean`](VerificationAsymmetry/Decomp.lean) | Theorem `thm:decomp` (stock-flow welfare decomposition; consumes `axiom_euler_crs`) |
 | [`VerificationAsymmetry/Inversion.lean`](VerificationAsymmetry/Inversion.lean) | Theorem `thm:inversion` (wage ratio scaling, closed-form threshold); Corollary `cor:bounded-AI` (endpoint identifications) |
-| [`VerificationAsymmetry/Collapse.lean`](VerificationAsymmetry/Collapse.lean) | Theorem `thm:collapse` (phase transition at `θ*`, transient decay, jump magnitude, general-`h` bound); Proposition `prop:smooth-collapse` (smooth-threshold decay rate) |
-| [`VerificationAsymmetry/Credential.lean`](VerificationAsymmetry/Credential.lean) | Theorem `thm:credential` (Cobb-Douglas closed form, multiplicative decay); Proposition `prop:junior-senior` (senior wage scaling) |
-| [`VerificationAsymmetry/Externality.lean`](VerificationAsymmetry/Externality.lean) | Theorem `thm:externality` (Pigouvian wedge, Cobb-Douglas subsidy formula); Propositions `prop:internalization`, `prop:decentralized-theta` |
-| [`VerificationAsymmetry/Recursive.lean`](VerificationAsymmetry/Recursive.lean) | Theorem `thm:recursive` (μ-amplification, leftward shift, collapse invariance); Proposition `prop:boundary` (separability condition) |
-| [`VerificationAsymmetry/Aggregation.lean`](VerificationAsymmetry/Aggregation.lean) | Theorem `thm:aggregation` Parts 2-3 (Cobb-Douglas zero-product + least-resilient-collapse corollary; perfect-substitutes survival + post-collapse residual identity); Proposition `prop:adjustment-margins` (career extension theorems + threshold-reduction floor) |
-| [`VerificationAsymmetry/EndogenousAI.lean`](VerificationAsymmetry/EndogenousAI.lean) | Theorem `thm:endogenous-ai` (Brouwer existence, uniqueness, corner self-consistency, hysteresis recovery rate) |
+| [`VerificationAsymmetry/Collapse.lean`](VerificationAsymmetry/Collapse.lean) | Steady-state hard-threshold algebra and the pre-shock-senior component of the transient path; the complete transient is partial |
+| [`VerificationAsymmetry/Credential.lean`](VerificationAsymmetry/Credential.lean) | Theorem `thm:credential` (Cobb-Douglas closed form, finite-capacity gross-peak FOC and uniqueness, multiplicative decay); Proposition `prop:junior-senior` (senior wage scaling) |
+| [`VerificationAsymmetry/Externality.lean`](VerificationAsymmetry/Externality.lean) | Algebraic residual/wedge identities, sign, Cobb-Douglas residual-transfer simplification, and an anti-monotonicity implication; no first-best policy theorem |
+| [`VerificationAsymmetry/Recursive.lean`](VerificationAsymmetry/Recursive.lean) | Conditional reduced-form μ-amplification, exact log-slope acceleration algebra, and threshold algebra; definitional cohort-side μ-invariance; technological reachability equivalence |
+| [`VerificationAsymmetry/Aggregation.lean`](VerificationAsymmetry/Aggregation.lean) | Exact Cobb-Douglas zero propagation, perfect-substitutes endpoint identities, and selected adjustment bounds; the near-Cobb--Douglas limit is partial and intermediate-CES claims remain open |
+| [`VerificationAsymmetry/EndogenousAI.lean`](VerificationAsymmetry/EndogenousAI.lean) | Abstract fixed-point/uniqueness lemmas and direct-form recovery arithmetic; the economic construction and cohort derivation remain partial |
 | [`VerificationAsymmetry/AxiomAudit.lean`](VerificationAsymmetry/AxiomAudit.lean) | Trust audit: prints `#print axioms` for every paper-level theorem |
 | [`VerificationAsymmetry/Ledger.lean`](VerificationAsymmetry/Ledger.lean) | Typed gap ledger: each closed top-level result and each deferred paper claim is one `GapEntry`, with `GapStatus` × `InputCategory` × `Cat3SubType` classification |
 
@@ -161,13 +165,14 @@ lake env lean VerificationAsymmetry/Ledger.lean
 
 ## Companion paper
 
-This formalization corresponds to the main paper at
-`../paper/verification_asymmetry.tex`.
+This formalization audits selected claims in the current manuscript at
+`../paper/verification_asymmetry.tex`. The identifiers below refer to an older
+public snapshot and must not be treated as identifiers for the reconstructed text.
 
 | Resource | Identifier |
 |----------|------------|
-| SSRN abstract id | [6718418](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6718418) |
-| Zenodo DOI | [10.5281/zenodo.20038848](https://doi.org/10.5281/zenodo.20038848) |
+| Historical SSRN abstract id | [6718418](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6718418) |
+| Historical Zenodo DOI | [10.5281/zenodo.20038848](https://doi.org/10.5281/zenodo.20038848) |
 
 ## License
 

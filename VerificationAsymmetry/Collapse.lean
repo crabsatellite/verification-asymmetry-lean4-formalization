@@ -4,8 +4,8 @@
   Theorem~\ref{thm:collapse} (Apprenticeship Pipeline Collapse) and
   Proposition~\ref{prop:smooth-collapse} (Smooth-Threshold Collapse).
 
-  Companion to: "Generation--Verification Asymmetry Inversion and
-  Apprenticeship Pipeline Collapse Under AI Substitution" (Li, 2026).
+  Companion to: "Generation--Verification Asymmetry and
+  Apprenticeship-Pipeline Thresholds Under AI Substitution" (Li, 2026).
 
   Statement.
 
@@ -15,18 +15,21 @@
     Part 2.  Jump discontinuity at θ*:
               V_∞(θ*⁻) - V_∞(θ*⁺) = ν T_s (τ*)^a.
     Part 3.  Long-run zero stock above θ*: V_∞(θ) = 0.
-    Part 4.  Transient decay: V(t) = V_∞(θ₀) · (1 - t/T_s)_+.
-    Part 5.  Lower bound generalization for non-decreasing h with
-             h(τ*) > 0:  jump ≥ ν T_s h(τ*).
+    Part 4.  Pre-shock-senior component:
+              V_pre(t) = V_∞(θ₀) · (1 - t/T_s)_+.
+              The complete straddling-cohort path is not encoded here.
+    Part 5.  Threshold value for arbitrary h; a left-limit statement
+              additionally needs the paper's one-sided-continuity premise.
 
-  Lean strategy.  All five parts are real-arithmetic identities once
+  Lean strategy.  The encoded algebraic subclaims are real-arithmetic identities once
   one has the `Vinf` carrier of `Basic.lean`.  The threshold equation
   `θ* = 1 - τ*/T_j` is the defining equation; we formalize it as
   a derived field.  Parts 1–3, 5 are direct algebraic consequences
   of `VinfHard_eq_pow_of_eBar_ge_tauStar` and
   `VinfHard_eq_zero_of_eBar_lt_tauStar` from `Basic.lean`.  Part 4
-  (transient decay) is a real-valued algebraic identity for the
-  retiring senior cohort.
+  (transient decay) is only a real-valued algebraic identity for the
+  retiring PRE-SHOCK senior component.  The ledger marks the complete
+  paper transient `gapPartial`.
 -/
 
 import VerificationAsymmetry.Basic
