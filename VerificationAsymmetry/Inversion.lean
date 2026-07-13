@@ -4,8 +4,8 @@
   Theorem~\ref{thm:inversion} (Asymmetry Inversion) and
   Corollary~\ref{cor:bounded-AI} (Inversion Under Bounded AI).
 
-  Companion to: "Generation--Verification Asymmetry and
-  Apprenticeship-Pipeline Thresholds Under AI Substitution" (Li, 2026).
+  Companion to: "Verification Asymmetry under AI Substitution:
+  Wage-Ratio Inversion and Apprenticeship Thresholds" (Li, 2026).
 
   Statement.
 

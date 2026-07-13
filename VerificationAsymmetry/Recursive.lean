@@ -4,8 +4,8 @@
   Theorem~\ref{thm:recursive} (Verification-Pressure Reduced Form) and
   Proposition~\ref{prop:boundary} (Technological Reachability Boundary).
 
-  Companion to: "Generation--Verification Asymmetry and
-  Apprenticeship-Pipeline Thresholds Under AI Substitution" (Li, 2026).
+  Companion to: "Verification Asymmetry under AI Substitution:
+  Wage-Ratio Inversion and Apprenticeship Thresholds" (Li, 2026).
 
   Statement.
 

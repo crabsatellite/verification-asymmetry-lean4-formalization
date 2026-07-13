@@ -2,8 +2,8 @@
 
 Companion machine-checked formalization for
 
-> Li, Alex Chengyu. *Generation--Verification Asymmetry and
-> Apprenticeship-Pipeline Thresholds Under AI Substitution.* 2026.
+> Li, Alex Chengyu. *Verification Asymmetry under AI Substitution:
+> Wage-Ratio Inversion and Apprenticeship Thresholds.* 2026.
 
 The current manuscript is an internal reconstruction and is not represented by
 the historical public identifiers listed near the end of this README.

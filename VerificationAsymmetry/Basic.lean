@@ -17,8 +17,8 @@
                                                        h((1-θ) T_j)
     * Definition `def:diagnostic`    — Structural conditions V1/V2/V3
 
-  Companion to: "Generation--Verification Asymmetry and
-  Apprenticeship-Pipeline Thresholds Under AI Substitution" (Li, 2026).
+  Companion to: "Verification Asymmetry under AI Substitution:
+  Wage-Ratio Inversion and Apprenticeship Thresholds" (Li, 2026).
 
   Naming conventions (paper symbol → Lean identifier):
       θ        →  theta            (AI substitution rate)

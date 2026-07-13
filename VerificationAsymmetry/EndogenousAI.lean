@@ -3,8 +3,8 @@
 
   Theorem~\ref{thm:endogenous-ai} (Fixed Point and Recovery Accounting).
 
-  Companion to: "Generation--Verification Asymmetry and
-  Apprenticeship-Pipeline Thresholds Under AI Substitution" (Li, 2026).
+  Companion to: "Verification Asymmetry under AI Substitution:
+  Wage-Ratio Inversion and Apprenticeship Thresholds" (Li, 2026).
 
   Statement.
 
