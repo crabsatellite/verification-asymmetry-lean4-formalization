@@ -172,7 +172,7 @@ public snapshot and must not be treated as identifiers for the reconstructed tex
 | Resource | Identifier |
 |----------|------------|
 | Historical SSRN abstract id | [6718418](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6718418) |
-| Historical Zenodo DOI | [10.5281/zenodo.20038848](https://doi.org/10.5281/zenodo.20038848) |
+| Zenodo concept DOI | [10.5281/zenodo.20038847](https://doi.org/10.5281/zenodo.20038847) |
 
 ## License
 
