@@ -58,7 +58,7 @@
   Ledger-only (no Lean declaration).
 
   The concrete closed-form `def`s `eBar`, `Vinf`, `thetaStar`,
-  `wageRatio`, `Gstar`, `thetaInv`, `Lambda`, `Vreq`, `hPow`,
+  `wageRatio`, `Gstar`, `thetaInv`, `LambdaJ`, `Lambda`, `Vreq`, `hPow`,
   `gSmooth`, `transientStock`, `MPpriv`, `MPsoc`,
   `externalityResidual`, `wedge`, `internalizedWedge`,
   `pigouvianSubsidy_CD`, `wageRatioRec`, `thetaInvRec`, `thetaEndo`,
@@ -348,7 +348,7 @@ def gap_axiom_cobb_douglas_factor_share : GapEntry := {
 
 /-! ### gapClosed entries — paper-level results formalized without `sorry` -/
 
-/-- Theorem~\ref{thm:decomp} (stock-flow welfare decomposition,
+/-- Theorem~\ref{thm:decomp} (stock-flow output decomposition,
     Euler-identity portion). -/
 def gap_thm_decomp_CLOSED : GapEntry := {
   name := "thm_decomp"
@@ -359,11 +359,12 @@ def gap_thm_decomp_CLOSED : GapEntry := {
   attackHistory := []
   scope :=
     "Derived theorem (`notInput`) composing Cat 2 axiom + Cat 3 " ++
-    "hypothesisPredicate.  Stock-flow welfare decomposition by " ++
+    "hypothesisPredicate.  Stock-flow output decomposition by " ++
     "Euler's identity: for any CRS `F` with `HasDerivAt`-bound " ++
     "marginal-product wages `w_G, w_V`, " ++
     "`F G V = w_G · G + w_V · V` (by `axiom_euler_crs`), implying " ++
-    "`F = Wflow + Wstock` where `Wflow = wG · G`, `Wstock = wV · V`."
+    "`F = Wflow + Wstock` where `Wflow = wG · G`, `Wstock = wV · V`. " ++
+    "This is an output/factor-income identity, not a welfare theorem."
   notes :=
     "Cat 2 dependency: `axiom_euler_crs` (Euler 1755 / MWG 1995 " ++
     "§5.B.2 Theorem). Cat 3 hypothesisPredicate dependency: `IsCRS`. " ++
@@ -762,14 +763,16 @@ def gap_thm_externality_wedge_CLOSED : GapEntry := {
   attackHistory := []
   scope :=
     "Covers `thm_externality_wedge_identity` (the substantive wedge " ++
-    "form `W_E(θ) = (wV/wG) · g h Λ / (1-θ)` derived by `field_simp` " ++
+    "form `W_E(θ) = (wV/wG) · g h Λ / ((1-θ)·ΛJ)` derived by `field_simp` " ++
     "from the def of `wedge`).  Definitional infrastructure `def`s " ++
-    "consumed: `wedge wG wV gE hE Lambda θ = externalityResidual " ++
-    "wV gE hE Lambda / MPpriv wG θ` (paper Eq. `\\eqref{eq:wedge}`); " ++
+    "consumed: `wedge wG wV gE hE LambdaJ Lambda θ = externalityResidual " ++
+    "wV gE hE Lambda / MPpriv wG LambdaJ θ` (paper Eq. `\\eqref{eq:wedge}`); " ++
     "`externalityResidual wV gE hE Lambda = wV·gE·hE·Lambda` " ++
     "(paper's externality residual `s* = MP_J^S - MP_J^P`); " ++
-    "`MPpriv wG θ = (1-θ)·wG` (private marginal product of a " ++
-    "junior).  All three are concrete `def`s in Externality.lean " ++
+    "`MPpriv wG LambdaJ θ = (1-θ)·wG·LambdaJ` (private present value " ++
+    "of a junior contribution).  `LambdaJ` and `Lambda` are the " ++
+    "discounted junior and senior horizons.  These are concrete `def`s " ++
+    "in Externality.lean " ++
     "whose defining equations hold by `rfl` — definitional " ++
     "notation, not standalone Cat 3 atoms."
 }
@@ -829,8 +832,8 @@ def gap_prop_internalization_CLOSED : GapEntry := {
   attackHistory := []
   scope :=
     "Derived theorem (`notInput`).  Definitional-unfolding identity " ++
-    "`internalizedWedge zeta wG wV gE hE Lambda θ = (1-zeta) · " ++
-    "(externalityResidual wV gE hE Lambda / MPpriv wG θ)` — the " ++
+    "`internalizedWedge zeta wG wV gE hE LambdaJ Lambda θ = (1-zeta) · " ++
+    "(externalityResidual wV gE hE Lambda / MPpriv wG LambdaJ θ)` — the " ++
     "`rfl` identification of the `internalizedWedge` def " ++
     "(`(1-zeta) · wedge ...`) composed with the `wedge` def " ++
     "(`externalityResidual / MPpriv`).  The full-internalization " ++
@@ -846,8 +849,8 @@ def gap_prop_internalization_CLOSED : GapEntry := {
     "internalization semantics is paper-side narrative content."
 }
 
-/-- Proposition~\ref{prop:decentralized-theta} (social overshoot
-    bundle: FOC + wG strict + overshoots). -/
+/-- Proposition~\ref{prop:decentralized-theta} (conditional adoption
+    ordering bundle: FOC + strict PV benefit + anti-monotonicity). -/
 def gap_prop_decentralized_theta_CONDITIONAL : GapEntry := {
   name := "prop_decentralized_theta (bundle)"
   status := GapStatus.gapClosedConditional
@@ -859,29 +862,27 @@ def gap_prop_decentralized_theta_CONDITIONAL : GapEntry := {
   scope :=
     "Bundle entry covering three theorems: " ++
     "`prop_decentralized_theta_foc` (FOC identity " ++
-    "`wG(θ_soc) = wG(θ_eq) + s*`), `prop_decentralized_theta_wG_strict` " ++
-    "(strict `wG(θ_eq) < wG(θ_soc)` for `s* > 0`), and " ++
+    "`B(θ_soc) = B(θ_eq) + s*`), `prop_decentralized_theta_wG_strict` " ++
+    "(legacy name; strict `B(θ_eq) < B(θ_soc)` for `s* > 0`), and " ++
     "`prop_decentralized_theta_overshoots` (anti-monotonicity " ++
-    "bridge to `θ_soc < θ_eq`).  Social FOC `p_AI + s* = wG(θ_soc)`; " ++
-    "private FOC `p_AI = wG(θ_eq)`. Strict positivity of `s*` plus " ++
-    "anti-monotone `wG` in `θ` gives `θ_soc < θ_eq`."
+    "bridge to `θ_soc < θ_eq`).  Social FOC `p_AI + s* = B(θ_soc)`; " ++
+    "private FOC `p_AI = B(θ_eq)`. Strict positivity of `s*` plus " ++
+    "anti-monotone present-value benefit schedule `B` gives `θ_soc < θ_eq`."
   notes :=
     "Parametric bridge — `prop_decentralized_theta_overshoots` " ++
-    "takes `wG` anti-monotonicity as a bare hypothesis " ++
-    "(`∀ x y, x < y → wG y < wG x`).  This is an INDEPENDENT " ++
+    "takes `B` anti-monotonicity as a bare hypothesis " ++
+    "(`∀ x y, x < y → B y < B x`).  This is an INDEPENDENT " ++
     "reduced-form premise: an increasing wage ratio does not imply " ++
-    "that `wG` itself is decreasing.  The bridge theorem proves the `θ_soc < θ_eq` " ++
+    "that a PV benefit schedule is decreasing.  The bridge theorem proves the `θ_soc < θ_eq` " ++
     "overshoot GIVEN anti-monotonicity.  `prop_decentralized_theta_foc` " ++
     "is similarly a parametric bridge: it derives the FOC identity " ++
-    "`wG(θ_soc) = wG(θ_eq) + s*` by linear arithmetic from the " ++
-    "social FOC `p_AI + s* = wG(θ_soc)` and private FOC " ++
-    "`p_AI = wG(θ_eq)` hypotheses (the FOCs themselves are paper-" ++
+    "`B(θ_soc) = B(θ_eq) + s*` by linear arithmetic from the " ++
+    "social FOC `p_AI + s* = B(θ_soc)` and private FOC " ++
+    "`p_AI = B(θ_eq)` hypotheses (the FOCs themselves are paper-" ++
     "stipulated equilibrium conditions, paper " ++
     "Eq. `\\eqref{eq:eq-foc}` + `\\eqref{eq:soc-foc}`).  The Lean " ++
-    "theorems parametrize over any anti-monotone `wG : ℝ → ℝ` " ++
-    "rather than re-deriving it from the CES marginal-product " ++
-    "structure (which would require Mathlib calculus infrastructure " ++
-    "beyond the closed-form `wageRatio` def)."
+    "theorems parametrize over any anti-monotone `B : ℝ → ℝ`; the " ++
+    "baseline production block does not derive this adoption benefit schedule."
 }
 
 /-- Theorem~\ref{thm:recursive} Part 1: closed-form recursive
@@ -895,12 +896,14 @@ def gap_thm_recursive_threshold_CONDITIONAL : GapEntry := {
     "Eq. `\\eqref{eq:theta-inv-recursive}`"
   attackHistory := []
   scope :=
-    "Bundle entry covering three theorems: " ++
+    "Bundle entry covering four theorems: " ++
     "`thm_recursive_threshold_closed_form` (the closed form " ++
-    "`V_req(θ_inv^{rec}) = G*(r̄)`), `thm_recursive_threshold_ratio` " ++
+    "`V_req(θ_inv^{rec}) = G*(r̄)`), " ++
+    "`thm_recursive_threshold_in_unit` (the crossing lies in `(0,1)` " ++
+    "when `L_G < G*(r̄) < μ K_AI`), `thm_recursive_threshold_ratio` " ++
     "(ratio `θ_inv^{rec}/θ_inv = (K_AI - L_G)/(μ K_AI - L_G)`), and " ++
     "`thm_recursive_threshold_leftward` (strict `θ_inv^{rec} < " ++
-    "θ_inv` for `μ > 1`).  Strict leftward shift for `μ > 1`.  " ++
+    "θ_inv` for `μ > 1` when the baseline crossing is reachable).  " ++
     "This is conditional on the declared recursive verification-pressure " ++
     "wage schedule; that schedule is not derived from the baseline CES block."
 }
@@ -1179,14 +1182,17 @@ def gap_thm_endogenous_ai_hysteresis_PARTIAL : GapEntry := {
   scope :=
     "Bundle entry covering four theorems: " ++
     "`thm_endogenous_ai_hysteresis_nonneg` (non-negativity of " ++
-    "deficit), `thm_endogenous_ai_recovery_at_Tj` (zero at junior " ++
-    "horizon), `thm_endogenous_ai_full_recovery_at_T` (full recovery " ++
-    "at `t = t_1 + T`), `thm_endogenous_ai_recovery_takes_full_career` " ++
-    "(strict below steady-state ceiling for `t < t_1 + T`).  " ++
-    "The algebra of the DECLARED worst-case deficit and recovery-stock " ++
+    "deficit), `thm_endogenous_ai_recovery_at_Tj` (the post-exit-born " ++
+    "component is zero at the junior horizon), " ++
+    "`thm_endogenous_ai_full_recovery_at_T` (legacy name; that component " ++
+    "reaches the low-substitution steady-state ceiling at `t = t_1 + T`), " ++
+    "and `thm_endogenous_ai_recovery_takes_full_career` (legacy name; " ++
+    "the component is strictly below its ceiling for `t < t_1 + T`).  " ++
+    "The algebra of the DECLARED worst-case deficit and post-exit component " ++
     "functions is closed: non-negativity, endpoint values, and the full-career " ++
-    "upper bound.  Lean does not derive those functions from the paper's " ++
-    "cohort integral or prove that the actual deficit equals the worst case; " ++
+    "upper horizon.  Lean does not derive those functions from the paper's " ++
+    "cohort integral, prove that the actual deficit equals the worst case, " ++
+    "or prove that total stock cannot recover earlier; " ++
     "the full paper claim is therefore `gapPartial`."
 }
 
@@ -1570,7 +1576,7 @@ def gap_IsCES_predicate : GapEntry := {
 /-! ### Definitional infrastructure (NOT standalone Cat 3 atoms)
 
   Cat 3 ratio guard.  The concrete Lean `def`s — `eBar`, `Vinf`,
-  `thetaStar`, `wageRatio`, `Gstar`, `thetaInv`, `Lambda`, `Vreq`,
+  `thetaStar`, `wageRatio`, `Gstar`, `thetaInv`, `LambdaJ`, `Lambda`, `Vreq`,
   `hPow`, `gSmooth`, `transientStock`, `MPpriv`, `MPsoc`,
   `externalityResidual`, `wedge`, `internalizedWedge`,
   `pigouvianSubsidy_CD`, `wageRatioRec`, `thetaInvRec`, `thetaEndo`,
@@ -1619,7 +1625,7 @@ def gap_IsCES_predicate : GapEntry := {
     * `Gstar`, `thetaInv` — `gap_thm_inversion_threshold_CLOSED`,
       `gap_thm_inversion_threshold_monotone_CLOSED`
     * `rBarZero`, `rBarMax` — `gap_cor_bounded_AI_CLOSED`
-    * `Lambda`, `wedge`, `MPpriv`, `MPsoc`, `externalityResidual` —
+    * `LambdaJ`, `Lambda`, `wedge`, `MPpriv`, `MPsoc`, `externalityResidual` —
       `gap_thm_externality_wedge_CLOSED`,
       `gap_thm_externality_nonneg_CLOSED`
     * `pigouvianSubsidy_CD` — `gap_thm_externality_pigouvian_CLOSED`
@@ -1666,7 +1672,7 @@ def gap_thm_externality_residual_identity_CLOSED : GapEntry := {
     "(residual identity)"
   attackHistory := []
   scope := "Derived theorem (`notInput`).  Identity " ++
-    "`MPsoc wG wV gE hE Lambda θ - MPpriv wG θ = " ++
+    "`MPsoc wG wV gE hE LambdaJ Lambda θ - MPpriv wG LambdaJ θ = " ++
     "externalityResidual wV gE hE Lambda`.  Proved by `unfold " ++
     "MPsoc MPpriv externalityResidual; ring` — a by-construction " ++
     "consequence of the `MPsoc` def `MPpriv + wV·gE·hE·Λ` and the " ++
@@ -1727,7 +1733,7 @@ def allGaps : List GapEntry := [
   -- Cat 3 paper-novel atoms (gapDefinitional): the `Economy`
   -- carrier + the four hypothesisPredicates.  The concrete
   -- closed-form `def`s — `eBar`, `Vinf`, `thetaStar`, `wageRatio`,
-  -- `Gstar`, `thetaInv`, `Lambda`, `Vreq`, `hPow`, `gSmooth`,
+  -- `Gstar`, `thetaInv`, `LambdaJ`, `Lambda`, `Vreq`, `hPow`, `gSmooth`,
   -- `transientStock`, `MPpriv`, `MPsoc`, `externalityResidual`,
   -- `wedge`, `internalizedWedge`, `pigouvianSubsidy_CD`,
   -- `wageRatioRec`, `thetaInvRec`, `thetaEndo`, `hysteresisDeficit`,
@@ -1923,7 +1929,7 @@ def cat3RatioPerMille : Nat :=
     carrier design).  The concrete closed-form `def`s — `eBar`
     (`\label{def:cohort}`), `Vinf` (`\label{lem:steady-state}`),
     `thetaStar` (`\label{eq:thetastar}`), and the further derived
-    `def`s (`wageRatio`, `Gstar`, `Lambda`, `wedge`, ...) — are
+    `def`s (`wageRatio`, `Gstar`, `LambdaJ`, `Lambda`, `wedge`, ...) — are
     definitional infrastructure, NOT standalone Cat 3 atoms and NOT
     standalone Ledger entries; see the "Definitional infrastructure"
     section above.

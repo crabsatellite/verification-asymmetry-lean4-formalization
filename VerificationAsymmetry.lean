@@ -20,7 +20,7 @@
                                              closed form, Cobb-Douglas
                                              factor share
     VerificationAsymmetry/Decomp.lean        Theorem~\ref{thm:decomp}
-                                             (stock-flow welfare
+                                             (stock-flow output
                                              decomposition by Euler)
     VerificationAsymmetry/Inversion.lean     Theorem~\ref{thm:inversion}
                                              (CES wage ratio scaling +
@@ -34,19 +34,21 @@
                                              closed form + multiplicative
                                              decay structure)
     VerificationAsymmetry/Externality.lean   Theorem~\ref{thm:externality}
-                                             (Pigouvian wedge + optimal
-                                             subsidy formula)
+                                             (PV-normalized residual
+                                             wedge + residual-equalizing
+                                             transfer)
     VerificationAsymmetry/Recursive.lean     Theorem~\ref{thm:recursive}
-                                             (mu-amplification of the
-                                             inversion threshold +
-                                             collapse invariance)
+                                             (reachable reduced-form
+                                             crossing + amplification
+                                             and collapse invariance)
     VerificationAsymmetry/Aggregation.lean   Theorem~\ref{thm:aggregation}
                                              (Cobb-Douglas aggregation
                                              min-theorem; perfect-
                                              substitutes survival)
     VerificationAsymmetry/EndogenousAI.lean  Theorem~\ref{thm:endogenous-ai}
                                              (1-D Brouwer via IVT;
-                                             hysteresis recovery bound)
+                                             disturbance bound +
+                                             post-exit cohort component)
 
   Soundness audit:
     VerificationAsymmetry/AxiomAudit.lean — prints axiom dependencies

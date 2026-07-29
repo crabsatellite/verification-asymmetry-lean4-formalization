@@ -70,7 +70,7 @@ identification, and positivity constraints) in its Lean signature.
   consumed downstream).
 
 The paper's derived closed-form notation (`eBar`, `Vinf`, `thetaStar`,
-`wageRatio`, `Gstar`, `thetaInv`, `Lambda`, `Vreq`, `hPow`, `gSmooth`,
+`wageRatio`, `Gstar`, `thetaInv`, `LambdaJ`, `Lambda`, `Vreq`, `hPow`, `gSmooth`,
 `transientStock`, `MPpriv`, `MPsoc`, `externalityResidual`, `wedge`,
 `internalizedWedge`, `pigouvianSubsidy_CD`, `wageRatioRec`, `thetaInvRec`,
 `thetaEndo`, `hysteresisDeficit`, `recoveryStock`, `thetaStarExt`,
@@ -119,7 +119,7 @@ dependencies is the output of
 |------|-----------------|
 | [`VerificationAsymmetry/Basic.lean`](VerificationAsymmetry/Basic.lean) | Definitions `def:gve`, `def:gen-supply`, `def:cohort`, `def:verification`, `def:diagnostic`; Lemma `lem:steady-state`; carriers `Economy`, `G`, `eBar`, `gHard`, `Vinf`, `VinfHard` |
 | [`VerificationAsymmetry/Axioms.lean`](VerificationAsymmetry/Axioms.lean) | Cat 2 textbook atomic axioms: `axiom_euler_crs`, `axiom_ces_wage_ratio`, `axiom_cobb_douglas_factor_share`; bridge theorems composing them with `steady_state_stock_identity` |
-| [`VerificationAsymmetry/Decomp.lean`](VerificationAsymmetry/Decomp.lean) | Theorem `thm:decomp` (stock-flow welfare decomposition; consumes `axiom_euler_crs`) |
+| [`VerificationAsymmetry/Decomp.lean`](VerificationAsymmetry/Decomp.lean) | Theorem `thm:decomp` (stock-flow output decomposition; consumes `axiom_euler_crs`) |
 | [`VerificationAsymmetry/Inversion.lean`](VerificationAsymmetry/Inversion.lean) | Theorem `thm:inversion` (wage ratio scaling, closed-form threshold); Corollary `cor:bounded-AI` (endpoint identifications) |
 | [`VerificationAsymmetry/Collapse.lean`](VerificationAsymmetry/Collapse.lean) | Steady-state hard-threshold algebra and the pre-shock-senior component of the transient path; the complete transient is partial |
 | [`VerificationAsymmetry/Credential.lean`](VerificationAsymmetry/Credential.lean) | Theorem `thm:credential` (Cobb-Douglas closed form, finite-capacity gross-peak FOC and uniqueness, multiplicative decay); Proposition `prop:junior-senior` (senior wage scaling) |

@@ -28,10 +28,14 @@
               senior-pool deficit after a transient disturbance is
               ν · |[t-T, t-T_j] ∩ [t_0 - T_j, t_1]| · ((1-θ_L) T_j)^a.
 
-    Part 5.  (Recovery rate.)  From the corner with θ_L < θ*,
-              V_∞(t) = ν · min(t - t_1 - T_j, T_s) · ((1-θ_L) T_j)^a
-              for t ∈ [t_1 + T_j, t_1 + T].  Full recovery at
-              t ≥ t_1 + T.
+    Part 5.  (Post-exit cohort component.)  With θ_L < θ*, the
+              contribution from cohorts born at or after t_1 is
+              V_post(t) =
+              ν · min(t - t_1 - T_j, T_s) · ((1-θ_L) T_j)^a
+              for t ∈ [t_1 + T_j, t_1 + T].  It reaches the
+              low-substitution steady-state ceiling at t_1 + T.
+              Total stock may recover earlier because of pre-t_1
+              seniors or straddle juniors.
 
   Lean strategy.  Part 1 (Brouwer existence) is invoked from
   Mathlib's intermediate value theorem on `[a, b] → ℝ` (a 1-D
@@ -39,9 +43,9 @@
   fixed point.  We formalize this as a real-line statement.
 
   Parts 4–5 verify real-arithmetic properties of DECLARED deficit and
-  recovery functions.  They do not derive those functions from the full
-  path-dependent cohort integral.  The ledger therefore marks the paper's
-  complete recovery claim `gapPartial`.  Part 3 is a conditional
+  post-exit-component functions.  They do not derive those functions from
+  the full path-dependent cohort integral.  The ledger therefore marks the
+  paper's complete recovery accounting `gapPartial`.  Part 3 is a conditional
   self-consistency observation, not a proof of global instability.
 
   Part 2 (uniqueness) is a structural lemma about strictly-
@@ -239,16 +243,21 @@ theorem thm_endogenous_ai_hysteresis_nonneg
     mul_nonneg E.nu_pos.le h_overlap
   exact mul_nonneg h3 h2
 
-/-- *Recovery stock function* `V_∞(t) = ν · min(t - t_1 - T_j, T_s) ·
-    ((1-θ_L) T_j)^a` for Theorem~\ref{thm:endogenous-ai} Part 5
-    (recovery rate closed form). Carrier for the closed-form
-    senior-pool recovery starting from the corner at `t_1`. -/
+/-- *Post-exit-born cohort component*
+    `V_post(t) = ν · min(t - t_1 - T_j, T_s) · ((1-θ_L) T_j)^a`
+    for Theorem~\ref{thm:endogenous-ai} Part 5.
+
+    The legacy declaration name is retained for API stability.  This
+    function is the contribution from cohorts born at or after `t_1`,
+    not the total senior stock unless a separate pipeline-reset premise
+    removes every pre-`t_1` contribution. -/
 noncomputable def recoveryStock (a θL t t₁ : ℝ) : ℝ :=
   E.nu * min (t - t₁ - E.Tj) E.Ts * ((1 - θL) * E.Tj) ^ a
 
-/-- **Theorem~\ref{thm:endogenous-ai} Part 5 (recovery at
+/-- **Theorem~\ref{thm:endogenous-ai} Part 5 (post-exit component at
     `t = t₁ + T_j`).** At the moment the first post-corner cohort
-    matures, the recovery stock is zero. -/
+    matures, its cohort component is zero.  The theorem makes no claim
+    that the total stock is zero at this date. -/
 theorem thm_endogenous_ai_recovery_at_Tj
     (a θL t₁ : ℝ) :
     E.recoveryStock a θL (t₁ + E.Tj) t₁ = 0 := by
@@ -258,9 +267,15 @@ theorem thm_endogenous_ai_recovery_at_Tj
   rw [min_eq_left E.Ts_pos.le]
   ring
 
-/-- **Theorem~\ref{thm:endogenous-ai} Part 5 (full recovery at
-    `t = t₁ + T`).** Full steady-state recovery is achieved at
-    `t = t₁ + T = t₁ + T_j + T_s`. -/
+/-- **Theorem~\ref{thm:endogenous-ai} Part 5 (post-exit component at
+    `t = t₁ + T`).** The post-exit-born component reaches the
+    low-substitution steady-state stock at
+    `t = t₁ + T = t₁ + T_j + T_s`.
+
+    In the paper's cohort accounting, all active seniors at this date
+    were born at or after `t₁`, which turns this component equality into
+    a uniform upper horizon for total-stock recovery.  That cohort-set
+    fact is paper-side and is not encoded by this algebraic theorem. -/
 theorem thm_endogenous_ai_full_recovery_at_T
     (a θL t₁ : ℝ) :
     E.recoveryStock a θL (t₁ + E.T) t₁
@@ -272,16 +287,18 @@ theorem thm_endogenous_ai_full_recovery_at_T
     unfold Ts; ring
   rw [hTs_eq, min_self]
 
-/-- **Theorem~\ref{thm:endogenous-ai} Part 5 (asymmetric recovery
-    timeline).** Recovery to the steady-state stock requires the
-    FULL career length `T = T_j + T_s` to elapse beyond the corner
-    exit `t_1`.  For any earlier `t < t_1 + T`, the recovery stock
-    is strictly below the steady-state value (the linear ramp
+/-- **Theorem~\ref{thm:endogenous-ai} Part 5 (post-exit component
+    timeline).** For any `t < t_1 + T`, the post-exit-born component
+    is strictly below its steady-state ceiling (the linear ramp
     `ν · (t - t_1 - T_j) · ē^a` has not yet hit its `ν T_s ē^a`
     ceiling).
 
     Formal content: for `t_1 + T_j ≤ t < t_1 + T`, the recovery
-    stock `recoveryStock a θL t t₁` is `< ν · T_s · ((1-θL) T_j)^a`. -/
+    component `recoveryStock a θL t t₁` is
+    `< ν · T_s · ((1-θL) T_j)^a`.  The legacy theorem name is retained
+    for API stability; this does NOT prove that the total stock cannot
+    recover earlier, because pre-`t_1` seniors and straddle juniors are
+    outside this definition. -/
 theorem thm_endogenous_ai_recovery_takes_full_career
     (a θL t t₁ : ℝ)
     (h_after_juniors : t₁ + E.Tj ≤ t) (h_before_full : t < t₁ + E.T)

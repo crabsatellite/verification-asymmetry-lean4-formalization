@@ -1,7 +1,7 @@
 /-
   VerificationAsymmetry/Decomp.lean
 
-  Theorem~\ref{thm:decomp} (Stock-Flow Welfare Decomposition).
+  Theorem~\ref{thm:decomp} (Stock-Flow Output Decomposition).
 
   Companion to: "Verification Asymmetry under AI Substitution:
   Wage-Ratio Inversion and Apprenticeship Thresholds" (Li, 2026).
@@ -9,7 +9,7 @@
   Statement.  For any constant-returns-to-scale `F`, Euler's identity
   gives the additive split
 
-      W = F_G · G + F_V · V = W_flow + W_stock,
+      Y = F_G · G + F_V · V = W_flow + W_stock,
 
   where `W_flow := F_G · G` is the generation factor income and
   `W_stock := F_V · V` is the verification factor income.
@@ -22,8 +22,9 @@
   Substantive content of `thm:decomp`.  The decomposition is the
   *additive split* itself — once one defines `W_stock` and `W_flow`
   as factor-share components, Euler's identity is the algebraic
-  identity that they sum to `W`.  We formalize this as an exact
-  identity at the level of marginal-product values.
+  identity that they sum to output `Y = F(G,V)`.  We formalize this
+  as an exact identity at the level of marginal-product values.  It
+  is not a social-welfare theorem.
 
   Window invariance (Proposition~\ref{prop:stock-flow-asymptotics}
   Part 4) is *not* formalized in this file.  A faithful Lean

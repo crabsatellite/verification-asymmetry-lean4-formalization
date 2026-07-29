@@ -11,17 +11,17 @@
 
   Statement.
 
-    The private marginal product of a junior at AI substitution
-    rate θ is
-        MP_J^P(θ) = (1-θ) w_G(θ).
-    The social marginal product is
+    The private present value of a junior at AI substitution rate θ is
+        MP_J^P(θ) = (1-θ) w_G(θ) Λ_J(r),
+    where Λ_J(r) = (1-e^{-r T_j})/r is the discounted junior horizon.
+    The social present value is
         MP_J^S(θ) = MP_J^P(θ) + w_V(θ) g(ē) h(ē) Λ(r),
     where Λ(r) = (e^{-r T_j} - e^{-r T})/r is the discounted senior
     horizon.
 
     Apprenticeship wedge (paper Eq.~\eqref{eq:wedge}):
         W_E(θ) = (MP_J^S - MP_J^P)/MP_J^P
-              = (w_V/w_G) · g(ē) h(ē) Λ(r) / (1-θ).
+              = (w_V/w_G) · g(ē) h(ē) Λ(r) / ((1-θ) Λ_J(r)).
 
     Residual-equalizing transfer (Cobb-Douglas, paper Thm
     Part 3 algebraic simplification):
@@ -66,7 +66,23 @@ namespace Economy
 
 variable (E : Economy)
 
-/-! ### Discounted senior horizon `Λ(r)`. -/
+/-! ### Discounted junior and senior horizons. -/
+
+/-- *Discounted junior horizon*
+    `Λ_J(r) := (1 - e^{-r T_j}) / r`, paper Eq.~\eqref{eq:MPS}. -/
+noncomputable def LambdaJ (r : ℝ) : ℝ :=
+  (1 - Real.exp (-r * E.Tj)) / r
+
+/-- `Λ_J(r) > 0` for `r > 0`. -/
+lemma LambdaJ_pos {r : ℝ} (hr : 0 < r) : 0 < E.LambdaJ r := by
+  unfold LambdaJ
+  apply div_pos _ hr
+  have hprod : 0 < r * E.Tj := mul_pos hr E.Tj_pos
+  have harg : -r * E.Tj < 0 := by linarith
+  have hexp : Real.exp (-r * E.Tj) < 1 := by
+    rw [← Real.exp_zero]
+    exact Real.exp_lt_exp.mpr harg
+  linarith
 
 /-- *Discounted senior horizon* `Λ(r) := (e^{-r T_j} - e^{-r T}) / r`,
     paper Eq.~\eqref{eq:MPS}.
@@ -88,10 +104,10 @@ lemma Lambda_pos {r : ℝ} (hr : 0 < r) : 0 < E.Lambda r := by
     Real.exp_lt_exp.mpr h1
   linarith
 
-/-! ### Marginal products. -/
+/-! ### Present-value marginal contributions. -/
 
-/-- *Private marginal product of a junior* at rate `θ`:
-    `MP_J^P(θ) = (1-θ) w_G(θ)`.
+/-- *Private present value of a junior* at rate `θ`:
+    `MP_J^P(θ) = (1-θ) w_G(θ) Λ_J`.
 
     Economy-independent definition: takes `wG` as an external
     parameter rather than threading through Economy fields, since
@@ -99,12 +115,12 @@ lemma Lambda_pos {r : ℝ} (hr : 0 < r) : 0 < E.Lambda r := by
     production function and the paper's narrative treats it as a
     given by the time MP_J^P enters the externality calculation.
     Downstream call sites use the bare `MPpriv` (no dot-notation). -/
-def MPpriv (wG θ : ℝ) : ℝ := (1 - θ) * wG
+def MPpriv (wG LambdaJ θ : ℝ) : ℝ := (1 - θ) * wG * LambdaJ
 
-/-- *Social marginal product of a junior* at rate `θ`:
+/-- *Social present value of a junior* at rate `θ`:
     `MP_J^S(θ) = MP_J^P(θ) + w_V g(ē) h(ē) Λ`. -/
-def MPsoc (wG wV gE hE Lambda θ : ℝ) : ℝ :=
-  MPpriv wG θ + wV * gE * hE * Lambda
+def MPsoc (wG wV gE hE LambdaJ Lambda θ : ℝ) : ℝ :=
+  MPpriv wG LambdaJ θ + wV * gE * hE * Lambda
 
 /-- *Externality residual* `s*(θ) := MP_J^S - MP_J^P =
     w_V g(ē) h(ē) Λ`.  Economy-independent definition: takes
@@ -119,8 +135,8 @@ def externalityResidual (wV gE hE Lambda : ℝ) : ℝ :=
     externality residual `MP_J^S - MP_J^P` equals
     `w_V g(ē) h(ē) Λ`. -/
 theorem thm_externality_residual_identity
-    (wG wV gE hE Lambda θ : ℝ) :
-    MPsoc wG wV gE hE Lambda θ - MPpriv wG θ
+    (wG wV gE hE LambdaJ Lambda θ : ℝ) :
+    MPsoc wG wV gE hE LambdaJ Lambda θ - MPpriv wG LambdaJ θ
       = externalityResidual wV gE hE Lambda := by
   unfold MPsoc MPpriv externalityResidual
   ring
@@ -154,20 +170,23 @@ theorem thm_externality_residual_pos
 
 /-- *Apprenticeship wedge* `W_E(θ) := (MP_J^S - MP_J^P)/MP_J^P`,
     paper Eq.~\eqref{eq:wedge}. -/
-noncomputable def wedge (wG wV gE hE Lambda θ : ℝ) : ℝ :=
-  externalityResidual wV gE hE Lambda / MPpriv wG θ
+noncomputable def wedge (wG wV gE hE LambdaJ Lambda θ : ℝ) : ℝ :=
+  externalityResidual wV gE hE Lambda / MPpriv wG LambdaJ θ
 
 /-- **Theorem~\ref{thm:externality} (wedge identity).** The
     wedge `W_E(θ)` rearranges to
-    `(w_V/w_G) · g(ē) h(ē) Λ / (1-θ)`. -/
+    `(w_V/w_G) · g(ē) h(ē) Λ / ((1-θ) Λ_J)`. -/
 theorem thm_externality_wedge_identity
-    (wG wV gE hE Lambda θ : ℝ) (hwG : 0 < wG) (hθ_lt : θ < 1) :
-    wedge wG wV gE hE Lambda θ
-      = (wV / wG) * (gE * hE * Lambda) / (1 - θ) := by
+    (wG wV gE hE LambdaJ Lambda θ : ℝ)
+    (hwG : 0 < wG) (hLambdaJ : 0 < LambdaJ) (hθ_lt : θ < 1) :
+    wedge wG wV gE hE LambdaJ Lambda θ
+      = (wV / wG) * (gE * hE * Lambda) /
+          ((1 - θ) * LambdaJ) := by
   unfold wedge externalityResidual MPpriv
   have h1mθ : 0 < 1 - θ := by linarith
   have h1mθ_ne : 1 - θ ≠ 0 := ne_of_gt h1mθ
   have hwG_ne : wG ≠ 0 := ne_of_gt hwG
+  have hLambdaJ_ne : LambdaJ ≠ 0 := ne_of_gt hLambdaJ
   field_simp
 
 /-! ### Theorem~\ref{thm:externality} Part 3: residual-equalizing transfer. -/
@@ -266,8 +285,8 @@ theorem thm_externality_pigouvian_cobb_douglas_from_axioms
     atom.  Documented under `gap_prop_internalization_CLOSED`
     in `Ledger.lean`. -/
 noncomputable def internalizedWedge
-    (zeta wG wV gE hE Lambda θ : ℝ) : ℝ :=
-  (1 - zeta) * wedge wG wV gE hE Lambda θ
+    (zeta wG wV gE hE LambdaJ Lambda θ : ℝ) : ℝ :=
+  (1 - zeta) * wedge wG wV gE hE LambdaJ Lambda θ
 
 /-- **Proposition~\ref{prop:internalization} (within-firm
     internalization — unfolding identity).** The internalized
@@ -284,60 +303,63 @@ noncomputable def internalizedWedge
     See `gap_prop_internalization_CLOSED` in `Ledger.lean`
     for the canonical record. -/
 theorem prop_internalization
-    (zeta wG wV gE hE Lambda θ : ℝ) :
-    internalizedWedge zeta wG wV gE hE Lambda θ
+    (zeta wG wV gE hE LambdaJ Lambda θ : ℝ) :
+    internalizedWedge zeta wG wV gE hE LambdaJ Lambda θ
       = (1 - zeta) *
-          (externalityResidual wV gE hE Lambda / MPpriv wG θ) := by
+          (externalityResidual wV gE hE Lambda /
+            MPpriv wG LambdaJ θ) := by
   unfold internalizedWedge wedge
   rfl
 
 /-! ### Proposition~\ref{prop:decentralized-theta}: social vs. private. -/
 
 /-- **Proposition~\ref{prop:decentralized-theta} (social vs. private
-    FOC).** The social FOC `p_AI + s*(θ_soc) = w_G(θ_soc)` and the
-    private FOC `p_AI = w_G(θ_eq)` imply
-    `w_G(θ_soc) = w_G(θ_eq) + s*(θ_soc)`.
+    FOC).** The social FOC `p_AI + s*(θ_soc) = B(θ_soc)` and the
+    private FOC `p_AI = B(θ_eq)` imply
+    `B(θ_soc) = B(θ_eq) + s*(θ_soc)`.
 
-    Hence whenever `s*(θ_soc) > 0`, `w_G(θ_soc) > w_G(θ_eq)`. -/
+    Hence whenever `s*(θ_soc) > 0`, `B(θ_soc) > B(θ_eq)`. -/
 theorem prop_decentralized_theta_foc
-    (pAI sStar wG_soc wG_eq : ℝ)
-    (hSoc : pAI + sStar = wG_soc) (hEq : pAI = wG_eq) :
-    wG_soc = wG_eq + sStar := by
+    (pAI sStar B_soc B_eq : ℝ)
+    (hSoc : pAI + sStar = B_soc) (hEq : pAI = B_eq) :
+    B_soc = B_eq + sStar := by
   linarith
 
 /-- **Proposition~\ref{prop:decentralized-theta} (strict inequality).**
     Given the two stipulated interior first-order equations, a positive
-    residual transfer implies a strictly higher `w_G` at the
-    residual-adjusted solution. -/
+    residual transfer implies a strictly higher present-value benefit
+    `B` at the residual-adjusted solution.  The legacy declaration name
+    is retained for API stability. -/
 theorem prop_decentralized_theta_wG_strict
-    (pAI sStar wG_soc wG_eq : ℝ) (hSoc : pAI + sStar = wG_soc)
-    (hEq : pAI = wG_eq) (hsStar : 0 < sStar) :
-    wG_eq < wG_soc := by
-  have := prop_decentralized_theta_foc pAI sStar wG_soc wG_eq hSoc hEq
+    (pAI sStar B_soc B_eq : ℝ) (hSoc : pAI + sStar = B_soc)
+    (hEq : pAI = B_eq) (hsStar : 0 < sStar) :
+    B_eq < B_soc := by
+  have := prop_decentralized_theta_foc pAI sStar B_soc B_eq hSoc hEq
   linarith
 
 /-- **Proposition~\ref{prop:decentralized-theta} (monotonicity of
-    `w_G`).** Given the INDEPENDENT reduced-form premise that `w_G`
-    is strictly decreasing in `θ`, the strict inequality `w_G(θ_soc) >
-    w_G(θ_eq)` implies `θ_soc < θ_eq`.
+    `B`).** Given the INDEPENDENT reduced-form premise that the
+    present-value benefit schedule `B` is strictly decreasing in `θ`,
+    the strict inequality `B(θ_soc) > B(θ_eq)` implies
+    `θ_soc < θ_eq`.
 
     An increasing ratio `w_V/w_G` does not itself establish this premise.
 
     *Formal content.*  Anti-monotonicity bridge: if `f` is
     strictly anti-monotone and `f(x) > f(y)`, then `x < y`. -/
 theorem prop_decentralized_theta_overshoots
-    (theta_soc theta_eq : ℝ) (wG : ℝ → ℝ)
-    (hwG_anti : ∀ x y, x < y → wG y < wG x)
-    (h_strict : wG theta_eq < wG theta_soc) :
+    (theta_soc theta_eq : ℝ) (B : ℝ → ℝ)
+    (hB_anti : ∀ x y, x < y → B y < B x)
+    (h_strict : B theta_eq < B theta_soc) :
     theta_soc < theta_eq := by
   by_contra hcon
   push Not at hcon
   rcases lt_or_eq_of_le hcon with hlt | heq
-  · -- theta_eq < theta_soc would give wG theta_soc < wG theta_eq,
+  · -- theta_eq < theta_soc would give B theta_soc < B theta_eq,
     -- contradicting h_strict.
-    have := hwG_anti theta_eq theta_soc hlt
+    have := hB_anti theta_eq theta_soc hlt
     linarith
-  · -- theta_eq = theta_soc would give wG equal, contradicting
+  · -- theta_eq = theta_soc would give B equal, contradicting
     -- the strict inequality.
     rw [heq] at h_strict
     exact lt_irrefl _ h_strict

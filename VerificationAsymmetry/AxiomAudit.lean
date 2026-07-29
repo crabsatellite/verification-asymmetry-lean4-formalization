@@ -210,6 +210,8 @@ import VerificationAsymmetry
 #print axioms VerificationAsymmetry.Economy.prop_junior_senior_wage_from_axioms
 
 -- Theorem~\ref{thm:externality}
+#print axioms VerificationAsymmetry.Economy.LambdaJ_pos
+#print axioms VerificationAsymmetry.Economy.Lambda_pos
 #print axioms VerificationAsymmetry.Economy.thm_externality_residual_identity
 #print axioms VerificationAsymmetry.Economy.thm_externality_residual_nonneg
 #print axioms VerificationAsymmetry.Economy.thm_externality_residual_pos
@@ -234,6 +236,7 @@ import VerificationAsymmetry
 -- is provided.  See `gap_thm_recursive_invariance_DEFINITIONAL` in
 -- Ledger.lean.)
 #print axioms VerificationAsymmetry.Economy.thm_recursive_threshold_closed_form
+#print axioms VerificationAsymmetry.Economy.thm_recursive_threshold_in_unit
 #print axioms VerificationAsymmetry.Economy.thm_recursive_threshold_ratio
 #print axioms VerificationAsymmetry.Economy.thm_recursive_threshold_leftward
 #print axioms VerificationAsymmetry.Economy.Vreq_ratio_bounds

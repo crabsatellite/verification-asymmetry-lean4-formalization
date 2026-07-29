@@ -1,7 +1,7 @@
 /-
   VerificationAsymmetry/Aggregation.lean
 
-  Theorem~\ref{thm:aggregation} (Welfare Aggregation Across
+  Theorem~\ref{thm:aggregation} (Output Aggregation Across
   Professions) and Proposition~\ref{prop:adjustment-margins}
   (Adjustment Margins).
 

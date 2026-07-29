@@ -13,8 +13,10 @@
     which AI output receives weight `μ ≥ 1` and human output weight 1:
         V_req(θ) = (1-θ) L_G + μ θ K_AI.
 
-    Part 1.  Inversion threshold under recursive verification:
+    Part 1.  When `L_G < G*(r̄) < μ K_AI`, the recursive crossing
+              is reachable in `(0,1)` and has closed form
         θ_inv^{rec}(r̄) = (G*(r̄) - L_G) / (μ K_AI - L_G),
+        while, when the baseline crossing is also reachable,
         θ_inv^{rec}/θ_inv = (K_AI - L_G)/(μ K_AI - L_G),
         which approaches 1/μ as K_AI → ∞.
 
@@ -100,11 +102,13 @@ theorem Vreq_ratio_bounds
 noncomputable def thetaInvRec (μ V rBar : ℝ) : ℝ :=
   (E.Gstar V rBar - E.LG) / (μ * E.KAI - E.LG)
 
-/-- **Theorem~\ref{thm:recursive} Part 1 (closed-form recursive
-    threshold).** The recursive threshold solves
-    `V_req(θ_inv^{rec}) = G*(r̄)`. -/
+/-- **Theorem~\ref{thm:recursive} Part 1 (closed-form reachable
+    recursive threshold).** If `L_G < G*(r̄) < μ K_AI`, the recursive
+    threshold solves `V_req(θ_inv^{rec}) = G*(r̄)`. -/
 theorem thm_recursive_threshold_closed_form
-    (μ V rBar : ℝ) (hμLG_lt : E.LG < μ * E.KAI) :
+    (μ V rBar : ℝ)
+    (hLower : E.LG < E.Gstar V rBar)
+    (hUpper : E.Gstar V rBar < μ * E.KAI) :
     E.Vreq μ (E.thetaInvRec μ V rBar) = E.Gstar V rBar := by
   unfold Vreq thetaInvRec
   have hne : μ * E.KAI - E.LG ≠ 0 := by
@@ -113,36 +117,50 @@ theorem thm_recursive_threshold_closed_form
   field_simp
   ring
 
+/-- **Theorem~\ref{thm:recursive} Part 1 (reachability).** The paper's
+    endpoint conditions place the recursive closed form strictly inside
+    the feasible share interval `(0,1)`. -/
+theorem thm_recursive_threshold_in_unit
+    (μ V rBar : ℝ)
+    (hLower : E.LG < E.Gstar V rBar)
+    (hUpper : E.Gstar V rBar < μ * E.KAI) :
+    0 < E.thetaInvRec μ V rBar ∧ E.thetaInvRec μ V rBar < 1 := by
+  unfold thetaInvRec
+  have hNumer : 0 < E.Gstar V rBar - E.LG := by linarith
+  have hDenom : 0 < μ * E.KAI - E.LG := by linarith
+  constructor
+  · exact div_pos hNumer hDenom
+  · apply (div_lt_iff₀ hDenom).2
+    linarith
+
 /-- **Theorem~\ref{thm:recursive} Part 1 (ratio identity).** The
-    ratio `θ_inv^{rec} / θ_inv = (K_AI - L_G)/(μ K_AI - L_G)`. -/
+    ratio `θ_inv^{rec} / θ_inv = (K_AI - L_G)/(μ K_AI - L_G)`
+    when both crossings are reachable. -/
 theorem thm_recursive_threshold_ratio
     (μ V rBar : ℝ)
-    (hKAI_gt : E.LG < E.KAI) (hμLG_lt : E.LG < μ * E.KAI)
-    (hGstar_ne_LG : E.Gstar V rBar ≠ E.LG) :
+    (hLower : E.LG < E.Gstar V rBar)
+    (hBaselineUpper : E.Gstar V rBar < E.KAI)
+    (hRecursiveUpper : E.Gstar V rBar < μ * E.KAI) :
     E.thetaInvRec μ V rBar / E.thetaInv V rBar
       = (E.KAI - E.LG) / (μ * E.KAI - E.LG) := by
   unfold thetaInvRec thetaInv
   -- (G* - L_G)/(μ K_AI - L_G) / ((G* - L_G)/(K_AI - L_G))
   --   = (K_AI - L_G)/(μ K_AI - L_G).
   have hGstar_LG_ne : E.Gstar V rBar - E.LG ≠ 0 := by
-    intro h
-    apply hGstar_ne_LG
-    linarith
+    exact ne_of_gt (by linarith)
   have hKAI_LG_ne : E.KAI - E.LG ≠ 0 := by
-    intro h
-    apply ne_of_gt hKAI_gt
-    linarith
+    exact ne_of_gt (by linarith)
   have hμKAI_LG_ne : μ * E.KAI - E.LG ≠ 0 := by
-    intro h
-    apply ne_of_gt hμLG_lt
-    linarith
+    exact ne_of_gt (by linarith)
   field_simp
 
-/-- **Theorem~\ref{thm:recursive} Part 1 (μ ≥ 1 ⇒ leftward shift).**
-    For `μ > 1` and `K_AI > L_G`, `θ_inv^{rec} < θ_inv` (strict). -/
+/-- **Theorem~\ref{thm:recursive} Part 1 (μ > 1 ⇒ leftward shift).**
+    For `μ > 1`, when both crossings are reachable,
+    `θ_inv^{rec} < θ_inv` strictly. -/
 theorem thm_recursive_threshold_leftward
     (μ V rBar : ℝ) (hμ : 1 < μ)
-    (hKAI_gt : E.LG < E.KAI) (hGstar_gt_LG : E.LG < E.Gstar V rBar) :
+    (hGstar_gt_LG : E.LG < E.Gstar V rBar)
+    (hBaselineUpper : E.Gstar V rBar < E.KAI) :
     E.thetaInvRec μ V rBar < E.thetaInv V rBar := by
   unfold thetaInvRec thetaInv
   -- (G* - L_G) > 0 (from hGstar_gt_LG).
@@ -150,6 +168,7 @@ theorem thm_recursive_threshold_leftward
   -- Both denominators positive (μ K_AI - L_G > K_AI - L_G > 0
   -- since μ > 1, K_AI > 0).
   have hKAI_pos : 0 < E.KAI := E.KAI_pos
+  have hKAI_gt : E.LG < E.KAI := by linarith
   have hKAI_LG_pos : 0 < E.KAI - E.LG := by linarith
   have hμKAI_pos : E.KAI < μ * E.KAI := by
     have : 0 < E.KAI := hKAI_pos
