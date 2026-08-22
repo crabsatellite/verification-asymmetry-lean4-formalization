@@ -75,6 +75,7 @@ namespace VerificationAsymmetry
 namespace Economy
 
 open Filter
+open Set
 open scoped Topology
 
 variable (E : Economy)
@@ -268,6 +269,129 @@ theorem thm_inversion_wage_ratio_strict
     exact mul_pos (div_pos (by linarith [E.eta_lt_one]) E.eta_pos)
       (Real.rpow_pos_of_pos E.lam_pos _)
   exact mul_lt_mul_of_pos_left hpow_lt hprefactor
+
+/-! ### The paper's infimum definition of the inversion threshold. -/
+
+/-- The exact crossing set in Theorem 9:
+    `{theta in [0,1] | rBar <= wageRatio V theta}`. -/
+def inversionCrossingSet (V rBar : ℝ) : Set ℝ :=
+  {theta | theta ∈ Set.Icc (0 : ℝ) 1 ∧ rBar ≤ E.wageRatio V theta}
+
+/-- The paper's original inversion-threshold object, defined as the infimum of
+    the exact crossing set rather than by the later closed form. -/
+noncomputable def thetaInvInf (V rBar : ℝ) : ℝ :=
+  sInf (E.inversionCrossingSet V rBar)
+
+/-- The crossing set written literally with the paper's marginal-product price
+    functions, before substituting the CES wage-ratio formula. -/
+def marginalProductCrossingSet
+    (wG wV : ℝ → ℝ) (rBar : ℝ) : Set ℝ :=
+  {theta | theta ∈ Set.Icc (0 : ℝ) 1 ∧ rBar ≤ wV theta / wG theta}
+
+/-- The paper's literal marginal-product inversion threshold. -/
+noncomputable def thetaInvMarginalProductInf
+    (wG wV : ℝ → ℝ) (rBar : ℝ) : ℝ :=
+  sInf (marginalProductCrossingSet wG wV rBar)
+
+/-- Pointwise consumption of the CES marginal-product identification makes the
+    literal price-ratio crossing set equal to the closed-form crossing set. -/
+theorem marginalProductCrossingSet_eq_inversionCrossingSet
+    (V rBar : ℝ) (wG wV : ℝ → ℝ)
+    (hwage : ∀ theta ∈ Set.Icc (0 : ℝ) 1,
+      wV theta / wG theta = E.wageRatio V theta) :
+    marginalProductCrossingSet wG wV rBar = E.inversionCrossingSet V rBar := by
+  ext theta
+  constructor
+  · rintro ⟨htheta, hcross⟩
+    exact ⟨htheta, by simpa [hwage theta htheta] using hcross⟩
+  · rintro ⟨htheta, hcross⟩
+    exact ⟨htheta, by simpa [hwage theta htheta] using hcross⟩
+
+/-- At the algebraic closed-form threshold, the actual wage-ratio function is
+    exactly the target ratio.  This is the missing bridge from the critical
+    generation level back to the paper's crossing predicate. -/
+theorem wageRatio_thetaInv_eq_target
+    (V rBar : ℝ) (hV_pos : 0 < V) (hrBar_pos : 0 < rBar)
+    (hKAI_gt : E.LG < E.KAI) (hrho_lt : E.rho < 1) :
+    E.wageRatio V (E.thetaInv V rBar) = rBar := by
+  rw [wageRatio, E.thm_inversion_threshold_closed_form V rBar hKAI_gt]
+  have h_eta : 0 < E.eta := E.eta_pos
+  have h_one_eta : 0 < 1 - E.eta := by linarith [E.eta_lt_one]
+  have h_lam_pow : 0 < E.lam ^ E.rho := Real.rpow_pos_of_pos E.lam_pos _
+  have h_den : 0 < (1 - E.eta) * E.lam ^ E.rho :=
+    mul_pos h_one_eta h_lam_pow
+  have h_base :
+      0 < rBar * E.eta / ((1 - E.eta) * E.lam ^ E.rho) :=
+    div_pos (mul_pos hrBar_pos h_eta) h_den
+  have h_exp : 0 < 1 - E.rho := by linarith
+  have hV_ne : V ≠ 0 := ne_of_gt hV_pos
+  have h_exp_ne : 1 - E.rho ≠ 0 := ne_of_gt h_exp
+  have h_ratio :
+      E.Gstar V rBar / V =
+        (rBar * E.eta / ((1 - E.eta) * E.lam ^ E.rho)) ^
+          (1 / (1 - E.rho)) := by
+    unfold Gstar
+    field_simp
+  rw [h_ratio]
+  rw [← Real.rpow_mul h_base.le (1 / (1 - E.rho)) (1 - E.rho)]
+  have hmul : (1 / (1 - E.rho)) * (1 - E.rho) = 1 := by
+    field_simp
+  rw [hmul, Real.rpow_one]
+  field_simp
+
+/-- The closed-form point is the least element of the paper's exact crossing
+    set.  The proof consumes the actual wage-ratio equality and strict
+    monotonicity; it is not a redefinition of the target. -/
+theorem thetaInv_isLeast_crossingSet
+    (V rBar : ℝ) (hV_pos : 0 < V) (hrBar_pos : 0 < rBar)
+    (hKAI_gt : E.LG < E.KAI) (hrho_lt : E.rho < 1)
+    (hGstar_lo : E.LG < E.Gstar V rBar)
+    (hGstar_hi : E.Gstar V rBar < E.KAI) :
+    IsLeast (E.inversionCrossingSet V rBar) (E.thetaInv V rBar) := by
+  obtain ⟨htheta_pos, htheta_lt_one⟩ :=
+    E.thm_inversion_threshold_in_unit_interval V rBar hKAI_gt hGstar_lo hGstar_hi
+  have htarget :=
+    E.wageRatio_thetaInv_eq_target V rBar hV_pos hrBar_pos hKAI_gt hrho_lt
+  constructor
+  · exact ⟨⟨htheta_pos.le, htheta_lt_one.le⟩, htarget.ge⟩
+  · intro theta htheta
+    rcases htheta with ⟨⟨htheta0, htheta1⟩, hcross⟩
+    by_contra hnot
+    have hlt : theta < E.thetaInv V rBar := lt_of_not_ge hnot
+    have hwage_lt : E.wageRatio V theta < E.wageRatio V (E.thetaInv V rBar) :=
+      E.thm_inversion_wage_ratio_strict V hV_pos hKAI_gt hrho_lt
+        htheta0 htheta_lt_one.le hlt
+    rw [htarget] at hwage_lt
+    linarith
+
+/-- **Theorem 9, exact object identity.** The infimum definition printed in the
+    paper equals the derived closed form. -/
+theorem thetaInvInf_eq_thetaInv
+    (V rBar : ℝ) (hV_pos : 0 < V) (hrBar_pos : 0 < rBar)
+    (hKAI_gt : E.LG < E.KAI) (hrho_lt : E.rho < 1)
+    (hGstar_lo : E.LG < E.Gstar V rBar)
+    (hGstar_hi : E.Gstar V rBar < E.KAI) :
+    E.thetaInvInf V rBar = E.thetaInv V rBar := by
+  unfold thetaInvInf
+  exact (E.thetaInv_isLeast_crossingSet V rBar hV_pos hrBar_pos hKAI_gt
+    hrho_lt hGstar_lo hGstar_hi).csInf_eq
+
+/-- **Theorem 9, literal marginal-product object identity.**  After consuming
+    the CES price-ratio identification pointwise on `[0,1]`, the infimum written
+    with the paper's original `wV/wG` functions equals the derived threshold. -/
+theorem thetaInvMarginalProductInf_eq_thetaInv
+    (V rBar : ℝ) (wG wV : ℝ → ℝ)
+    (hV_pos : 0 < V) (hrBar_pos : 0 < rBar)
+    (hKAI_gt : E.LG < E.KAI) (hrho_lt : E.rho < 1)
+    (hGstar_lo : E.LG < E.Gstar V rBar)
+    (hGstar_hi : E.Gstar V rBar < E.KAI)
+    (hwage : ∀ theta ∈ Set.Icc (0 : ℝ) 1,
+      wV theta / wG theta = E.wageRatio V theta) :
+    thetaInvMarginalProductInf wG wV rBar = E.thetaInv V rBar := by
+  unfold thetaInvMarginalProductInf
+  rw [marginalProductCrossingSet_eq_inversionCrossingSet E V rBar wG wV hwage]
+  exact E.thetaInvInf_eq_thetaInv V rBar hV_pos hrBar_pos hKAI_gt hrho_lt
+    hGstar_lo hGstar_hi
 
 /-! ### Theorem~\ref{thm:inversion} Part 2 (monotonicity in r̄ and K_AI). -/
 

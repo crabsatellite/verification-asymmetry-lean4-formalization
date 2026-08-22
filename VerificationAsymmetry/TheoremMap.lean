@@ -74,6 +74,15 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.wageRatioAtCapacity_tendsto_atTop
 #check VerificationAsymmetry.Economy.Gstar
 #check VerificationAsymmetry.Economy.thetaInv
+#check VerificationAsymmetry.Economy.inversionCrossingSet
+#check VerificationAsymmetry.Economy.thetaInvInf
+#check VerificationAsymmetry.Economy.marginalProductCrossingSet
+#check VerificationAsymmetry.Economy.thetaInvMarginalProductInf
+#check VerificationAsymmetry.Economy.marginalProductCrossingSet_eq_inversionCrossingSet
+#check VerificationAsymmetry.Economy.wageRatio_thetaInv_eq_target
+#check VerificationAsymmetry.Economy.thetaInv_isLeast_crossingSet
+#check VerificationAsymmetry.Economy.thetaInvInf_eq_thetaInv
+#check VerificationAsymmetry.Economy.thetaInvMarginalProductInf_eq_thetaInv
 #check VerificationAsymmetry.Economy.thm_inversion_threshold_closed_form
 #check VerificationAsymmetry.Economy.thm_inversion_threshold_in_unit_interval
 #check VerificationAsymmetry.Economy.thm_inversion_threshold_monotone_in_rBar
@@ -123,6 +132,8 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.smoothSlopeAboveAtThreshold
 #check VerificationAsymmetry.Economy.hasDerivAt_smooth_stock_below_at_threshold
 #check VerificationAsymmetry.Economy.hasDerivAt_smooth_stock_above_at_threshold
+#check VerificationAsymmetry.Economy.hasDerivWithinAt_smoothStock_left
+#check VerificationAsymmetry.Economy.hasDerivWithinAt_smoothStock_right
 #check VerificationAsymmetry.Economy.prop_smooth_collapse_kink
 
 /-! ## Remark 12: smooth versus hard promotion.
@@ -134,6 +145,8 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.Lambda
 #check VerificationAsymmetry.Economy.LambdaJ_pos
 #check VerificationAsymmetry.Economy.Lambda_pos
+#check VerificationAsymmetry.Economy.intervalIntegral_exp_neg_eq_LambdaJ
+#check VerificationAsymmetry.Economy.intervalIntegral_exp_neg_eq_Lambda
 #check VerificationAsymmetry.Economy.MPpriv
 #check VerificationAsymmetry.Economy.MPsoc
 #check VerificationAsymmetry.Economy.externalityResidual
@@ -145,6 +158,10 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.wedgeGrowthCore
 #check VerificationAsymmetry.Economy.wedgeGrowthCoefficient
 #check VerificationAsymmetry.Economy.wedgeExplicit
+#check VerificationAsymmetry.Economy.hardPaperWedge
+#check VerificationAsymmetry.Economy.wedge_eq_hardPaperWedge
+#check VerificationAsymmetry.Economy.hardPaperWedge_eq_wedgeExplicit
+#check VerificationAsymmetry.Economy.wedge_eq_wedgeExplicit
 #check VerificationAsymmetry.Economy.wedgeExplicit_monotone
 #check VerificationAsymmetry.Economy.smoothWedgeExponent_neg
 #check VerificationAsymmetry.Economy.smoothWedgeExponent_eq_zero
@@ -152,10 +169,17 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.smoothWedgePower_tendsto_atTop
 #check VerificationAsymmetry.Economy.smoothWedgePower_eq_one
 #check VerificationAsymmetry.Economy.smoothWedgePower_tendsto_zero
-#check VerificationAsymmetry.Economy.smoothWedgeLeadingTerm
-#check VerificationAsymmetry.Economy.smoothWedgeLeadingTerm_tendsto_atTop
-#check VerificationAsymmetry.Economy.smoothWedgeLeadingTerm_eq_constant
-#check VerificationAsymmetry.Economy.smoothWedgeLeadingTerm_tendsto_zero
+#check VerificationAsymmetry.Economy.smoothPaperWedge
+#check VerificationAsymmetry.Economy.smoothMarginalProductWedge
+#check VerificationAsymmetry.Economy.smoothMarginalProductWedge_eq_smoothPaperWedge
+#check VerificationAsymmetry.Economy.smoothWedgeClosedForm
+#check VerificationAsymmetry.Economy.smoothPaperWedge_eq_closedForm
+#check VerificationAsymmetry.Economy.smoothPaperWedge_tendsto_atTop
+#check VerificationAsymmetry.Economy.smoothPaperWedge_tendsto_endpoint
+#check VerificationAsymmetry.Economy.smoothPaperWedge_tendsto_zero
+#check VerificationAsymmetry.Economy.smoothMarginalProductWedge_tendsto_atTop
+#check VerificationAsymmetry.Economy.smoothMarginalProductWedge_tendsto_endpoint
+#check VerificationAsymmetry.Economy.smoothMarginalProductWedge_tendsto_zero
 #check VerificationAsymmetry.Economy.thm_externality_pigouvian_cobb_douglas_from_axioms
 #check VerificationAsymmetry.Economy.internalizedWedge
 #check VerificationAsymmetry.Economy.prop_internalization

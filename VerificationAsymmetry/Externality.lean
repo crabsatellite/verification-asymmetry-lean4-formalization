@@ -59,8 +59,10 @@
 import VerificationAsymmetry.Basic
 import VerificationAsymmetry.Axioms
 import VerificationAsymmetry.Collapse
+import VerificationAsymmetry.Inversion
 import Mathlib.Analysis.SpecialFunctions.Pow.Asymptotics
 import Mathlib.Analysis.SpecialFunctions.Pow.Continuity
+import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 
 namespace VerificationAsymmetry
 
@@ -95,6 +97,46 @@ lemma LambdaJ_pos {r : ℝ} (hr : 0 < r) : 0 < E.LambdaJ r := by
     For `r > 0` and `T_j < T`, `Λ(r) > 0`. -/
 noncomputable def Lambda (r : ℝ) : ℝ :=
   (Real.exp (-r * E.Tj) - Real.exp (-r * E.T)) / r
+
+/-- Exact antiderivative identity used by both displayed discounted horizons. -/
+theorem intervalIntegral_exp_neg_mul
+    (r a b : ℝ) (hr : r ≠ 0) :
+    (∫ s in a..b, Real.exp (-r * s)) =
+      (Real.exp (-r * a) - Real.exp (-r * b)) / r := by
+  let F : ℝ → ℝ := fun s => -Real.exp (-r * s) / r
+  have hderiv : ∀ s ∈ Set.uIcc a b,
+      HasDerivAt F (Real.exp (-r * s)) s := by
+    intro s _hs
+    have hinner : HasDerivAt (fun x : ℝ => -r * x) (-r) s :=
+      by simpa using (hasDerivAt_id s).const_mul (-r)
+    have hexp0 := (Real.hasDerivAt_exp (-r * s)).comp s hinner
+    change HasDerivAt (fun x : ℝ => Real.exp (-r * x))
+      (Real.exp (-r * s) * (-r)) s at hexp0
+    have hexp : HasDerivAt (fun x : ℝ => Real.exp (-r * x))
+        ((-r) * Real.exp (-r * s)) s := by simpa [mul_comm] using hexp0
+    have hF := hexp.neg.div_const r
+    simpa [F, hr] using hF
+  have hint : IntervalIntegrable (fun s : ℝ => Real.exp (-r * s))
+      MeasureTheory.volume a b := by
+    have hcont : Continuous (fun s : ℝ => Real.exp (-r * s)) := by fun_prop
+    exact hcont.intervalIntegrable a b
+  rw [intervalIntegral.integral_eq_sub_of_hasDerivAt hderiv hint]
+  dsimp [F]
+  field_simp
+  ring
+
+/-- The paper's junior discounted horizon is the exact interval integral, not
+    merely a separately defined closed form. -/
+theorem intervalIntegral_exp_neg_eq_LambdaJ {r : ℝ} (hr : 0 < r) :
+    (∫ s in (0 : ℝ)..E.Tj, Real.exp (-r * s)) = E.LambdaJ r := by
+  rw [intervalIntegral_exp_neg_mul r 0 E.Tj (ne_of_gt hr)]
+  simp [LambdaJ]
+
+/-- The paper's senior discounted horizon is the exact interval integral. -/
+theorem intervalIntegral_exp_neg_eq_Lambda {r : ℝ} (hr : 0 < r) :
+    (∫ s in E.Tj..E.T, Real.exp (-r * s)) = E.Lambda r := by
+  rw [intervalIntegral_exp_neg_mul r E.Tj E.T (ne_of_gt hr)]
+  rfl
 
 /-- `Λ(r) > 0` for `r > 0`. -/
 lemma Lambda_pos {r : ℝ} (hr : 0 < r) : 0 < E.Lambda r := by
@@ -233,6 +275,302 @@ noncomputable def wedgeGrowthCoefficient (r a : ℝ) : ℝ :=
 noncomputable def wedgeExplicit (r a theta : ℝ) : ℝ :=
   E.wedgeGrowthCoefficient r a * E.wedgeGrowthCore a theta
 
+/-- Exponent governing the smooth-threshold post-collapse wedge. -/
+def smoothWedgeExponent (a b : ℝ) : ℝ := (a + b) * E.rho - 1
+
+/-- The actual hard-promotion wedge after substituting the paper's CES wage
+    ratio and steady-state stock.  Unlike `wedgeExplicit`, this definition is
+    built from the original economic objects. -/
+noncomputable def hardPaperWedge (r a theta : ℝ) : ℝ :=
+  E.wageRatio (E.VinfHard a theta) theta *
+    (E.gHard (E.eBar theta) * (E.eBar theta) ^ a * E.Lambda r) /
+      ((1 - theta) * E.LambdaJ r)
+
+/-- The normalized wedge defined from `MPsoc-MPpriv` reduces to the original-
+    object hard wedge whenever the actual marginal-product wage ratio is the
+    CES wage-ratio function. -/
+theorem wedge_eq_hardPaperWedge
+    {r a theta wG wV : ℝ}
+    (hr : 0 < r) (htheta : theta < 1) (hwG : 0 < wG)
+    (hwage : wV / wG = E.wageRatio (E.VinfHard a theta) theta) :
+    wedge wG wV (E.gHard (E.eBar theta)) ((E.eBar theta) ^ a)
+        (E.LambdaJ r) (E.Lambda r) theta = E.hardPaperWedge r a theta := by
+  rw [thm_externality_wedge_identity wG wV (E.gHard (E.eBar theta))
+    ((E.eBar theta) ^ a) (E.LambdaJ r) (E.Lambda r) theta
+    hwG (E.LambdaJ_pos hr) htheta]
+  rw [hwage]
+  rfl
+
+/-- **Equation (14), exact consumption bridge.** The wedge built from the
+    paper's actual wage-ratio, promotion, stock, and discounted-horizon objects
+    equals the displayed closed form.  The closed-form monotonicity theorem
+    therefore applies to the actual wedge rather than to a disconnected RHS. -/
+theorem hardPaperWedge_eq_wedgeExplicit
+    {r a theta : ℝ} (hr : 0 < r)
+    (htheta0 : 0 ≤ theta) (hthetaStar : theta < E.thetaStar) :
+    E.hardPaperWedge r a theta = E.wedgeExplicit r a theta := by
+  have htheta1 : theta < 1 := lt_trans hthetaStar E.thetaStar_in_unit_interval.2
+  have hx : 0 < 1 - theta := by linarith
+  have he : 0 < E.eBar theta := by
+    unfold eBar
+    exact mul_pos hx E.Tj_pos
+  have hG : 0 < E.G theta := E.G_pos htheta0 htheta1.le
+  have hM : 0 < E.nu * E.Ts := mul_pos E.nu_pos E.Ts_pos
+  have hLJ : 0 < E.LambdaJ r := E.LambdaJ_pos hr
+  have hg : E.gHard (E.eBar theta) = 1 := by
+    exact E.gHard_of_ge ((E.eBar_ge_tauStar_iff_theta_le_thetaStar theta).2
+      hthetaStar.le)
+  have hstock : E.VinfHard a theta =
+      (E.nu * E.Ts) * (E.eBar theta) ^ a := by
+    rw [E.thm_collapse_below_threshold a theta hthetaStar.le]
+  have hdenpow :
+      ((E.nu * E.Ts) * (E.eBar theta) ^ a) ^ (1 - E.rho) =
+        (E.nu * E.Ts) ^ (1 - E.rho) *
+          (E.eBar theta) ^ (a * (1 - E.rho)) := by
+    rw [Real.mul_rpow hM.le (Real.rpow_nonneg he.le _)]
+    rw [← Real.rpow_mul he.le]
+  have hecancel :
+      (E.eBar theta) ^ a / (E.eBar theta) ^ (a * (1 - E.rho)) =
+        (E.eBar theta) ^ (a * E.rho) := by
+    rw [← Real.rpow_sub he]
+    congr 1
+    ring
+  have hesplit :
+      (E.eBar theta) ^ (a * E.rho) =
+        (1 - theta) ^ (a * E.rho) * E.Tj ^ (a * E.rho) := by
+    unfold eBar
+    exact Real.mul_rpow hx.le E.Tj_pos.le
+  have hxdiv :
+      (1 - theta) ^ (a * E.rho) / (1 - theta) =
+        (1 - theta) ^ (a * E.rho - 1) := by
+    rw [Real.rpow_sub_one (ne_of_gt hx)]
+  unfold hardPaperWedge wedgeExplicit wedgeGrowthCoefficient wedgeGrowthCore wageRatio
+  rw [hstock, hg]
+  simp only [one_mul]
+  rw [Real.div_rpow hG.le (mul_nonneg hM.le (Real.rpow_nonneg he.le _))]
+  rw [hdenpow]
+  have hMpow : 0 < (E.nu * E.Ts) ^ (1 - E.rho) :=
+    Real.rpow_pos_of_pos hM _
+  have hepow : 0 < (E.eBar theta) ^ (a * (1 - E.rho)) :=
+    Real.rpow_pos_of_pos he _
+  have h_eta : E.eta ≠ 0 := ne_of_gt E.eta_pos
+  have hLJ_ne : E.LambdaJ r ≠ 0 := ne_of_gt hLJ
+  have hx_ne : 1 - theta ≠ 0 := ne_of_gt hx
+  calc
+    ((1 - E.eta) / E.eta * E.lam ^ E.rho *
+          (E.G theta ^ (1 - E.rho) /
+            ((E.nu * E.Ts) ^ (1 - E.rho) *
+              E.eBar theta ^ (a * (1 - E.rho)))) *
+        (E.eBar theta ^ a * E.Lambda r) /
+          ((1 - theta) * E.LambdaJ r)) =
+        (((1 - E.eta) * E.lam ^ E.rho * E.Lambda r) /
+            (E.eta * E.LambdaJ r * (E.nu * E.Ts) ^ (1 - E.rho))) *
+          E.G theta ^ (1 - E.rho) *
+          ((E.eBar theta ^ a /
+            E.eBar theta ^ (a * (1 - E.rho))) / (1 - theta)) := by
+              field_simp
+    _ = (((1 - E.eta) * E.lam ^ E.rho * E.Lambda r) /
+            (E.eta * E.LambdaJ r * (E.nu * E.Ts) ^ (1 - E.rho))) *
+          E.G theta ^ (1 - E.rho) *
+          (E.eBar theta ^ (a * E.rho) / (1 - theta)) := by rw [hecancel]
+    _ = (((1 - E.eta) * E.lam ^ E.rho * E.Lambda r *
+            E.Tj ^ (a * E.rho)) /
+            (E.eta * E.LambdaJ r * (E.nu * E.Ts) ^ (1 - E.rho))) *
+          (E.G theta ^ (1 - E.rho) *
+            (1 - theta) ^ (a * E.rho - 1)) := by
+              rw [hesplit]
+              rw [show
+                (1 - theta) ^ (a * E.rho) * E.Tj ^ (a * E.rho) /
+                    (1 - theta) =
+                  ((1 - theta) ^ (a * E.rho) / (1 - theta)) *
+                    E.Tj ^ (a * E.rho) by
+                    field_simp]
+              rw [hxdiv]
+              ring
+
+/-- The actual normalized wedge is the displayed Eq. (14) closed form after
+    the CES marginal-product ratio is supplied. -/
+theorem wedge_eq_wedgeExplicit
+    {r a theta wG wV : ℝ}
+    (hr : 0 < r)
+    (htheta0 : 0 ≤ theta) (hthetaStar : theta < E.thetaStar)
+    (hwG : 0 < wG)
+    (hwage : wV / wG = E.wageRatio (E.VinfHard a theta) theta) :
+    wedge wG wV (E.gHard (E.eBar theta)) ((E.eBar theta) ^ a)
+        (E.LambdaJ r) (E.Lambda r) theta = E.wedgeExplicit r a theta := by
+  rw [E.wedge_eq_hardPaperWedge hr
+    (lt_trans hthetaStar E.thetaStar_in_unit_interval.2) hwG hwage]
+  exact E.hardPaperWedge_eq_wedgeExplicit hr htheta0 hthetaStar
+
+/-- A reusable algebraic bridge for an arbitrary positive per-cohort stock
+    factor `z`: the CES wage ratio at stock `nu*T_s*z`, multiplied by the
+    discounted cohort factor `z`, has the exact power decomposition used in
+    the paper. -/
+theorem wageRatio_stockFactor_identity
+    {r theta z : ℝ} (hr : 0 < r) (htheta0 : 0 ≤ theta)
+    (htheta1 : theta < 1) (hz : 0 < z) :
+    E.wageRatio ((E.nu * E.Ts) * z) theta *
+        (z * E.Lambda r) / ((1 - theta) * E.LambdaJ r) =
+      (((1 - E.eta) * E.lam ^ E.rho * E.Lambda r) /
+          (E.eta * E.LambdaJ r * (E.nu * E.Ts) ^ (1 - E.rho))) *
+        E.G theta ^ (1 - E.rho) * (z ^ E.rho / (1 - theta)) := by
+  have hx : 0 < 1 - theta := by linarith
+  have hG : 0 < E.G theta := E.G_pos htheta0 htheta1.le
+  have hM : 0 < E.nu * E.Ts := mul_pos E.nu_pos E.Ts_pos
+  have hLJ : 0 < E.LambdaJ r := E.LambdaJ_pos hr
+  have hdenpow :
+      ((E.nu * E.Ts) * z) ^ (1 - E.rho) =
+        (E.nu * E.Ts) ^ (1 - E.rho) * z ^ (1 - E.rho) :=
+    Real.mul_rpow hM.le hz.le
+  have hzcancel : z / z ^ (1 - E.rho) = z ^ E.rho := by
+    calc
+      z / z ^ (1 - E.rho) = z ^ (1 : ℝ) / z ^ (1 - E.rho) := by
+        rw [Real.rpow_one]
+      _ = z ^ ((1 : ℝ) - (1 - E.rho)) :=
+        (Real.rpow_sub hz (1 : ℝ) (1 - E.rho)).symm
+      _ = z ^ E.rho := by
+        congr 1
+        ring
+  have hMpow : 0 < (E.nu * E.Ts) ^ (1 - E.rho) :=
+    Real.rpow_pos_of_pos hM _
+  have hzpow : 0 < z ^ (1 - E.rho) := Real.rpow_pos_of_pos hz _
+  have h_eta : E.eta ≠ 0 := ne_of_gt E.eta_pos
+  have hLJ_ne : E.LambdaJ r ≠ 0 := ne_of_gt hLJ
+  have hx_ne : 1 - theta ≠ 0 := ne_of_gt hx
+  unfold wageRatio
+  rw [Real.div_rpow hG.le (mul_nonneg hM.le hz.le)]
+  rw [hdenpow]
+  calc
+    ((1 - E.eta) / E.eta * E.lam ^ E.rho *
+          (E.G theta ^ (1 - E.rho) /
+            ((E.nu * E.Ts) ^ (1 - E.rho) * z ^ (1 - E.rho))) *
+        (z * E.Lambda r) / ((1 - theta) * E.LambdaJ r)) =
+      (((1 - E.eta) * E.lam ^ E.rho * E.Lambda r) /
+          (E.eta * E.LambdaJ r * (E.nu * E.Ts) ^ (1 - E.rho))) *
+        E.G theta ^ (1 - E.rho) *
+          ((z / z ^ (1 - E.rho)) / (1 - theta)) := by field_simp
+    _ = (((1 - E.eta) * E.lam ^ E.rho * E.Lambda r) /
+          (E.eta * E.LambdaJ r * (E.nu * E.Ts) ^ (1 - E.rho))) *
+        E.G theta ^ (1 - E.rho) * (z ^ E.rho / (1 - theta)) := by
+      rw [hzcancel]
+
+/-- The actual post-threshold smooth-promotion wedge, built from the paper's
+    original stock, promotion, experience, wage-ratio, and horizon objects. -/
+noncomputable def smoothPaperWedge (r a b theta : ℝ) : ℝ :=
+  E.wageRatio (E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a)) theta *
+    (E.gSmooth b (E.eBar theta) * (E.eBar theta) ^ a * E.Lambda r) /
+      ((1 - theta) * E.LambdaJ r)
+
+/-- The smooth wedge written literally with theta-indexed marginal-product
+    prices, before substituting the CES price ratio. -/
+noncomputable def smoothMarginalProductWedge
+    (wG wV : ℝ → ℝ) (r a b theta : ℝ) : ℝ :=
+  wedge (wG theta) (wV theta) (E.gSmooth b (E.eBar theta))
+    ((E.eBar theta) ^ a) (E.LambdaJ r) (E.Lambda r) theta
+
+/-- Pointwise exact bridge from the literal marginal-product wedge to the
+    original-object CES wedge. -/
+theorem smoothMarginalProductWedge_eq_smoothPaperWedge
+    {wG wV : ℝ → ℝ} {r a b theta : ℝ}
+    (hr : 0 < r) (htheta1 : theta < 1) (hwG : 0 < wG theta)
+    (hwage : wV theta / wG theta =
+      E.wageRatio (E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a)) theta) :
+    E.smoothMarginalProductWedge wG wV r a b theta =
+      E.smoothPaperWedge r a b theta := by
+  unfold smoothMarginalProductWedge smoothPaperWedge
+  rw [thm_externality_wedge_identity (wG theta) (wV theta)
+    (E.gSmooth b (E.eBar theta)) (E.eBar theta ^ a)
+    (E.LambdaJ r) (E.Lambda r) theta hwG (E.LambdaJ_pos hr) htheta1]
+  rw [hwage]
+
+/-- Positive theta-independent coefficient in the exact smooth post-threshold
+    wedge formula. -/
+noncomputable def smoothWedgeCoefficient (r a b : ℝ) : ℝ :=
+  ((1 - E.eta) * E.lam ^ E.rho * E.Lambda r *
+      E.Tj ^ ((a + b) * E.rho)) /
+    (E.eta * E.LambdaJ r * (E.nu * E.Ts) ^ (1 - E.rho) *
+      E.tauStar ^ (b * E.rho))
+
+/-- Exact smooth post-threshold closed form before taking `theta -> 1-`. -/
+noncomputable def smoothWedgeClosedForm (r a b theta : ℝ) : ℝ :=
+  E.smoothWedgeCoefficient r a b * E.G theta ^ (1 - E.rho) *
+    (1 - theta) ^ E.smoothWedgeExponent a b
+
+/-- **Smooth post-threshold exact consumption bridge.** The actual wedge equals
+    the closed form whose exponent controls the paper's trichotomy. -/
+theorem smoothPaperWedge_eq_closedForm
+    {r a b theta : ℝ} (hr : 0 < r) (htheta0 : 0 ≤ theta)
+    (hthetaStar : E.thetaStar < theta) (htheta1 : theta < 1) :
+    E.smoothPaperWedge r a b theta =
+      E.smoothWedgeClosedForm r a b theta := by
+  have hx : 0 < 1 - theta := by linarith
+  have he : 0 < E.eBar theta := by
+    unfold eBar
+    exact mul_pos hx E.Tj_pos
+  have hratio : 0 < E.eBar theta / E.tauStar :=
+    div_pos he E.tauStar_pos
+  have hg : E.gSmooth b (E.eBar theta) =
+      (E.eBar theta / E.tauStar) ^ b := by
+    unfold gSmooth
+    have hlt : E.eBar theta < E.tauStar :=
+      (E.eBar_lt_tauStar_iff_theta_gt_thetaStar theta).2 hthetaStar
+    simp [not_le.mpr hlt]
+  let z : ℝ := (E.eBar theta / E.tauStar) ^ b * E.eBar theta ^ a
+  have hz : 0 < z :=
+    mul_pos (Real.rpow_pos_of_pos hratio _) (Real.rpow_pos_of_pos he _)
+  have hstock :
+      E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a) =
+        (E.nu * E.Ts) * z := by
+    unfold Vinf z
+    rw [hg]
+    ring
+  have hzrho : z ^ E.rho =
+      ((1 - theta) ^ ((a + b) * E.rho) *
+          E.Tj ^ ((a + b) * E.rho)) /
+        E.tauStar ^ (b * E.rho) := by
+    unfold z
+    rw [Real.mul_rpow (Real.rpow_nonneg hratio.le _)
+      (Real.rpow_nonneg he.le _)]
+    rw [← Real.rpow_mul hratio.le, ← Real.rpow_mul he.le]
+    rw [Real.div_rpow he.le E.tauStar_pos.le]
+    rw [show
+      E.eBar theta ^ (b * E.rho) / E.tauStar ^ (b * E.rho) *
+          E.eBar theta ^ (a * E.rho) =
+        (E.eBar theta ^ (b * E.rho) * E.eBar theta ^ (a * E.rho)) /
+          E.tauStar ^ (b * E.rho) by field_simp]
+    rw [← Real.rpow_add he]
+    have hexp : b * E.rho + a * E.rho = (a + b) * E.rho := by ring
+    rw [hexp]
+    unfold eBar
+    rw [Real.mul_rpow hx.le E.Tj_pos.le]
+  unfold smoothPaperWedge smoothWedgeClosedForm smoothWedgeCoefficient
+  rw [hstock, hg]
+  change E.wageRatio ((E.nu * E.Ts) * z) theta *
+      (z * E.Lambda r) / ((1 - theta) * E.LambdaJ r) = _
+  rw [E.wageRatio_stockFactor_identity hr htheta0 htheta1 hz]
+  rw [hzrho]
+  unfold smoothWedgeExponent
+  have htaupow : 0 < E.tauStar ^ (b * E.rho) :=
+    Real.rpow_pos_of_pos E.tauStar_pos _
+  have hx_ne : 1 - theta ≠ 0 := ne_of_gt hx
+  rw [show
+    ((1 - theta) ^ ((a + b) * E.rho) *
+        E.Tj ^ ((a + b) * E.rho) /
+      E.tauStar ^ (b * E.rho)) / (1 - theta) =
+      E.Tj ^ ((a + b) * E.rho) /
+        E.tauStar ^ (b * E.rho) *
+          (1 - theta) ^ ((a + b) * E.rho - 1) by
+            rw [show
+              (1 - theta) ^ ((a + b) * E.rho) *
+                    E.Tj ^ ((a + b) * E.rho) /
+                  E.tauStar ^ (b * E.rho) / (1 - theta) =
+                ((1 - theta) ^ ((a + b) * E.rho) / (1 - theta)) *
+                  (E.Tj ^ ((a + b) * E.rho) /
+                    E.tauStar ^ (b * E.rho)) by field_simp]
+            rw [Real.rpow_sub_one hx_ne]
+            ring]
+  field_simp
+
 theorem wedgeGrowthCoefficient_pos {r a : ℝ} (hr : 0 < r) :
     0 < E.wedgeGrowthCoefficient r a := by
   unfold wedgeGrowthCoefficient
@@ -313,9 +651,6 @@ theorem wedgeExplicit_monotone
     (E.wedgeGrowthCoefficient_pos hr).le ha_pos ha_le hrho_lt hKAI_ge
     htheta1_nonneg htheta12 htheta2_below
 
-/-- Exponent governing the smooth-threshold post-collapse wedge. -/
-def smoothWedgeExponent (a b : ℝ) : ℝ := (a + b) * E.rho - 1
-
 theorem smoothWedgeExponent_neg
     {a b : ℝ} (hab : 0 < a + b) (h : E.rho < 1 / (a + b)) :
     E.smoothWedgeExponent a b < 0 := by
@@ -389,6 +724,178 @@ theorem smoothWedgeLeadingTerm_tendsto_zero
       (nhdsWithin 0 (Set.Ioi 0)) (𝓝 0) := by
   unfold smoothWedgeLeadingTerm
   simpa using Tendsto.const_mul C (E.smoothWedgePower_tendsto_zero hexponent)
+
+/-! ### Actual smooth-wedge endpoint trichotomy. -/
+
+/-- Endpoint coefficient obtained after consuming the exact smooth-wedge closed
+    form and the positive finite generation endpoint. -/
+noncomputable def smoothWedgeEndpointCoefficient (r a b : ℝ) : ℝ :=
+  E.smoothWedgeCoefficient r a b * E.KAI ^ (1 - E.rho)
+
+theorem smoothWedgeCoefficient_pos {r a b : ℝ} (hr : 0 < r) :
+    0 < E.smoothWedgeCoefficient r a b := by
+  unfold smoothWedgeCoefficient
+  apply div_pos
+  · exact mul_pos
+      (mul_pos
+        (mul_pos (by linarith [E.eta_lt_one])
+          (Real.rpow_pos_of_pos E.lam_pos _))
+        (E.Lambda_pos hr))
+      (Real.rpow_pos_of_pos E.Tj_pos _)
+  · exact mul_pos
+      (mul_pos
+        (mul_pos E.eta_pos (E.LambdaJ_pos hr))
+        (Real.rpow_pos_of_pos (mul_pos E.nu_pos E.Ts_pos) _))
+      (Real.rpow_pos_of_pos E.tauStar_pos _)
+
+theorem smoothWedgeEndpointCoefficient_pos {r a b : ℝ} (hr : 0 < r) :
+    0 < E.smoothWedgeEndpointCoefficient r a b := by
+  exact mul_pos (E.smoothWedgeCoefficient_pos hr) E.G_rpow_endpoint_pos
+
+/-- The human-generation share `1-theta` tends to zero from above as
+    `theta -> 1-`. -/
+theorem one_sub_tendsto_nhdsGT_zero :
+    Tendsto (fun theta : ℝ => 1 - theta)
+      (nhdsWithin 1 (Set.Iio 1)) (nhdsWithin 0 (Set.Ioi 0)) := by
+  rw [tendsto_nhdsWithin_iff]
+  constructor
+  · have hcont : ContinuousAt (fun theta : ℝ => 1 - theta) 1 := by fun_prop
+    simpa using hcont.tendsto.mono_left inf_le_left
+  · filter_upwards [self_mem_nhdsWithin] with theta htheta
+    exact sub_pos.mpr (by simpa only [Set.mem_Iio] using htheta)
+
+/-- The finite theta-dependent coefficient in the exact smooth wedge converges
+    to the strictly positive endpoint coefficient. -/
+theorem smoothWedgeFiniteFactor_tendsto
+    (r a b : ℝ) :
+    Tendsto
+      (fun theta => E.smoothWedgeCoefficient r a b *
+        E.G theta ^ (1 - E.rho))
+      (nhdsWithin 1 (Set.Iio 1))
+      (𝓝 (E.smoothWedgeEndpointCoefficient r a b)) := by
+  unfold smoothWedgeEndpointCoefficient
+  exact tendsto_const_nhds.mul E.G_rpow_tendsto_at_one
+
+/-- Near `theta=1` the actual smooth wedge is eventually the exact closed form;
+    this bridge prevents an unconsumed leading-term surrogate. -/
+theorem smoothPaperWedge_eventuallyEq_closedForm
+    {r a b : ℝ} (hr : 0 < r) :
+    (fun theta => E.smoothPaperWedge r a b theta) =ᶠ[
+      nhdsWithin 1 (Set.Iio 1)]
+      (fun theta => E.smoothWedgeClosedForm r a b theta) := by
+  have hstarAt : ∀ᶠ theta : ℝ in 𝓝 1, E.thetaStar < theta :=
+    Ioi_mem_nhds E.thetaStar_in_unit_interval.2
+  have hstar : ∀ᶠ theta in nhdsWithin 1 (Set.Iio 1), E.thetaStar < theta :=
+    hstarAt.filter_mono inf_le_left
+  filter_upwards [self_mem_nhdsWithin, hstar] with theta htheta1 hthetaStar
+  exact E.smoothPaperWedge_eq_closedForm hr
+    (le_trans E.thetaStar_in_unit_interval.1 hthetaStar.le)
+    hthetaStar htheta1
+
+/-- Negative exponent: the actual smooth post-threshold wedge diverges. -/
+theorem smoothPaperWedge_tendsto_atTop
+    {r a b : ℝ} (hr : 0 < r)
+    (hexponent : E.smoothWedgeExponent a b < 0) :
+    Tendsto (fun theta => E.smoothPaperWedge r a b theta)
+      (nhdsWithin 1 (Set.Iio 1)) atTop := by
+  have hfactor := E.smoothWedgeFiniteFactor_tendsto r a b
+  have hpower := (E.smoothWedgePower_tendsto_atTop hexponent).comp
+    one_sub_tendsto_nhdsGT_zero
+  have hclosed : Tendsto (fun theta => E.smoothWedgeClosedForm r a b theta)
+      (nhdsWithin 1 (Set.Iio 1)) atTop := by
+    unfold smoothWedgeClosedForm
+    exact hfactor.pos_mul_atTop (E.smoothWedgeEndpointCoefficient_pos hr) hpower
+  exact hclosed.congr' (E.smoothPaperWedge_eventuallyEq_closedForm hr).symm
+
+/-- Zero exponent: the actual smooth wedge converges to a finite strictly
+    positive endpoint. -/
+theorem smoothPaperWedge_tendsto_endpoint
+    {r a b : ℝ} (hr : 0 < r)
+    (hexponent : E.smoothWedgeExponent a b = 0) :
+    Tendsto (fun theta => E.smoothPaperWedge r a b theta)
+      (nhdsWithin 1 (Set.Iio 1))
+      (𝓝 (E.smoothWedgeEndpointCoefficient r a b)) := by
+  have hclosed : Tendsto (fun theta => E.smoothWedgeClosedForm r a b theta)
+      (nhdsWithin 1 (Set.Iio 1))
+      (𝓝 (E.smoothWedgeEndpointCoefficient r a b)) := by
+    simpa [smoothWedgeClosedForm, hexponent] using
+      E.smoothWedgeFiniteFactor_tendsto r a b
+  exact hclosed.congr' (E.smoothPaperWedge_eventuallyEq_closedForm hr).symm
+
+/-- Positive exponent: the actual smooth wedge converges to zero. -/
+theorem smoothPaperWedge_tendsto_zero
+    {r a b : ℝ} (hr : 0 < r)
+    (hexponent : 0 < E.smoothWedgeExponent a b) :
+    Tendsto (fun theta => E.smoothPaperWedge r a b theta)
+      (nhdsWithin 1 (Set.Iio 1)) (𝓝 0) := by
+  have hfactor := E.smoothWedgeFiniteFactor_tendsto r a b
+  have hpower := (E.smoothWedgePower_tendsto_zero hexponent).comp
+    one_sub_tendsto_nhdsGT_zero
+  have hclosed : Tendsto (fun theta => E.smoothWedgeClosedForm r a b theta)
+      (nhdsWithin 1 (Set.Iio 1)) (𝓝 0) := by
+    simpa [smoothWedgeClosedForm] using hfactor.mul hpower
+  exact hclosed.congr' (E.smoothPaperWedge_eventuallyEq_closedForm hr).symm
+
+/-- Near the endpoint, the literal marginal-product wedge and the exact CES
+    paper wedge are eventually identical when the paper's price identification
+    is supplied on the post-threshold domain. -/
+theorem smoothMarginalProductWedge_eventuallyEq_smoothPaperWedge
+    {wG wV : ℝ → ℝ} {r a b : ℝ} (hr : 0 < r)
+    (hwG : ∀ theta ∈ Set.Ioo E.thetaStar 1, 0 < wG theta)
+    (hwage : ∀ theta ∈ Set.Ioo E.thetaStar 1,
+      wV theta / wG theta =
+        E.wageRatio (E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a)) theta) :
+    (fun theta => E.smoothMarginalProductWedge wG wV r a b theta) =ᶠ[
+      nhdsWithin 1 (Set.Iio 1)]
+      (fun theta => E.smoothPaperWedge r a b theta) := by
+  have hstarAt : ∀ᶠ theta : ℝ in 𝓝 1, E.thetaStar < theta :=
+    Ioi_mem_nhds E.thetaStar_in_unit_interval.2
+  have hstar : ∀ᶠ theta in nhdsWithin 1 (Set.Iio 1), E.thetaStar < theta :=
+    hstarAt.filter_mono inf_le_left
+  filter_upwards [self_mem_nhdsWithin, hstar] with theta htheta1 hthetaStar
+  have hdomain : theta ∈ Set.Ioo E.thetaStar 1 := ⟨hthetaStar, htheta1⟩
+  exact E.smoothMarginalProductWedge_eq_smoothPaperWedge hr htheta1
+    (hwG theta hdomain) (hwage theta hdomain)
+
+/-- Negative exponent for the literal marginal-product wedge. -/
+theorem smoothMarginalProductWedge_tendsto_atTop
+    {wG wV : ℝ → ℝ} {r a b : ℝ} (hr : 0 < r)
+    (hwG : ∀ theta ∈ Set.Ioo E.thetaStar 1, 0 < wG theta)
+    (hwage : ∀ theta ∈ Set.Ioo E.thetaStar 1,
+      wV theta / wG theta =
+        E.wageRatio (E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a)) theta)
+    (hexponent : E.smoothWedgeExponent a b < 0) :
+    Tendsto (fun theta => E.smoothMarginalProductWedge wG wV r a b theta)
+      (nhdsWithin 1 (Set.Iio 1)) atTop :=
+  (E.smoothPaperWedge_tendsto_atTop hr hexponent).congr'
+    (E.smoothMarginalProductWedge_eventuallyEq_smoothPaperWedge hr hwG hwage).symm
+
+/-- Zero exponent for the literal marginal-product wedge. -/
+theorem smoothMarginalProductWedge_tendsto_endpoint
+    {wG wV : ℝ → ℝ} {r a b : ℝ} (hr : 0 < r)
+    (hwG : ∀ theta ∈ Set.Ioo E.thetaStar 1, 0 < wG theta)
+    (hwage : ∀ theta ∈ Set.Ioo E.thetaStar 1,
+      wV theta / wG theta =
+        E.wageRatio (E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a)) theta)
+    (hexponent : E.smoothWedgeExponent a b = 0) :
+    Tendsto (fun theta => E.smoothMarginalProductWedge wG wV r a b theta)
+      (nhdsWithin 1 (Set.Iio 1))
+      (𝓝 (E.smoothWedgeEndpointCoefficient r a b)) :=
+  (E.smoothPaperWedge_tendsto_endpoint hr hexponent).congr'
+    (E.smoothMarginalProductWedge_eventuallyEq_smoothPaperWedge hr hwG hwage).symm
+
+/-- Positive exponent for the literal marginal-product wedge. -/
+theorem smoothMarginalProductWedge_tendsto_zero
+    {wG wV : ℝ → ℝ} {r a b : ℝ} (hr : 0 < r)
+    (hwG : ∀ theta ∈ Set.Ioo E.thetaStar 1, 0 < wG theta)
+    (hwage : ∀ theta ∈ Set.Ioo E.thetaStar 1,
+      wV theta / wG theta =
+        E.wageRatio (E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a)) theta)
+    (hexponent : 0 < E.smoothWedgeExponent a b) :
+    Tendsto (fun theta => E.smoothMarginalProductWedge wG wV r a b theta)
+      (nhdsWithin 1 (Set.Iio 1)) (𝓝 0) :=
+  (E.smoothPaperWedge_tendsto_zero hr hexponent).congr'
+    (E.smoothMarginalProductWedge_eventuallyEq_smoothPaperWedge hr hwG hwage).symm
 
 /-! ### Theorem~\ref{thm:externality} Part 3: residual-equalizing transfer. -/
 

@@ -62,20 +62,30 @@ REQUIRED_MAP_SYMBOLS = (
     "VerificationAsymmetryDiagnostic",
     "verificationAsymmetryDiagnostic_of_V2",
     "thm_inversion_wage_ratio_strict",
+    "thetaInvMarginalProductInf_eq_thetaInv",
     "thm_inversion_threshold_strict_in_rBar",
     "thetaInvAtCapacity_strictAnti",
     "hasDerivAt_hard_stock_below",
     "hardStockSlopeBelow_neg",
     "VinfHard_tendsto_left_at_thetaStar",
     "VinfHard_tendsto_right_zero_at_thetaStar",
+    "hasDerivWithinAt_smoothStock_left",
+    "hasDerivWithinAt_smoothStock_right",
     "cumulativeExperience_step_eq_stepExperience",
     "timeIndexedStock_step_eq_exactStepStock",
     "preStepStockIntegral_eq_transientStock",
     "hardPromotion_externalityResidual_zero_above",
     "hardPromotion_wedge_zero_above",
-    "smoothWedgeLeadingTerm_tendsto_atTop",
-    "smoothWedgeLeadingTerm_eq_constant",
-    "smoothWedgeLeadingTerm_tendsto_zero",
+    "intervalIntegral_exp_neg_eq_LambdaJ",
+    "intervalIntegral_exp_neg_eq_Lambda",
+    "wedge_eq_wedgeExplicit",
+    "smoothPaperWedge_eq_closedForm",
+    "smoothPaperWedge_tendsto_atTop",
+    "smoothPaperWedge_tendsto_endpoint",
+    "smoothPaperWedge_tendsto_zero",
+    "smoothMarginalProductWedge_tendsto_atTop",
+    "smoothMarginalProductWedge_tendsto_endpoint",
+    "smoothMarginalProductWedge_tendsto_zero",
     "prop_aggregation_near_cobb_douglas_limit",
 )
 REQUIRED_DEFAULT_TARGETS = (
@@ -84,6 +94,7 @@ REQUIRED_DEFAULT_TARGETS = (
     "VerificationAsymmetry.TheoremMap",
     "VerificationAsymmetry.CurrentPaperStatus",
     "VerificationAsymmetry.CurrentPaperAxiomAudit",
+    "VerificationAsymmetry.PaperExactnessAudit",
 )
 EXPECTED_TOOLCHAIN = "leanprover/lean4:v4.30.0-rc2"
 EXPECTED_MATHLIB_REV = "388f44f89d70fbad0e1accb8fd62fc8c97714a85"
@@ -272,6 +283,8 @@ def check_kernel_outputs(skip_build: bool) -> None:
     missing_outputs = [symbol for symbol in REQUIRED_MAP_SYMBOLS if symbol not in theorem_map]
     if missing_outputs:
         raise SystemExit("compiled theorem-map output lacks consumers: " + ", ".join(missing_outputs))
+
+    run(["lake", "env", "lean", "VerificationAsymmetry/PaperExactnessAudit.lean"])
 
     status = run(["lake", "env", "lean", "VerificationAsymmetry/CurrentPaperStatus.lean"])
     if EXPECTED_STATUS not in status:

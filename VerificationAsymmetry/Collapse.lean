@@ -478,6 +478,42 @@ theorem hasDerivAt_smooth_stock_above_at_threshold (a b : ℝ) :
     rw [Real.rpow_sub_one (ne_of_gt E.tauStar_pos)]
     field_simp
 
+/-- **Exact left-object bridge.**  The displayed below-threshold derivative is
+    the left derivative of the paper's original piecewise `Vinf` carrier, not
+    merely the derivative of an unconnected branch formula. -/
+theorem hasDerivWithinAt_smoothStock_left (a b : ℝ) :
+    HasDerivWithinAt
+      (fun theta => E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a))
+      (E.smoothSlopeBelowAtThreshold a)
+      (Set.Iic E.thetaStar) E.thetaStar := by
+  refine (E.hasDerivAt_smooth_stock_below_at_threshold a).hasDerivWithinAt.congr
+    ?_ ?_
+  · intro theta htheta
+    exact E.prop_smooth_collapse_below a b theta htheta
+  · exact E.prop_smooth_collapse_below a b E.thetaStar le_rfl
+
+/-- **Exact right-object bridge.**  The displayed above-threshold derivative
+    is the right derivative of the same original piecewise `Vinf` carrier.
+    At the threshold the two branch values agree, so the within-derivative is
+    genuinely attached to the paper's single stock object. -/
+theorem hasDerivWithinAt_smoothStock_right (a b : ℝ) :
+    HasDerivWithinAt
+      (fun theta => E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a))
+      (E.smoothSlopeAboveAtThreshold a b)
+      (Set.Ici E.thetaStar) E.thetaStar := by
+  refine (E.hasDerivAt_smooth_stock_above_at_threshold a b).hasDerivWithinAt.congr
+    ?_ ?_
+  · intro theta htheta
+    have hle : E.thetaStar ≤ theta := by
+      simpa only [Set.mem_Ici] using htheta
+    rcases eq_or_lt_of_le hle with hEq | hthetaStar
+    · subst theta
+      rw [E.prop_smooth_collapse_below a b E.thetaStar le_rfl]
+      simp [E.eBar_thetaStar, div_self (ne_of_gt E.tauStar_pos)]
+    · exact E.prop_smooth_collapse_above a b theta hthetaStar
+  · rw [E.prop_smooth_collapse_below a b E.thetaStar le_rfl]
+    simp [E.eBar_thetaStar, div_self (ne_of_gt E.tauStar_pos)]
+
 /-! ### Corollary~\ref{cor:quant-predictions}: numerical calibration.
 
   The paper's Corollary~\ref{cor:quant-predictions} reports numerical

@@ -15,6 +15,10 @@ The current 22-page EINT manuscript has a complete publication-facing theorem
 map. Every derived mathematical claim in that manuscript has a named Lean
 carrier or theorem, and `CurrentPaperStatus.lean` evaluates to
 `unfinishedDerived=0`. The project contains zero executable `sorry` or `admit`.
+`PaperExactnessAudit.lean` additionally forces the publication-facing endpoints
+to consume the manuscript's literal `w_V/w_G` infimum, original piecewise
+stock, discounted integrals, theta-indexed marginal-product wedge, and
+endpoint-limit objects.
 
 Two external textbook inputs are load-bearing for the current paper:
 `axiom_ces_wage_ratio` and `axiom_cobb_douglas_factor_share`. Their signatures
@@ -81,8 +85,9 @@ identification, and positivity constraints) in its Lean signature.
   consumed downstream).
 
 The paper's derived closed-form notation (`eBar`, `Vinf`, `thetaStar`,
-`wageRatio`, `Gstar`, `thetaInv`, `LambdaJ`, `Lambda`, `Vreq`, `hPow`, `gSmooth`,
+`wageRatio`, `Gstar`, `thetaInv`, `thetaInvInf`, `LambdaJ`, `Lambda`, `Vreq`, `hPow`, `gSmooth`,
 `transientStock`, `MPpriv`, `MPsoc`, `externalityResidual`, `wedge`,
+`hardPaperWedge`, `smoothPaperWedge`, `smoothMarginalProductWedge`,
 `internalizedWedge`, `pigouvianSubsidy_CD`, `wageRatioRec`, `thetaInvRec`,
 `thetaEndo`, `hysteresisDeficit`, `recoveryStock`, `thetaStarExt`,
 `leontiefSeniorRent`, `rBarZero`, `rBarMax`) are concrete Lean `def`s whose
@@ -104,6 +109,8 @@ The authoritative current-paper surfaces are:
 
 - `TheoremMap.lean` — Definition 1 through Proposition 14 and Eqs. (1)--(15);
 - `CurrentPaperAxiomAudit.lean` — per-endpoint axiom dependencies;
+- `PaperExactnessAudit.lean` — exact-object consumption theorems compiled by the
+  manuscript/formalization infrastructure contract;
 - `CurrentPaperStatus.lean` — typed current-paper ledger with zero unfinished
   derived entries;
 - `Ledger.lean` / `AxiomAudit.lean` — the broader historical project inventory.
@@ -128,6 +135,7 @@ The authoritative current-paper surfaces are:
 | [`VerificationAsymmetry/TheoremMap.lean`](VerificationAsymmetry/TheoremMap.lean) | Publication-facing `#check` map for every numbered current-paper object and derivation |
 | [`VerificationAsymmetry/CurrentPaperAxiomAudit.lean`](VerificationAsymmetry/CurrentPaperAxiomAudit.lean) | Current-paper-only `#print axioms` audit; allowed project axioms are exactly CES wage ratio and Cobb-Douglas factor share |
 | [`VerificationAsymmetry/CurrentPaperStatus.lean`](VerificationAsymmetry/CurrentPaperStatus.lean) | Current-paper ledger; evaluates to 25 entries and zero unfinished derived mathematics |
+| [`VerificationAsymmetry/PaperExactnessAudit.lean`](VerificationAsymmetry/PaperExactnessAudit.lean) | Exact-object consumers for the infimum threshold, original piecewise stock, discounted integrals, actual wedge, and actual endpoint trichotomy |
 
 ## Building
 
@@ -152,6 +160,7 @@ lake env lean VerificationAsymmetry/CurrentPaperAxiomAudit.lean
 # Run current-paper theorem map and status
 lake env lean VerificationAsymmetry/TheoremMap.lean
 lake env lean VerificationAsymmetry/CurrentPaperStatus.lean
+lake env lean VerificationAsymmetry/PaperExactnessAudit.lean
 ```
 
 ## Trust verification
@@ -164,7 +173,7 @@ python verify_release.py
 
 The verifier checks zero executable `sorry`/`admit`, the exact three-name
 project axiom declaration boundary, the exact two-name current-paper axiom
-dependency boundary, all numbered theorem-map markers, `24/0` current-paper
+dependency boundary, all numbered theorem-map markers, `25/0` current-paper
 status, the reviewed historical ledger inventory, required default build
 targets, and release-metadata consistency.
 
@@ -185,11 +194,10 @@ submission text.
 
 Repository citation metadata is provided in [`CITATION.cff`](CITATION.cff).
 The software archive has Zenodo concept DOI
-[`10.5281/zenodo.22058379`](https://doi.org/10.5281/zenodo.22058379).  For the
-exact release formalizing the current manuscript, cite version 0.4.2 at
-[`10.5281/zenodo.22058380`](https://doi.org/10.5281/zenodo.22058380).  The paper
-has a separate concept DOI, `10.5281/zenodo.20038847`; the software record is
-linked to it as a supplement.
+[`10.5281/zenodo.22058379`](https://doi.org/10.5281/zenodo.22058379). The paper
+has the separate concept DOI `10.5281/zenodo.20038847`; the software record is
+linked to it as a supplement. Concept DOIs are used here so citation metadata
+does not require maintenance for every software or manuscript release.
 
 ## License
 
