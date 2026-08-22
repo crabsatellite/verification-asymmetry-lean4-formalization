@@ -132,6 +132,9 @@ The authoritative current-paper surfaces are:
 ## Building
 
 Requires Lean 4 toolchain `v4.30.0-rc2` (managed via `elan`).
+The tracked `lake-manifest.json` pins Mathlib revision
+`388f44f89d70fbad0e1accb8fd62fc8c97714a85`; release and CI builds must not
+re-resolve Mathlib from its moving `main` branch.
 
 ```bash
 # Install elan + Lean toolchain if not already
@@ -181,7 +184,7 @@ submission text.
 ## Citation
 
 Repository citation metadata is provided in [`CITATION.cff`](CITATION.cff).
-Until a release DOI is minted for version 0.4.0, cite the repository URL with
+Until a release DOI is minted for version 0.4.1, cite the repository URL with
 the exact commit or release tag used. The SSRN and Zenodo identifiers above are
 historical paper surfaces and are not software-release identifiers.
 

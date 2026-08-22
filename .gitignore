@@ -1,7 +1,5 @@
 /.lake
 /build
-lake-manifest.json
-
 # Tool outputs
 audit-report.json
 audit_v*.txt

@@ -8,6 +8,7 @@ surfaces rather than treating a successful library build as sufficient.
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -59,6 +60,8 @@ REQUIRED_DEFAULT_TARGETS = (
     "VerificationAsymmetry.CurrentPaperStatus",
     "VerificationAsymmetry.CurrentPaperAxiomAudit",
 )
+EXPECTED_TOOLCHAIN = "leanprover/lean4:v4.30.0-rc2"
+EXPECTED_MATHLIB_REV = "388f44f89d70fbad0e1accb8fd62fc8c97714a85"
 
 
 def strip_lean_comments_and_strings(source: str) -> str:
@@ -168,9 +171,32 @@ def check_source_policy() -> None:
     if not (ROOT / "LICENSE").is_file():
         raise SystemExit("LICENSE is missing")
 
+    toolchain = (ROOT / "lean-toolchain").read_text(encoding="utf-8").strip()
+    if toolchain != EXPECTED_TOOLCHAIN:
+        raise SystemExit(
+            f"Lean toolchain drifted: expected={EXPECTED_TOOLCHAIN} observed={toolchain}"
+        )
+    manifest_path = ROOT / "lake-manifest.json"
+    if not manifest_path.is_file():
+        raise SystemExit("tracked lake-manifest.json is required for reproducible releases")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    packages = manifest.get("packages", [])
+    mathlib = next(
+        (package for package in packages if isinstance(package, dict) and package.get("name") == "mathlib"),
+        None,
+    )
+    if not isinstance(mathlib, dict) or mathlib.get("rev") != EXPECTED_MATHLIB_REV:
+        raise SystemExit(
+            "Mathlib revision drifted or is absent from lake-manifest.json: "
+            f"expected={EXPECTED_MATHLIB_REV} observed={None if mathlib is None else mathlib.get('rev')}"
+        )
+
     print("source policy: 0 proof escapes, exact 3-name project axiom boundary")
     print("publication map: all numbered markers and required default targets present")
-    print(f"release metadata: version {lake_version.group(1)}, CITATION.cff and LICENSE present")
+    print(
+        f"release metadata: version {lake_version.group(1)}, CITATION.cff and LICENSE present"
+    )
+    print(f"dependency lock: {EXPECTED_TOOLCHAIN}, Mathlib {EXPECTED_MATHLIB_REV}")
 
 
 def run(command: list[str]) -> str:
