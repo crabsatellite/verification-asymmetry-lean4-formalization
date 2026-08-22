@@ -1,21 +1,31 @@
-# Generation-Verification Asymmetry — Lean 4 Formalization
+# Verification Asymmetry — Lean 4 Formalization
 
 Companion machine-checked formalization for
 
 > Li, Alex Chengyu. *Verification Asymmetry under AI Substitution:
 > Wage-Ratio Inversion and Apprenticeship Thresholds.* 2026.
 
-The current manuscript is an internal reconstruction and is not represented by
-the historical public identifiers listed near the end of this README.
+The theorem map targets the current 22-page EINT submission manuscript. The
+public preprint identifiers near the end of this README refer to an earlier,
+longer manuscript version.
 
 ## Status
 
-This Lean 4 + Mathlib project is a **typed algebraic audit**, not a certificate
-for the complete paper. Every deduction actually captured as a theorem here is
-checked with **zero `sorry`**, but several paper claims are only conditional,
-partial, definitional, or open. In particular, the complete path-dependent
-cohort dynamics and the economic microfoundation of several reduced forms are
-not machine-checked.
+The current 22-page EINT manuscript has a complete publication-facing theorem
+map. Every derived mathematical claim in that manuscript has a named Lean
+carrier or theorem, and `CurrentPaperStatus.lean` evaluates to
+`unfinishedDerived=0`. The project contains zero executable `sorry` or `admit`.
+
+Two external textbook inputs are load-bearing for the current paper:
+`axiom_ces_wage_ratio` and `axiom_cobb_douglas_factor_share`. Their signatures
+carry the exact production-function, derivative, positivity, and range
+antecedents used by the paper. All other current-paper mathematical deductions
+are derived in Lean from Mathlib and those explicit inputs.
+
+The repository remains a superset of an older 42-page model. Historical modules
+for credentialing, recursive verification, and endogenous adoption retain honest
+conditional, partial, or open ledger entries, but those entries are not claims of
+the current journal manuscript and are excluded from `currentPaperEntries`.
 
 The trust boundary is explicit: each ledger entry is either
 
@@ -25,9 +35,9 @@ The trust boundary is explicit: each ledger entry is either
 - an honest open entry in a typed gap ledger (no Lean declaration), with a
   documented resolution path.
 
-The live counts of closed / partial / open entries are emitted by `#eval` at the
-bottom of [`VerificationAsymmetry/Ledger.lean`](VerificationAsymmetry/Ledger.lean);
-this README deliberately bakes no fixed counts.
+The live superset-ledger counts are emitted by `Ledger.lean`. Current-paper
+coverage is independently emitted by `CurrentPaperStatus.lean` and enforced by
+the manuscript audit.
 
 ### Inputs of the formalization
 
@@ -41,7 +51,8 @@ kernel (`propext`, `Classical.choice`, `Quot.sound`).
 **Cat 2 — external textbook axioms** (declared in
 [`VerificationAsymmetry/Axioms.lean`](VerificationAsymmetry/Axioms.lean)):
 
-- `axiom_euler_crs` — Euler's identity for CRS production. Citations:
+- `axiom_euler_crs` — Euler's identity for CRS production. Historical-superset
+  input, not consumed by the current 22-page paper. Citations:
   Euler 1755 (original); Mas-Colell, Whinston, Green 1995 §5.B.2 (modern
   textbook). Load-bearing: consumed by `thm_decomp`.
 - `axiom_ces_wage_ratio` — CES marginal-product wage-ratio closed form.
@@ -78,40 +89,24 @@ The paper's derived closed-form notation (`eBar`, `Vinf`, `thetaStar`,
 defining equations hold by `rfl`. They are definitional infrastructure, not
 standalone Cat 3 atoms.
 
-### Non-closed paper claims
+### Current-paper closure and historical-superset gaps
 
-The authoritative classification is the live `allGaps` inventory in
-`Ledger.lean`. Important limitations include:
+The current manuscript's exact post-step cohort path, straddling-cohort cutoff,
+full-stock clearing time, smooth-threshold derivative kink, externality-wedge
+growth, post-collapse exponent trichotomy, large-capacity limits, fixed-CES
+positivity, and near-Cobb--Douglas variable-exponent limit are all Lean-closed.
 
-- The complete post-step cohort path is **partial**. Lean proves the linear
-  decay of the pre-shock senior component, not the complete stock including
-  straddling cohorts or its exact clearing time.
-- The endogenous-AI fixed-point construction is **partial**. Lean proves an
-  abstract one-dimensional fixed-point lemma, but does not derive the paper's
-  selected inner map from primitives.
-- The disturbance deficit and recovery functions are **partial**: endpoint
-  arithmetic is checked for declared functions, while their derivation from
-  the cohort integral remains open.
-- Recursive pressure and endogenous uniqueness claims are **conditional** on
-  explicitly declared reduced-form schedules or composite-map properties.
-- The recursive log-slope comparison is machine-checked **conditional** on the
-  declared pressure schedule; the constrained-production derivation of that
-  schedule remains open.
-- The near-Cobb--Douglas limit from above is **partial**: the manuscript proves
-  the variable-exponent finite-sum limit, while its Lean formalization remains
-  pending.
-- Window invariance, sequential aggregation kinks, the intermediate-CES
-  regime, and an empirical residual-floor claim remain **open**.
-- The μ-invariance of the cohort threshold is **definitional**: the relevant
-  carriers have no μ argument. It is not an independently proved robustness
-  theorem.
+Historical claims omitted from the journal paper remain in `Ledger.lean` with
+their original conditional/partial/open status. They are not converted into
+axioms and do not enter `CurrentPaperStatus.currentPaperEntries`.
 
-These claims are not converted into axioms merely to make a proof pass.
+The authoritative current-paper surfaces are:
 
-The authoritative inventory of theorem names and per-theorem axiom
-dependencies is the output of
-`lake env lean VerificationAsymmetry/AxiomAudit.lean`, combined with the
-`#eval` printouts at the bottom of `Ledger.lean`.
+- `TheoremMap.lean` — Definition 1 through Proposition 14 and Eqs. (1)--(15);
+- `CurrentPaperAxiomAudit.lean` — per-endpoint axiom dependencies;
+- `CurrentPaperStatus.lean` — typed current-paper ledger with zero unfinished
+  derived entries;
+- `Ledger.lean` / `AxiomAudit.lean` — the broader historical project inventory.
 
 ## File structure
 
@@ -121,14 +116,18 @@ dependencies is the output of
 | [`VerificationAsymmetry/Axioms.lean`](VerificationAsymmetry/Axioms.lean) | Cat 2 textbook atomic axioms: `axiom_euler_crs`, `axiom_ces_wage_ratio`, `axiom_cobb_douglas_factor_share`; bridge theorems composing them with `steady_state_stock_identity` |
 | [`VerificationAsymmetry/Decomp.lean`](VerificationAsymmetry/Decomp.lean) | Theorem `thm:decomp` (stock-flow output decomposition; consumes `axiom_euler_crs`) |
 | [`VerificationAsymmetry/Inversion.lean`](VerificationAsymmetry/Inversion.lean) | Theorem `thm:inversion` (wage ratio scaling, closed-form threshold); Corollary `cor:bounded-AI` (endpoint identifications) |
-| [`VerificationAsymmetry/Collapse.lean`](VerificationAsymmetry/Collapse.lean) | Steady-state hard-threshold algebra and the pre-shock-senior component of the transient path; the complete transient is partial |
+| [`VerificationAsymmetry/Collapse.lean`](VerificationAsymmetry/Collapse.lean) | Steady-state hard/smooth threshold algebra, derivative formulas, and the verified slope kink |
+| [`VerificationAsymmetry/CohortPath.lean`](VerificationAsymmetry/CohortPath.lean) | Arbitrary-path experience integral, exact permanent-step cohort path, promotion cutoff, full stock integral, and clearing time |
 | [`VerificationAsymmetry/Credential.lean`](VerificationAsymmetry/Credential.lean) | Theorem `thm:credential` (Cobb-Douglas closed form, finite-capacity gross-peak FOC and uniqueness, multiplicative decay); Proposition `prop:junior-senior` (senior wage scaling) |
-| [`VerificationAsymmetry/Externality.lean`](VerificationAsymmetry/Externality.lean) | Algebraic residual/wedge identities, sign, Cobb-Douglas residual-transfer simplification, and an anti-monotonicity implication; no first-best policy theorem |
+| [`VerificationAsymmetry/Externality.lean`](VerificationAsymmetry/Externality.lean) | Present-value identities, wedge closed form and monotonicity, smooth exponent limits, Cobb-Douglas residual-transfer simplification, and partial-capture identity |
 | [`VerificationAsymmetry/Recursive.lean`](VerificationAsymmetry/Recursive.lean) | Conditional reduced-form μ-amplification, exact log-slope acceleration algebra, and threshold algebra; definitional cohort-side μ-invariance; technological reachability equivalence |
-| [`VerificationAsymmetry/Aggregation.lean`](VerificationAsymmetry/Aggregation.lean) | Exact Cobb-Douglas zero propagation, perfect-substitutes endpoint identities, and selected adjustment bounds; the near-Cobb--Douglas limit is partial and intermediate-CES claims remain open |
+| [`VerificationAsymmetry/Aggregation.lean`](VerificationAsymmetry/Aggregation.lean) | Exact Cobb-Douglas zero propagation, every-fixed-CES positivity, surviving-weight limit, and the full `sigma -> 1+` near-Cobb--Douglas limit |
 | [`VerificationAsymmetry/EndogenousAI.lean`](VerificationAsymmetry/EndogenousAI.lean) | Abstract fixed-point/uniqueness lemmas and direct-form recovery arithmetic; the economic construction and cohort derivation remain partial |
 | [`VerificationAsymmetry/AxiomAudit.lean`](VerificationAsymmetry/AxiomAudit.lean) | Trust audit: prints `#print axioms` for every paper-level theorem |
 | [`VerificationAsymmetry/Ledger.lean`](VerificationAsymmetry/Ledger.lean) | Typed gap ledger: each closed top-level result and each deferred paper claim is one `GapEntry`, with `GapStatus` × `InputCategory` × `Cat3SubType` classification |
+| [`VerificationAsymmetry/TheoremMap.lean`](VerificationAsymmetry/TheoremMap.lean) | Publication-facing `#check` map for every numbered current-paper object and derivation |
+| [`VerificationAsymmetry/CurrentPaperAxiomAudit.lean`](VerificationAsymmetry/CurrentPaperAxiomAudit.lean) | Current-paper-only `#print axioms` audit; allowed project axioms are exactly CES wage ratio and Cobb-Douglas factor share |
+| [`VerificationAsymmetry/CurrentPaperStatus.lean`](VerificationAsymmetry/CurrentPaperStatus.lean) | Current-paper ledger; evaluates to 24 entries and zero unfinished derived mathematics |
 
 ## Building
 
@@ -145,35 +144,47 @@ lake exe cache get
 lake build
 
 # Run axiom audit
-lake env lean VerificationAsymmetry/AxiomAudit.lean
+lake env lean VerificationAsymmetry/CurrentPaperAxiomAudit.lean
+
+# Run current-paper theorem map and status
+lake env lean VerificationAsymmetry/TheoremMap.lean
+lake env lean VerificationAsymmetry/CurrentPaperStatus.lean
 ```
 
 ## Trust verification
 
-For an independent trust check, after `lake build`:
+Run the same fail-closed release verifier used by CI:
 
 ```bash
-# Count of `sorry` (expect 0)
-grep -rn '\bsorry\b' VerificationAsymmetry/
-
-# Print axiom dependencies of every paper-level theorem
-lake env lean VerificationAsymmetry/AxiomAudit.lean
-
-# Print live gap-ledger inventory
-lake env lean VerificationAsymmetry/Ledger.lean
+python verify_release.py
 ```
+
+The verifier checks zero executable `sorry`/`admit`, the exact three-name
+project axiom declaration boundary, the exact two-name current-paper axiom
+dependency boundary, all numbered theorem-map markers, `24/0` current-paper
+status, the reviewed historical ledger inventory, required default build
+targets, and release-metadata consistency.
 
 ## Companion paper
 
-This formalization audits selected claims in the current manuscript at
-`../paper/verification_asymmetry.tex`. The identifiers below refer to an older
-public snapshot and must not be treated as identifiers for the reconstructed text.
+This formalization targets the current 22-page EINT submission manuscript named
+above. Its canonical TeX source is maintained with the submission package, not
+inside this public code repository. The identifiers below refer to an older
+public paper snapshot and must not be treated as identifiers for the current
+submission text.
 
 | Resource | Identifier |
 |----------|------------|
 | Historical SSRN abstract id | [6718418](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6718418) |
 | Zenodo concept DOI | [10.5281/zenodo.20038847](https://doi.org/10.5281/zenodo.20038847) |
 
+## Citation
+
+Repository citation metadata is provided in [`CITATION.cff`](CITATION.cff).
+Until a release DOI is minted for version 0.4.0, cite the repository URL with
+the exact commit or release tag used. The SSRN and Zenodo identifiers above are
+historical paper surfaces and are not software-release identifiers.
+
 ## License
 
-MIT License © 2026 Alex Li.
+Released under the [`MIT License`](LICENSE), © 2026 Alex Chengyu Li.

@@ -33,6 +33,7 @@
 -/
 
 import VerificationAsymmetry.Basic
+import Mathlib.Analysis.SpecialFunctions.Pow.Deriv
 
 namespace VerificationAsymmetry
 
@@ -101,6 +102,12 @@ lemma eBar_lt_tauStar_iff_theta_gt_thetaStar (θ : ℝ) :
     push Not at hcon
     have := (E.eBar_ge_tauStar_iff_theta_le_thetaStar θ).mp hcon
     linarith
+
+@[simp] lemma eBar_thetaStar : E.eBar E.thetaStar = E.tauStar := by
+  unfold eBar thetaStar
+  have hTj_ne : E.Tj ≠ 0 := ne_of_gt E.Tj_pos
+  field_simp
+  ring
 
 /-! ### Theorem~\ref{thm:collapse} Part 1: smooth power-law below θ*. -/
 
@@ -292,6 +299,96 @@ theorem prop_smooth_collapse_above
   -- The `if` branch evaluates to (eBar θ / τ*)^b since ē < τ*.
   have hbranch : ¬ (E.tauStar ≤ E.eBar θ) := not_le.mpr h'
   simp [hbranch]
+
+/-! ### Proposition~\ref{prop:smooth-collapse}: slope kink at θ*. -/
+
+/-- Left derivative displayed in the paper at the smooth-promotion threshold. -/
+noncomputable def smoothSlopeBelowAtThreshold (a : ℝ) : ℝ :=
+  -a * E.nu * E.Ts * E.Tj * E.tauStar ^ (a - 1)
+
+/-- Right derivative displayed in the paper at the smooth-promotion threshold. -/
+noncomputable def smoothSlopeAboveAtThreshold (a b : ℝ) : ℝ :=
+  -(a + b) * E.nu * E.Ts * E.Tj * E.tauStar ^ (a - 1)
+
+/-- The right slope magnitude is strictly larger than the left slope magnitude
+    for `a>0`, `b>0`, exactly as stated in Proposition 11. -/
+theorem prop_smooth_collapse_kink
+    {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
+    |E.smoothSlopeBelowAtThreshold a| <
+      |E.smoothSlopeAboveAtThreshold a b| := by
+  have hpow : 0 < E.tauStar ^ (a - 1) :=
+    Real.rpow_pos_of_pos E.tauStar_pos _
+  have hbase : 0 < E.nu * E.Ts * E.Tj * E.tauStar ^ (a - 1) := by
+    exact mul_pos (mul_pos (mul_pos E.nu_pos E.Ts_pos) E.Tj_pos) hpow
+  have hbelow :
+      E.smoothSlopeBelowAtThreshold a =
+        -(a * (E.nu * E.Ts * E.Tj * E.tauStar ^ (a - 1))) := by
+    unfold smoothSlopeBelowAtThreshold
+    ring
+  have habove :
+      E.smoothSlopeAboveAtThreshold a b =
+        -((a + b) * (E.nu * E.Ts * E.Tj * E.tauStar ^ (a - 1))) := by
+    unfold smoothSlopeAboveAtThreshold
+    ring
+  rw [hbelow, habove, abs_neg, abs_neg,
+      abs_of_pos (mul_pos ha hbase),
+      abs_of_pos (mul_pos (by linarith) hbase)]
+  nlinarith
+
+/-- The below-threshold stock has the paper's displayed left derivative at the
+    threshold. -/
+theorem hasDerivAt_smooth_stock_below_at_threshold (a : ℝ) :
+    HasDerivAt
+      (fun theta => E.nu * E.Ts * (E.eBar theta) ^ a)
+      (E.smoothSlopeBelowAtThreshold a) E.thetaStar := by
+  have hlinear : HasDerivAt (fun theta : ℝ => 1 - theta) (-1) E.thetaStar := by
+    simpa using (hasDerivAt_const E.thetaStar (1 : ℝ)).sub
+      (hasDerivAt_id E.thetaStar)
+  have heBar : HasDerivAt (fun theta => E.eBar theta) (-E.Tj) E.thetaStar := by
+    simpa [eBar] using hlinear.mul_const E.Tj
+  have hpow := heBar.rpow_const (p := a) (Or.inl (by
+    rw [E.eBar_thetaStar]
+    exact ne_of_gt E.tauStar_pos))
+  rw [E.eBar_thetaStar] at hpow
+  have hscaled := hpow.const_mul (E.nu * E.Ts)
+  convert hscaled using 1
+  unfold smoothSlopeBelowAtThreshold
+  ring
+
+/-- The above-threshold smooth stock has the paper's displayed right derivative
+    at the threshold. -/
+theorem hasDerivAt_smooth_stock_above_at_threshold (a b : ℝ) :
+    HasDerivAt
+      (fun theta =>
+        E.nu * E.Ts * ((E.eBar theta) / E.tauStar) ^ b *
+          (E.eBar theta) ^ a)
+      (E.smoothSlopeAboveAtThreshold a b) E.thetaStar := by
+  have hlinear : HasDerivAt (fun theta : ℝ => 1 - theta) (-1) E.thetaStar := by
+    simpa using (hasDerivAt_const E.thetaStar (1 : ℝ)).sub
+      (hasDerivAt_id E.thetaStar)
+  have heBar : HasDerivAt (fun theta => E.eBar theta) (-E.Tj) E.thetaStar := by
+    simpa [eBar] using hlinear.mul_const E.Tj
+  have hratio : HasDerivAt (fun theta => E.eBar theta / E.tauStar)
+      (-E.Tj / E.tauStar) E.thetaStar := heBar.div_const E.tauStar
+  have hratio_value : E.eBar E.thetaStar / E.tauStar = 1 := by
+    rw [E.eBar_thetaStar]
+    exact div_self (ne_of_gt E.tauStar_pos)
+  have hratio_pow := hratio.rpow_const (p := b)
+    (Or.inl (by rw [hratio_value]; norm_num))
+  have heBar_pow := heBar.rpow_const (p := a)
+    (Or.inl (by rw [E.eBar_thetaStar]; exact ne_of_gt E.tauStar_pos))
+  rw [hratio_value] at hratio_pow
+  rw [E.eBar_thetaStar] at heBar_pow
+  have hprod := hratio_pow.mul heBar_pow
+  have hscaled := hprod.const_mul (E.nu * E.Ts)
+  have htau_ne : E.tauStar ≠ 0 := ne_of_gt E.tauStar_pos
+  convert hscaled using 1
+  · funext theta
+    simp [div_eq_mul_inv, mul_comm, mul_left_comm, mul_assoc]
+  · unfold smoothSlopeAboveAtThreshold
+    simp [E.eBar_thetaStar, htau_ne]
+    rw [Real.rpow_sub_one (ne_of_gt E.tauStar_pos)]
+    field_simp
 
 /-! ### Corollary~\ref{cor:quant-predictions}: numerical calibration.
 

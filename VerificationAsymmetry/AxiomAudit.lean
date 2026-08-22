@@ -79,10 +79,11 @@
                                       narrative endogenous-AI-
                                       verification residual bound
                                       (`gap_prop_adjustment_narrative_OPEN`).
-                                      One paper-proved limit is partial:
-                                      `gap_thm_aggregation_near_cd_limit_PARTIAL`
-                                      records the near-Cobb--Douglas
-                                      variable-exponent limit pending Lean.
+                                      The current paper's near-Cobb--Douglas
+                                      variable-exponent limit is closed in
+                                      `Aggregation.lean`; remaining open/partial
+                                      entries belong to omitted historical
+                                      branches.
                                       A faithful sound STATEMENT of
                                       each requires Mathlib
                                       infrastructure (MeasureTheory
@@ -288,7 +289,8 @@ import VerificationAsymmetry
 -- faithful sound statement of each requires Mathlib infrastructure
 -- beyond this formalization's structural scope.  The paper-proved
 -- near-Cobb--Douglas variable-exponent limit is separately tracked as
--- `gap_thm_aggregation_near_cd_limit_PARTIAL`.  One separate
+-- The current near-Cobb--Douglas limit is checked in
+-- `CurrentPaperAxiomAudit.lean`.  One separate
 -- definitional claim is satisfied by construction
 -- (`gap_thm_recursive_invariance_DEFINITIONAL`) — `thetaStar` / `VinfHard`
 -- are defined without a μ parameter, so the paper's μ-invariance

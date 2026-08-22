@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this formalization, please cite the software repository and the companion paper."
+type: software
+title: "Verification Asymmetry: Lean 4 Formalization"
+version: 0.4.0
+date-released: 2026-08-22
+authors:
+  - family-names: Li
+    given-names: Alex Chengyu
+    orcid: "https://orcid.org/0009-0008-4516-8946"
+repository-code: "https://github.com/crabsatellite/verification-asymmetry-lean4-formalization"
+url: "https://github.com/crabsatellite/verification-asymmetry-lean4-formalization"
+license: MIT
+keywords:
+  - Lean 4
+  - formal verification
+  - verification asymmetry
+  - artificial intelligence
+  - apprenticeship
+  - economics of innovation
+abstract: >-
+  Machine-checked formal companion for Verification Asymmetry under AI
+  Substitution. The current-paper theorem map covers the numbered mathematical
+  objects and displayed derivations of the 22-page EINT manuscript, with an
+  explicit two-input textbook axiom boundary.

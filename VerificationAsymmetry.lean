@@ -27,8 +27,11 @@
                                              closed-form threshold)
     VerificationAsymmetry/Collapse.lean      Theorem~\ref{thm:collapse}
                                              (hard-threshold phase
-                                             transition at thetastar +
-                                             linear transient decay)
+                                             transition at thetastar;
+                                             smooth-threshold kink)
+    VerificationAsymmetry/CohortPath.lean    Arbitrary-path experience and
+                                             complete permanent-step cohort
+                                             stock / clearing-time proof
     VerificationAsymmetry/Credential.lean    Theorem~\ref{thm:credential}
                                              (Cobb-Douglas factor-share
                                              closed form + multiplicative
@@ -42,9 +45,9 @@
                                              crossing + amplification
                                              and collapse invariance)
     VerificationAsymmetry/Aggregation.lean   Theorem~\ref{thm:aggregation}
-                                             (Cobb-Douglas aggregation
-                                             min-theorem; perfect-
-                                             substitutes survival)
+                                             (Cobb-Douglas zero;
+                                             fixed-CES positivity;
+                                             near-CD limit)
     VerificationAsymmetry/EndogenousAI.lean  Theorem~\ref{thm:endogenous-ai}
                                              (1-D Brouwer via IVT;
                                              disturbance bound +
@@ -61,7 +64,10 @@
     These three axioms are textbook facts (Mas-Colell-Whinston-Green
     1995 §5.B.2; Acemoglu 2009 §15) whose Lean derivation from
     Mathlib's `Real.rpow` calculus is mechanically possible but
-    suppressed here for clarity of the audit boundary.
+    suppressed here for clarity of the audit boundary.  The current
+    22-page paper consumes only `axiom_ces_wage_ratio` and
+    `axiom_cobb_douglas_factor_share`; `axiom_euler_crs` belongs to
+    the historical longer-model superset.
 
   Gap ledger:
     VerificationAsymmetry/Ledger.lean — typed record of every closed
@@ -87,6 +93,7 @@ import VerificationAsymmetry.Axioms
 import VerificationAsymmetry.Decomp
 import VerificationAsymmetry.Inversion
 import VerificationAsymmetry.Collapse
+import VerificationAsymmetry.CohortPath
 import VerificationAsymmetry.Credential
 import VerificationAsymmetry.Externality
 import VerificationAsymmetry.Recursive

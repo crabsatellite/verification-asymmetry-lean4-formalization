@@ -1,0 +1,41 @@
+/- Current 22-page EINT manuscript axiom audit. -/
+
+import VerificationAsymmetry.TheoremMap
+
+-- Cat 2 textbook inputs allowed by the paper.
+#print axioms VerificationAsymmetry.Economy.axiom_ces_wage_ratio
+#print axioms VerificationAsymmetry.Economy.axiom_cobb_douglas_factor_share
+
+-- Theorem 9.
+#print axioms VerificationAsymmetry.Economy.wageRatio_eq_ces_marginal_product_ratio
+#print axioms VerificationAsymmetry.Economy.thm_inversion_wage_ratio_monotone
+#print axioms VerificationAsymmetry.Economy.wageRatioAtCapacity_tendsto_atTop
+#print axioms VerificationAsymmetry.Economy.thm_inversion_threshold_closed_form
+#print axioms VerificationAsymmetry.Economy.thm_inversion_threshold_in_unit_interval
+#print axioms VerificationAsymmetry.Economy.thetaInvAtCapacity_antitone
+#print axioms VerificationAsymmetry.Economy.thetaInvAtCapacity_tendsto_zero
+
+-- Theorem 10 and Proposition 11.
+#print axioms VerificationAsymmetry.Economy.cumulativeExperience_const
+#print axioms VerificationAsymmetry.Economy.cStar_mem_open_interval
+#print axioms VerificationAsymmetry.Economy.stepExperience_ge_tauStar_iff
+#print axioms VerificationAsymmetry.Economy.gHard_stepExperience_eq_one_iff
+#print axioms VerificationAsymmetry.Economy.exactStepStock_eq_cohort_integral
+#print axioms VerificationAsymmetry.Economy.exactStepStock_zero_after_last_straddle
+#print axioms VerificationAsymmetry.Economy.prop_smooth_collapse_above
+#print axioms VerificationAsymmetry.Economy.hasDerivAt_smooth_stock_below_at_threshold
+#print axioms VerificationAsymmetry.Economy.hasDerivAt_smooth_stock_above_at_threshold
+#print axioms VerificationAsymmetry.Economy.prop_smooth_collapse_kink
+
+-- Theorem 13.
+#print axioms VerificationAsymmetry.Economy.thm_externality_residual_identity
+#print axioms VerificationAsymmetry.Economy.thm_externality_wedge_identity
+#print axioms VerificationAsymmetry.Economy.wedgeExplicit_monotone
+#print axioms VerificationAsymmetry.Economy.smoothWedgePower_tendsto_atTop
+#print axioms VerificationAsymmetry.Economy.smoothWedgePower_tendsto_zero
+#print axioms VerificationAsymmetry.Economy.thm_externality_pigouvian_cobb_douglas_from_axioms
+
+-- Proposition 14.
+#print axioms VerificationAsymmetry.Economy.thm_aggregation_cobb_douglas_zero
+#print axioms VerificationAsymmetry.Economy.prop_aggregation_fixed_sigma_positive
+#print axioms VerificationAsymmetry.Economy.prop_aggregation_near_cobb_douglas_limit

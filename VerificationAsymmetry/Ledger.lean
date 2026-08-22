@@ -100,10 +100,10 @@
   empirical (cohort-study evidence per `\label{sec:predictions}`),
   not Mathlib derivation.
 
-  One additional paper-proved limit claim is tracked as `gapPartial`:
-  `gap_thm_aggregation_near_cd_limit_PARTIAL` records the
-  near-Cobb--Douglas variable-exponent finite-sum limit.  Its endpoint
-  ingredients are Lean-closed, while the full limit is not yet encoded.
+  The current paper's complete permanent-step cohort path and
+  near-Cobb--Douglas variable-exponent finite-sum limit are now `gapClosed`.
+  The remaining partial/open entries belong to mathematical or empirical
+  branches omitted from the current 22-page journal manuscript.
 
   A separate `gapDefinitional` record,
   `gap_thm_recursive_invariance_DEFINITIONAL`, records the μ-invariance
@@ -417,7 +417,10 @@ def gap_thm_inversion_threshold_monotone_CLOSED : GapEntry := {
     "the `Gstar`-monotonicity hypothesis).  Algebraic monotonicity " ++
     "of `r̄ ↦ r̄^{1/(1-ρ)}` for `1/(1-ρ) > 0` underlies the " ++
     "`Gstar`-monotonicity hypothesis; this entry covers the lifted " ++
-    "monotonicity from `Gstar` to `thetaInv` via division."
+    "monotonicity from `Gstar` to `thetaInv` via division.  The current " ++
+    "paper's capacity comparative statics are additionally closed by " ++
+    "`thetaInvAtCapacity_antitone` and " ++
+    "`thetaInvAtCapacity_tendsto_zero`."
   notes :=
     "Parametric bridge — `thm_inversion_threshold_monotone_in_rBar` " ++
     "takes `Gstar` monotonicity in `r̄` (`Gstar V rBar₁ ≤ Gstar V " ++
@@ -444,7 +447,9 @@ def gap_thm_inversion_wage_ratio_CLOSED : GapEntry := {
     "Wage-ratio function `r(θ) = ((1-η)/η) λ^ρ (G(θ)/V)^(1-ρ)` is " ++
     "non-decreasing in `θ` under `K_AI ≥ L_G` and `ρ < 1`. Proof " ++
     "uses `Real.rpow_le_rpow` on `G(θ)/V` together with the " ++
-    "monotonicity of `G` (`Economy.G_monotone_of_KAI_ge_LG`)."
+    "monotonicity of `G` (`Economy.G_monotone_of_KAI_ge_LG`).  The " ++
+    "fixed-positive-θ large-capacity divergence is closed by " ++
+    "`wageRatioAtCapacity_tendsto_atTop`."
   notes :=
     "**Scope precision:** paper abstract / introduction use " ++
     "'monotonically rising'/'monotonically increasing' for the " ++
@@ -579,26 +584,28 @@ def gap_thm_collapse_above_CLOSED : GapEntry := {
     "`VinfHard_eq_zero_of_eBar_lt_tauStar`."
 }
 
-/-- Theorem~\ref{thm:collapse} Part 4: only the pre-shock-senior
-    component of the transient path is currently formalized. -/
-def gap_thm_collapse_transient_PARTIAL : GapEntry := {
-  name := "thm_collapse_transient_decay (bundle)"
-  status := GapStatus.gapPartial
+/-- Theorem~\ref{thm:collapse} Part 4: complete permanent-step path. -/
+def gap_thm_collapse_transient_CLOSED : GapEntry := {
+  name := "thm_collapse_complete_step_path (bundle)"
+  status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
-  paperSource := "Li 2026, `\\label{thm:collapse}` Part 4, " ++
-    "Eq. `\\eqref{eq:transient}`"
+  paperSource := "Li 2026, `\\label{thm:collapse}` Part 4, exact " ++
+    "`e_01(c)` path, cohort integral, Eq. `\\eqref{eq:transient}`, and " ++
+    "full-stock clearing time"
   attackHistory := []
   scope :=
-    "Bundle entry covering four pointwise theorems: " ++
+    "The legacy pre-shock component remains covered by four pointwise theorems: " ++
     "`thm_collapse_transient_at_zero`, `thm_collapse_transient_at_Ts`, " ++
     "`thm_collapse_transient_linear`, `thm_collapse_transient_zero_after_Ts`. " ++
     "These close the linear decay of the PRE-SHOCK SENIOR COMPONENT " ++
     "`V_pre(t) = V_∞(θ_0) · (1 - t/T_s)_+`, formalized via " ++
-    "`transientStock`.  They do NOT formalize the paper's complete " ++
-    "post-step cohort integral, the straddling-cohort experience path, " ++
-    "or the exact full-stock clearing time.  The paper claim is therefore " ++
-    "`gapPartial`, not closed."
+    "`transientStock`.  `CohortPath.lean` now additionally closes " ++
+    "`cumulativeExperience_const`, the three branches of `stepExperience`, " ++
+    "`cStar_mem_open_interval`, `stepExperience_ge_tauStar_iff`, " ++
+    "`gHard_stepExperience_eq_one_iff`, the exact `exactStepStock` cohort " ++
+    "integral, `exactStepStock_zero_after_last_straddle`, and the last " ++
+    "retirement-time identity."
 }
 
 /-- Theorem~\ref{thm:collapse} Part 5: general-`h` value at θ*. -/
@@ -627,11 +634,13 @@ def gap_prop_smooth_collapse_CLOSED : GapEntry := {
   paperSource := "Li 2026, `\\label{prop:smooth-collapse}`"
   attackHistory := []
   scope :=
-    "Bundle entry covering two theorems: " ++
+    "Bundle entry covering the two stock-level theorems and the kink theorem: " ++
     "`prop_smooth_collapse_below` (below `θ*`, matches hard-threshold " ++
     "value `ν T_s ē^a`) and `prop_smooth_collapse_above` (above " ++
     "`θ*`, `V_∞(θ) = ν T_s · (ē/τ*)^b · ē^a` with `(1-θ)^{a+b}` " ++
-    "decay rate)."
+    "decay rate), plus `prop_smooth_collapse_kink`, which proves that the " ++
+    "right slope magnitude is strictly larger than the left slope magnitude " ++
+    "for `a>0`, `b>0`."
 }
 
 /-- Theorem~\ref{thm:credential} (Cobb-Douglas reduction + closed
@@ -773,8 +782,12 @@ def gap_thm_externality_wedge_CLOSED : GapEntry := {
     "of a junior contribution).  `LambdaJ` and `Lambda` are the " ++
     "discounted junior and senior horizons.  These are concrete `def`s " ++
     "in Externality.lean " ++
-    "whose defining equations hold by `rfl` — definitional " ++
-    "notation, not standalone Cat 3 atoms."
+    "whose defining equations hold by `rfl` — definitional notation, not " ++
+    "standalone Cat 3 atoms.  The current paper's Part 1 growth argument is " ++
+    "closed by `thm_externality_wedge_growth_core_monotone` and " ++
+    "`thm_externality_wedge_growth_monotone`; the smooth post-collapse " ++
+    "exponent trichotomy is closed by the `smoothWedgeExponent_*` and " ++
+    "`smoothWedgePower_*` theorems."
 }
 
 /-- Theorem~\ref{thm:externality} (non-negativity / strict
@@ -1043,18 +1056,16 @@ def gap_thm_aggregation_PS_CLOSED : GapEntry := {
     "erase arguments."
 }
 
-/-- Theorem~\ref{thm:aggregation} Part 4: the near-Cobb--Douglas
-    limit from above.  The paper proof is complete; faithful Lean
-    formalization of the finite-sum / variable-exponent limit is pending. -/
-def gap_thm_aggregation_near_cd_limit_PARTIAL : GapEntry := {
+/-- Current Proposition~\ref{prop:aggregation}: finite-CES positivity and the
+    near-Cobb--Douglas limit from above. -/
+def gap_prop_aggregation_near_cd_limit_CLOSED : GapEntry := {
   name :=
-    "thm:aggregation Part 4 (near-Cobb-Douglas limit from above) — " ++
-    "paper-proved; Lean limit pending"
-  status := GapStatus.gapPartial
+    "prop:aggregation finite-CES positivity and near-Cobb-Douglas limit"
+  status := GapStatus.gapClosed
   inputCategory := InputCategory.notInput
   cat3SubType := Cat3SubType.notCat3
-  paperSource := "Li 2026, `\\label{thm:aggregation}` Part 4, " ++
-    "Eq. `\\eqref{eq:near-cd-fragility}`"
+  paperSource := "Li 2026, `\\label{prop:aggregation}`, " ++
+    "Eq. `\\eqref{eq:Y-agg}` Parts 2-3"
   attackHistory := []
   scope :=
     "For fixed component outputs with at least one positive-weight zero " ++
@@ -1062,10 +1073,12 @@ def gap_thm_aggregation_near_cd_limit_PARTIAL : GapEntry := {
     "gives positive CES output, but that output tends to zero as " ++
     "`σ_a ↓ 1`.  The manuscript proves this by setting " ++
     "`q=(σ_a-1)/σ_a`, observing the inner finite sum tends to the surviving " ++
-    "weight mass `p<1`, and bounding by `c^(1/q)→0` for `p<c<1`.  Lean " ++
-    "already closes the exact Cobb-Douglas zero endpoint and the perfect-" ++
-    "substitutes endpoint; the variable-exponent finite-sum limit itself " ++
-    "is not yet encoded, so this entry remains `gapPartial`."
+    "weight mass `p<1`, and bounding by `c^(1/q)→0` for `p<c<1`.  Lean now " ++
+    "closes every step through `cesInner_tendsto_positiveComponentWeight`, " ++
+    "`positiveComponentWeight_mem_unit`, `aggregateCESQ_pos`, " ++
+    "`aggregateCESQ_tendsto_zero`, `aggregationQ_tendsto_zero`, " ++
+    "`prop_aggregation_fixed_sigma_positive`, and " ++
+    "`prop_aggregation_near_cobb_douglas_limit`."
 }
 
 /-- Proposition~\ref{prop:adjustment-margins} (career extension portion;
@@ -1634,7 +1647,7 @@ def gap_IsCES_predicate : GapEntry := {
       `gap_thm_recursive_threshold_CONDITIONAL`,
       `gap_thm_recursive_wedge_CONDITIONAL`
     * `transientStock`, `gSmooth`, `hPow` —
-      `gap_thm_collapse_transient_PARTIAL`,
+      `gap_thm_collapse_transient_CLOSED`,
       `gap_prop_smooth_collapse_CLOSED`,
       `gap_thm_collapse_below_CLOSED`
     * `thetaEndo`, `hysteresisDeficit`, `recoveryStock` —
@@ -1759,7 +1772,7 @@ def allGaps : List GapEntry := [
   gap_thm_collapse_jump_CLOSED,
   gap_thm_collapse_jump_diff_CLOSED,
   gap_thm_collapse_above_CLOSED,
-  gap_thm_collapse_transient_PARTIAL,
+  gap_thm_collapse_transient_CLOSED,
   gap_thm_collapse_general_h_CLOSED,
   gap_prop_smooth_collapse_CLOSED,
   gap_thm_credential_CLOSED,
@@ -1799,7 +1812,7 @@ def allGaps : List GapEntry := [
   -- μ parameter; no Lean theorem is or can be written).
   gap_window_invariance_OPEN,
   gap_aggregation_sequential_kinks_OPEN,
-  gap_thm_aggregation_near_cd_limit_PARTIAL,
+  gap_prop_aggregation_near_cd_limit_CLOSED,
   gap_aggregation_intermediate_regime_OPEN,
   gap_prop_adjustment_narrative_OPEN,
   gap_thm_recursive_invariance_DEFINITIONAL

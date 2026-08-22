@@ -114,8 +114,8 @@ structure Economy where
   Tj_lt_T : Tj < T
   /-- `0 < τ*`. -/
   tauStar_pos : 0 < tauStar
-  /-- `τ* ≤ T_j`. -/
-  tauStar_le_Tj : tauStar ≤ Tj
+  /-- `τ* < T_j` (the current paper's non-degenerate interior threshold). -/
+  tauStar_lt_Tj : tauStar < Tj
   /-- `0 < η`. -/
   eta_pos : 0 < eta
   /-- `η < 1`. -/
@@ -126,6 +126,10 @@ structure Economy where
 namespace Economy
 
 variable (E : Economy)
+
+/-- The paper's interior threshold assumption implies the weak inequality used
+    by legacy algebraic consumers. -/
+lemma tauStar_le_Tj : E.tauStar ≤ E.Tj := E.tauStar_lt_Tj.le
 
 /-! ### Derived parameters. -/
 

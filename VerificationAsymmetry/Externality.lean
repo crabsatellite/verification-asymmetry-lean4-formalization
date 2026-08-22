@@ -59,10 +59,15 @@
 import VerificationAsymmetry.Basic
 import VerificationAsymmetry.Axioms
 import VerificationAsymmetry.Collapse
+import Mathlib.Analysis.SpecialFunctions.Pow.Asymptotics
+import Mathlib.Analysis.SpecialFunctions.Pow.Continuity
 
 namespace VerificationAsymmetry
 
 namespace Economy
+
+open Filter
+open scoped Topology
 
 variable (E : Economy)
 
@@ -188,6 +193,151 @@ theorem thm_externality_wedge_identity
   have hwG_ne : wG ≠ 0 := ne_of_gt hwG
   have hLambdaJ_ne : LambdaJ ≠ 0 := ne_of_gt hLambdaJ
   field_simp
+
+/-! ### Theorem~\ref{thm:externality} Part 1: wedge growth below the
+    hard threshold. -/
+
+/-- The theta-dependent core of paper Eq. (14).  The omitted coefficient is
+    strictly positive under the theorem's displayed parameter restrictions. -/
+noncomputable def wedgeGrowthCore (a theta : ℝ) : ℝ :=
+  (E.G theta) ^ (1 - E.rho) * (1 - theta) ^ (a * E.rho - 1)
+
+/-- Positive theta-independent coefficient in paper Eq. (14). -/
+noncomputable def wedgeGrowthCoefficient (r a : ℝ) : ℝ :=
+  ((1 - E.eta) * E.lam ^ E.rho * E.Lambda r * E.Tj ^ (a * E.rho)) /
+    (E.eta * E.LambdaJ r * (E.nu * E.Ts) ^ (1 - E.rho))
+
+/-- Full closed form displayed in paper Eq. (14). -/
+noncomputable def wedgeExplicit (r a theta : ℝ) : ℝ :=
+  E.wedgeGrowthCoefficient r a * E.wedgeGrowthCore a theta
+
+theorem wedgeGrowthCoefficient_pos {r a : ℝ} (hr : 0 < r) :
+    0 < E.wedgeGrowthCoefficient r a := by
+  unfold wedgeGrowthCoefficient
+  apply div_pos
+  · exact mul_pos
+      (mul_pos
+        (mul_pos (by linarith [E.eta_lt_one])
+          (Real.rpow_pos_of_pos E.lam_pos _))
+        (E.Lambda_pos hr))
+      (Real.rpow_pos_of_pos E.Tj_pos _)
+  · exact mul_pos
+      (mul_pos E.eta_pos (E.LambdaJ_pos hr))
+      (Real.rpow_pos_of_pos (mul_pos E.nu_pos E.Ts_pos) _)
+
+/-- The wedge-growth core is non-decreasing below the hard threshold.  This is
+    the complete two-factor monotonicity argument used in the paper: generation
+    rises, while a positive base raised to the negative exponent
+    `a*rho-1` also rises as `theta` rises. -/
+theorem thm_externality_wedge_growth_core_monotone
+    {a theta1 theta2 : ℝ}
+    (ha_pos : 0 < a) (ha_le : a ≤ 1)
+    (hrho_lt : E.rho < 1) (hKAI_ge : E.LG ≤ E.KAI)
+    (htheta1_nonneg : 0 ≤ theta1) (htheta12 : theta1 ≤ theta2)
+    (htheta2_below : theta2 < E.thetaStar) :
+    E.wedgeGrowthCore a theta1 ≤ E.wedgeGrowthCore a theta2 := by
+  have hthetaStar_lt : E.thetaStar < 1 := E.thetaStar_in_unit_interval.2
+  have htheta2_lt_one : theta2 < 1 := lt_trans htheta2_below hthetaStar_lt
+  have htheta2_le_one : theta2 ≤ 1 := htheta2_lt_one.le
+  have htheta1_le_one : theta1 ≤ 1 := le_trans htheta12 htheta2_le_one
+  have hG1_pos : 0 < E.G theta1 := E.G_pos htheta1_nonneg htheta1_le_one
+  have hG2_pos : 0 < E.G theta2 :=
+    E.G_pos (le_trans htheta1_nonneg htheta12) htheta2_le_one
+  have hG_le : E.G theta1 ≤ E.G theta2 :=
+    E.G_monotone_of_KAI_ge_LG hKAI_ge htheta12
+  have hpowG :
+      (E.G theta1) ^ (1 - E.rho) ≤ (E.G theta2) ^ (1 - E.rho) :=
+    Real.rpow_le_rpow hG1_pos.le hG_le (by linarith)
+  have hexp_neg : a * E.rho - 1 < 0 := by
+    have hmul : a * E.rho < a * 1 := mul_lt_mul_of_pos_left hrho_lt ha_pos
+    linarith
+  have hbase2_pos : 0 < 1 - theta2 := by linarith
+  have hbase1_pos : 0 < 1 - theta1 := by linarith
+  have hbase_le : 1 - theta2 ≤ 1 - theta1 := by linarith
+  have hpowTheta :
+      (1 - theta1) ^ (a * E.rho - 1) ≤
+        (1 - theta2) ^ (a * E.rho - 1) :=
+    Real.rpow_le_rpow_of_nonpos hbase2_pos hbase_le hexp_neg.le
+  unfold wedgeGrowthCore
+  exact mul_le_mul hpowG hpowTheta
+    (Real.rpow_nonneg hbase1_pos.le _)
+    (Real.rpow_nonneg hG2_pos.le _)
+
+/-- Multiplying the core by the positive theta-independent coefficient in
+    Eq. (14) preserves monotonicity. -/
+theorem thm_externality_wedge_growth_monotone
+    {a theta1 theta2 C : ℝ}
+    (hC : 0 ≤ C)
+    (ha_pos : 0 < a) (ha_le : a ≤ 1)
+    (hrho_lt : E.rho < 1) (hKAI_ge : E.LG ≤ E.KAI)
+    (htheta1_nonneg : 0 ≤ theta1) (htheta12 : theta1 ≤ theta2)
+    (htheta2_below : theta2 < E.thetaStar) :
+    C * E.wedgeGrowthCore a theta1 ≤
+      C * E.wedgeGrowthCore a theta2 :=
+  mul_le_mul_of_nonneg_left
+    (E.thm_externality_wedge_growth_core_monotone ha_pos ha_le hrho_lt
+      hKAI_ge htheta1_nonneg htheta12 htheta2_below) hC
+
+/-- Paper Eq. (14) is non-decreasing below the hard threshold. -/
+theorem wedgeExplicit_monotone
+    {r a theta1 theta2 : ℝ}
+    (hr : 0 < r) (ha_pos : 0 < a) (ha_le : a ≤ 1)
+    (hrho_lt : E.rho < 1) (hKAI_ge : E.LG ≤ E.KAI)
+    (htheta1_nonneg : 0 ≤ theta1) (htheta12 : theta1 ≤ theta2)
+    (htheta2_below : theta2 < E.thetaStar) :
+    E.wedgeExplicit r a theta1 ≤ E.wedgeExplicit r a theta2 := by
+  unfold wedgeExplicit
+  exact E.thm_externality_wedge_growth_monotone
+    (E.wedgeGrowthCoefficient_pos hr).le ha_pos ha_le hrho_lt hKAI_ge
+    htheta1_nonneg htheta12 htheta2_below
+
+/-- Exponent governing the smooth-threshold post-collapse wedge. -/
+def smoothWedgeExponent (a b : ℝ) : ℝ := (a + b) * E.rho - 1
+
+theorem smoothWedgeExponent_neg
+    {a b : ℝ} (hab : 0 < a + b) (h : E.rho < 1 / (a + b)) :
+    E.smoothWedgeExponent a b < 0 := by
+  unfold smoothWedgeExponent
+  have hmul : E.rho * (a + b) < 1 := (lt_div_iff₀ hab).1 h
+  nlinarith
+
+theorem smoothWedgeExponent_eq_zero
+    {a b : ℝ} (hab : 0 < a + b) (h : E.rho = 1 / (a + b)) :
+    E.smoothWedgeExponent a b = 0 := by
+  unfold smoothWedgeExponent
+  rw [h]
+  field_simp
+  norm_num
+
+theorem smoothWedgeExponent_pos
+    {a b : ℝ} (hab : 0 < a + b) (h : 1 / (a + b) < E.rho) :
+    0 < E.smoothWedgeExponent a b := by
+  unfold smoothWedgeExponent
+  have hmul : 1 < E.rho * (a + b) := (div_lt_iff₀ hab).1 h
+  nlinarith
+
+/-- A negative post-collapse exponent diverges as residual human generation
+    `x=1-theta` tends to zero from above. -/
+theorem smoothWedgePower_tendsto_atTop
+    {a b : ℝ} (h : E.smoothWedgeExponent a b < 0) :
+    Tendsto (fun x : ℝ => x ^ E.smoothWedgeExponent a b)
+      (nhdsWithin 0 (Set.Ioi 0)) atTop :=
+  tendsto_rpow_neg_nhdsGT_zero h
+
+/-- A zero post-collapse exponent has the finite nonzero limit one. -/
+theorem smoothWedgePower_eq_one
+    {a b x : ℝ} (h : E.smoothWedgeExponent a b = 0) :
+    x ^ E.smoothWedgeExponent a b = 1 := by
+  rw [h, Real.rpow_zero]
+
+/-- A positive post-collapse exponent tends to zero. -/
+theorem smoothWedgePower_tendsto_zero
+    {a b : ℝ} (h : 0 < E.smoothWedgeExponent a b) :
+    Tendsto (fun x : ℝ => x ^ E.smoothWedgeExponent a b)
+      (nhdsWithin 0 (Set.Ioi 0)) (𝓝 0) := by
+  have hid : Tendsto (fun x : ℝ => x) (nhdsWithin 0 (Set.Ioi 0)) (𝓝 0) :=
+    tendsto_id.mono_left inf_le_left
+  exact hid.rpow_const_nhds_zero h
 
 /-! ### Theorem~\ref{thm:externality} Part 3: residual-equalizing transfer. -/
 

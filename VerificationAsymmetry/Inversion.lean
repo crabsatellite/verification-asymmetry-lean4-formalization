@@ -68,10 +68,14 @@
 
 import VerificationAsymmetry.Basic
 import VerificationAsymmetry.Axioms
+import Mathlib.Analysis.SpecialFunctions.Pow.Asymptotics
 
 namespace VerificationAsymmetry
 
 namespace Economy
+
+open Filter
+open scoped Topology
 
 variable (E : Economy)
 
@@ -371,6 +375,79 @@ theorem cor_bounded_AI_threshold_at_rBarMax
     have : 0 < E.KAI - E.LG := by linarith
     exact ne_of_gt this
   field_simp
+
+/-! ### Theorem~\ref{thm:inversion}: large-capacity comparative statics. -/
+
+/-- Generation with AI capacity exposed as a varying argument. -/
+def generationAtCapacity (LG theta K : ℝ) : ℝ := (1 - theta) * LG + theta * K
+
+/-- For every fixed positive substitution rate, generation tends to infinity
+    as AI capacity tends to infinity. -/
+theorem generationAtCapacity_tendsto_atTop
+    {LG theta : ℝ} (htheta : 0 < theta) :
+    Tendsto (fun K : ℝ => generationAtCapacity LG theta K) atTop atTop := by
+  rw [tendsto_atTop]
+  intro b
+  filter_upwards [eventually_ge_atTop ((b - (1 - theta) * LG) / theta)] with K hK
+  unfold generationAtCapacity
+  have := (div_le_iff₀ htheta).1 hK
+  nlinarith
+
+/-- Wage ratio with the capacity coordinate exposed. -/
+noncomputable def wageRatioAtCapacity
+    (eta rho lam LG V theta K : ℝ) : ℝ :=
+  ((1 - eta) / eta) * lam ^ rho *
+    (generationAtCapacity LG theta K / V) ^ (1 - rho)
+
+/-- Paper Theorem 9 Part 1: for fixed `theta>0`, `V>0`, `rho<1`, and
+    admissible positive CES parameters, the wage ratio diverges along the
+    large-capacity limit. -/
+theorem wageRatioAtCapacity_tendsto_atTop
+    {eta rho lam LG V theta : ℝ}
+    (heta_pos : 0 < eta) (heta_lt : eta < 1)
+    (hlam_pos : 0 < lam) (hV_pos : 0 < V)
+    (htheta_pos : 0 < theta) (hrho_lt : rho < 1) :
+    Tendsto (fun K : ℝ => wageRatioAtCapacity eta rho lam LG V theta K)
+      atTop atTop := by
+  have hgen : Tendsto (fun K : ℝ => generationAtCapacity LG theta K)
+      atTop atTop := generationAtCapacity_tendsto_atTop htheta_pos
+  have hdiv : Tendsto (fun K : ℝ => generationAtCapacity LG theta K / V)
+      atTop atTop := Tendsto.atTop_div_const hV_pos hgen
+  have hpow : Tendsto
+      (fun K : ℝ => (generationAtCapacity LG theta K / V) ^ (1 - rho))
+      atTop atTop := (tendsto_rpow_atTop (by linarith)).comp hdiv
+  have hpref : 0 < ((1 - eta) / eta) * lam ^ rho := by
+    exact mul_pos (div_pos (by linarith) heta_pos)
+      (Real.rpow_pos_of_pos hlam_pos _)
+  exact Tendsto.const_mul_atTop hpref hpow
+
+/-- Inversion threshold with AI capacity exposed as a varying argument. -/
+noncomputable def thetaInvAtCapacity (LG Gcrit K : ℝ) : ℝ :=
+  (Gcrit - LG) / (K - LG)
+
+/-- Paper Theorem 9 Part 2: the reachable threshold moves weakly left as AI
+    capacity rises. -/
+theorem thetaInvAtCapacity_antitone
+    {LG Gcrit K1 K2 : ℝ}
+    (hcrit : LG < Gcrit) (hK1 : Gcrit < K1) (hK12 : K1 ≤ K2) :
+    thetaInvAtCapacity LG Gcrit K2 ≤ thetaInvAtCapacity LG Gcrit K1 := by
+  have hden1 : 0 < K1 - LG := by linarith
+  have hden2 : 0 < K2 - LG := by linarith
+  unfold thetaInvAtCapacity
+  rw [div_le_div_iff₀ hden2 hden1]
+  exact mul_le_mul_of_nonneg_left (by linarith) (by linarith)
+
+/-- Paper Theorem 9 Part 2: every fixed reachable critical generation level is
+    crossed at an arbitrarily small substitution rate as capacity tends to
+    infinity. -/
+theorem thetaInvAtCapacity_tendsto_zero (LG Gcrit : ℝ) :
+    Tendsto (fun K : ℝ => thetaInvAtCapacity LG Gcrit K) atTop (𝓝 0) := by
+  have hden : Tendsto (fun K : ℝ => K - LG) atTop atTop := by
+    rw [tendsto_atTop]
+    intro b
+    filter_upwards [eventually_ge_atTop (b + LG)] with K hK
+    linarith
+  simpa [thetaInvAtCapacity] using tendsto_const_nhds.div_atTop hden
 
 end Economy
 

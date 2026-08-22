@@ -31,13 +31,6 @@ jobs:
         working-directory: .
         run: lake build
         timeout-minutes: 60
-      - name: Report sorry + axiom counts
-        if: always()
+      - name: Verify current-paper closure and trust boundary
         working-directory: .
-        run: |
-          SRC="VerificationAsymmetry"
-          SORRY_TERMS=$(grep -rn -E ':= sorry|by sorry|^[[:space:]]*sorry[[:space:]]*$' "$SRC/" "$SRC.lean" --include='*.lean' 2>/dev/null | wc -l)
-          AXIOMS=$(grep -h '^axiom ' "$SRC"/*.lean "$SRC.lean" 2>/dev/null | wc -l)
-          echo "=== formalization counts ==="
-          echo "Active sorry terms: $SORRY_TERMS"
-          echo "Axiom declarations: $AXIOMS"
+        run: python verify_release.py --skip-build
