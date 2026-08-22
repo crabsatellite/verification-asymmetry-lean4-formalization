@@ -1,0 +1,31 @@
+{
+  "creators": [
+    {
+      "name": "Li, Alex Chengyu",
+      "orcid": "0009-0008-4516-8946"
+    }
+  ],
+  "title": "Verification Asymmetry: Lean 4 Formalization",
+  "version": "0.4.2",
+  "description": "Machine-checked Lean 4 and Mathlib formal companion for Verification Asymmetry under AI Substitution. The current-paper theorem map covers Definition 1 through Proposition 14 and Equations (1)-(15), with 25 typed current-paper entries, zero unfinished derived mathematics, zero executable sorry/admit, and an explicit two-input textbook axiom boundary.",
+  "access_right": "open",
+  "upload_type": "software",
+  "license": "mit",
+  "language": "eng",
+  "keywords": [
+    "Lean 4",
+    "formal verification",
+    "verification asymmetry",
+    "artificial intelligence",
+    "apprenticeship",
+    "human capital",
+    "economics of innovation"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://doi.org/10.5281/zenodo.20038847",
+      "relation": "isSupplementTo",
+      "resource_type": "publication-workingpaper"
+    }
+  ]
+}

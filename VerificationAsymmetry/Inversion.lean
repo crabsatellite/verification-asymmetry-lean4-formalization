@@ -240,6 +240,35 @@ theorem thm_inversion_wage_ratio_monotone
     · exact Real.rpow_pos_of_pos E.lam_pos _
   exact mul_le_mul_of_nonneg_left hPow hPrefactor_pos.le
 
+/-- **Theorem~\ref{thm:inversion} Part 1 (strict form).** If AI
+    capacity strictly exceeds baseline human generation and `theta1 < theta2`,
+    the CES wage ratio is strictly increasing on the admissible interval. -/
+theorem thm_inversion_wage_ratio_strict
+    (V : ℝ) (hV_pos : 0 < V) (hKAI_gt : E.LG < E.KAI)
+    (hrho_lt : E.rho < 1) {theta1 theta2 : ℝ}
+    (h0 : 0 ≤ theta1) (h1 : theta2 ≤ 1) (htheta : theta1 < theta2) :
+    E.wageRatio V theta1 < E.wageRatio V theta2 := by
+  unfold wageRatio
+  have hexponent : 0 < 1 - E.rho := by linarith
+  have hG1_pos : 0 < E.G theta1 := E.G_pos h0 (le_trans htheta.le h1)
+  have hG2_pos : 0 < E.G theta2 := E.G_pos (le_trans h0 htheta.le) h1
+  have hGdiff : E.G theta2 - E.G theta1 =
+      (theta2 - theta1) * (E.KAI - E.LG) := E.G_diff theta1 theta2
+  have hG_lt : E.G theta1 < E.G theta2 := by
+    have hprod : 0 < (theta2 - theta1) * (E.KAI - E.LG) :=
+      mul_pos (by linarith) (by linarith)
+    linarith
+  have hdiv_lt : E.G theta1 / V < E.G theta2 / V :=
+    div_lt_div_of_pos_right hG_lt hV_pos
+  have hpow_lt :
+      (E.G theta1 / V) ^ (1 - E.rho) <
+        (E.G theta2 / V) ^ (1 - E.rho) :=
+    Real.rpow_lt_rpow (div_pos hG1_pos hV_pos).le hdiv_lt hexponent
+  have hprefactor : 0 < ((1 - E.eta) / E.eta) * E.lam ^ E.rho := by
+    exact mul_pos (div_pos (by linarith [E.eta_lt_one]) E.eta_pos)
+      (Real.rpow_pos_of_pos E.lam_pos _)
+  exact mul_lt_mul_of_pos_left hpow_lt hprefactor
+
 /-! ### Theorem~\ref{thm:inversion} Part 2 (monotonicity in r̄ and K_AI). -/
 
 /-- **Theorem~\ref{thm:inversion} Part 2 (monotonicity in r̄).**
@@ -257,6 +286,43 @@ theorem thm_inversion_threshold_monotone_in_rBar
     E.thetaInv V rBar₁ ≤ E.thetaInv V rBar₂ := by
   unfold thetaInv
   apply div_le_div_of_nonneg_right (by linarith) (by linarith)
+
+/-- The paper's critical generation level is strictly increasing in every
+    positive target ratio when `rho < 1`. -/
+theorem Gstar_strict_in_rBar
+    (V : ℝ) (hV_pos : 0 < V) {rBar1 rBar2 : ℝ}
+    (hrBar1 : 0 < rBar1) (hrBar12 : rBar1 < rBar2)
+    (hrho_lt : E.rho < 1) :
+    E.Gstar V rBar1 < E.Gstar V rBar2 := by
+  unfold Gstar
+  have hden : 0 < (1 - E.eta) * E.lam ^ E.rho := by
+    exact mul_pos (by linarith [E.eta_lt_one])
+      (Real.rpow_pos_of_pos E.lam_pos _)
+  have hbase1 : 0 < rBar1 * E.eta /
+      ((1 - E.eta) * E.lam ^ E.rho) :=
+    div_pos (mul_pos hrBar1 E.eta_pos) hden
+  have hbase_lt :
+      rBar1 * E.eta / ((1 - E.eta) * E.lam ^ E.rho) <
+        rBar2 * E.eta / ((1 - E.eta) * E.lam ^ E.rho) := by
+    exact div_lt_div_of_pos_right
+      (mul_lt_mul_of_pos_right hrBar12 E.eta_pos) hden
+  have hexponent : 0 < 1 / (1 - E.rho) := by positivity
+  have hpow := Real.rpow_lt_rpow hbase1.le hbase_lt hexponent
+  exact mul_lt_mul_of_pos_left hpow hV_pos
+
+/-- **Theorem~\ref{thm:inversion} Part 2 (strict target-ratio form).**
+    The inversion threshold is strictly increasing in the positive target ratio
+    whenever `K_AI > L_G`. -/
+theorem thm_inversion_threshold_strict_in_rBar
+    (V : ℝ) (hV_pos : 0 < V) {rBar1 rBar2 : ℝ}
+    (hrBar1 : 0 < rBar1) (hrBar12 : rBar1 < rBar2)
+    (hKAI_gt : E.LG < E.KAI) (hrho_lt : E.rho < 1) :
+    E.thetaInv V rBar1 < E.thetaInv V rBar2 := by
+  unfold thetaInv
+  exact div_lt_div_of_pos_right
+    (sub_lt_sub_right
+      (E.Gstar_strict_in_rBar V hV_pos hrBar1 hrBar12 hrho_lt) E.LG)
+    (by linarith)
 
 /-! ### Corollary~\ref{cor:bounded-AI}: inversion under bounded AI.
 
@@ -436,6 +502,18 @@ theorem thetaInvAtCapacity_antitone
   unfold thetaInvAtCapacity
   rw [div_le_div_iff₀ hden2 hden1]
   exact mul_le_mul_of_nonneg_left (by linarith) (by linarith)
+
+/-- Paper Theorem 9 Part 2, strict form: a reachable threshold moves strictly
+    left when AI capacity strictly rises. -/
+theorem thetaInvAtCapacity_strictAnti
+    {LG Gcrit K1 K2 : ℝ}
+    (hcrit : LG < Gcrit) (hK1 : Gcrit < K1) (hK12 : K1 < K2) :
+    thetaInvAtCapacity LG Gcrit K2 < thetaInvAtCapacity LG Gcrit K1 := by
+  have hden1 : 0 < K1 - LG := by linarith
+  have hden2 : 0 < K2 - LG := by linarith
+  unfold thetaInvAtCapacity
+  rw [div_lt_div_iff₀ hden2 hden1]
+  exact mul_lt_mul_of_pos_left (by linarith) (by linarith)
 
 /-- Paper Theorem 9 Part 2: every fixed reachable critical generation level is
     crossed at an arbitrarily small substitution rate as capacity tends to

@@ -14,6 +14,7 @@ def currentPaperEntries : List GapEntry := [
   gap_IsCobbDouglas_predicate,
   gap_IsCES_predicate,
   gap_V2_TacitAccumulation_predicate,
+  gap_verification_asymmetry_diagnostic_DEFINITIONAL,
   gap_thm_inversion_threshold_CLOSED,
   gap_thm_inversion_threshold_monotone_CLOSED,
   gap_thm_inversion_wage_ratio_CLOSED,

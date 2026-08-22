@@ -44,6 +44,7 @@
 
 import Mathlib.Data.Real.Basic
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Analysis.SpecialFunctions.Pow.Continuity
 import Mathlib.Algebra.Order.Field.Basic
 
 namespace VerificationAsymmetry
@@ -127,6 +128,8 @@ namespace Economy
 
 variable (E : Economy)
 
+open Filter
+
 /-- The paper's interior threshold assumption implies the weak inequality used
     by legacy algebraic consumers. -/
 lemma tauStar_le_Tj : E.tauStar ≤ E.Tj := E.tauStar_lt_Tj.le
@@ -154,6 +157,27 @@ def G (θ : ℝ) : ℝ := (1 - θ) * E.LG + θ * E.KAI
 @[simp] lemma G_zero : E.G 0 = E.LG := by simp [G]
 
 @[simp] lemma G_one : E.G 1 = E.KAI := by simp [G]
+
+/-- Along the paper's `theta -> 1-` endpoint, generation converges to the
+    positive finite capacity `K_AI`. -/
+theorem G_tendsto_at_one :
+    Tendsto E.G (nhdsWithin 1 (Set.Iio 1)) (nhds E.KAI) := by
+  have hcont : ContinuousAt E.G 1 := by
+    unfold G
+    fun_prop
+  simpa using hcont.tendsto.mono_left inf_le_left
+
+/-- The generation factor in the smooth-wedge asymptotic converges to a
+    strictly positive finite endpoint when `rho<1`. -/
+theorem G_rpow_tendsto_at_one :
+    Tendsto (fun theta => E.G theta ^ (1 - E.rho))
+      (nhdsWithin 1 (Set.Iio 1)) (nhds (E.KAI ^ (1 - E.rho))) := by
+  have hcont : ContinuousAt (fun x : ℝ => x ^ (1 - E.rho)) E.KAI :=
+    Real.continuousAt_rpow_const E.KAI (1 - E.rho) (Or.inl (ne_of_gt E.KAI_pos))
+  exact hcont.tendsto.comp E.G_tendsto_at_one
+
+theorem G_rpow_endpoint_pos :
+    0 < E.KAI ^ (1 - E.rho) := Real.rpow_pos_of_pos E.KAI_pos _
 
 /-- `G(θ)` is monotone non-decreasing in `θ` when `K_AI ≥ L_G`. -/
 lemma G_monotone_of_KAI_ge_LG (h : E.LG ≤ E.KAI) {θ₁ θ₂ : ℝ}
@@ -304,8 +328,10 @@ lemma VinfHard_eq_zero_of_eBar_lt_tauStar
 
 /-- The V2 (tacit accumulation) constraint on the apprenticeship
     technology `h`: `h(0) = 0` and `h` is monotone non-decreasing.
-    V1 and V3 are structural properties of the carrier types
-    (`Vinf`/`eBar`) and are not separately encoded.
+    V1 and V3 are structural properties of the exact stock/experience
+    carriers.  `CohortPath.lean` packages them with V2 in the explicit
+    `VerificationAsymmetryDiagnostic` predicate; they are not additional
+    atomic premises.
 
     Both V2 fields are Lean-load-bearing:
     `h_zero_at_zero` is consumed by `Vinf_zero_at_theta_one_under_V2`

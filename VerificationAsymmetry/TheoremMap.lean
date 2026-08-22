@@ -34,6 +34,9 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.G_one
 #check VerificationAsymmetry.Economy.G_monotone_of_KAI_ge_LG
 #check VerificationAsymmetry.Economy.G_diff
+#check VerificationAsymmetry.Economy.G_tendsto_at_one
+#check VerificationAsymmetry.Economy.G_rpow_tendsto_at_one
+#check VerificationAsymmetry.Economy.G_rpow_endpoint_pos
 
 /-! ## Definition 4 and Eq. (3): arbitrary-path cohort experience. -/
 #check VerificationAsymmetry.Economy.cumulativeExperience
@@ -45,9 +48,12 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.Vinf
 #check VerificationAsymmetry.Economy.gHard
 #check VerificationAsymmetry.Economy.hPow
+#check VerificationAsymmetry.Economy.timeIndexedStock
+#check VerificationAsymmetry.Economy.timeIndexedStock_eq_cohort_integral
 
 /-! ## Lemma 7 and Eqs. (4)--(6): steady-state stock. -/
 #check VerificationAsymmetry.Economy.steady_state_stock_identity
+#check VerificationAsymmetry.Economy.timeIndexedStock_const_eq_Vinf
 #check VerificationAsymmetry.Economy.VinfHard_eq_pow_of_eBar_ge_tauStar
 #check VerificationAsymmetry.Economy.VinfHard_eq_zero_of_eBar_lt_tauStar
 #check VerificationAsymmetry.Economy.prop_smooth_collapse_below
@@ -55,6 +61,8 @@ open VerificationAsymmetry.Economy
 
 /-! ## Definition 8: V1--V3 diagnostic conditions. -/
 #check VerificationAsymmetry.Economy.V2_TacitAccumulation
+#check VerificationAsymmetry.Economy.VerificationAsymmetryDiagnostic
+#check VerificationAsymmetry.Economy.verificationAsymmetryDiagnostic_of_V2
 #check VerificationAsymmetry.Economy.Vinf_zero_at_theta_one_under_V2
 #check VerificationAsymmetry.Economy.h_eBar_nonneg_under_V2
 
@@ -62,13 +70,17 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.wageRatio
 #check VerificationAsymmetry.Economy.wageRatio_eq_ces_marginal_product_ratio
 #check VerificationAsymmetry.Economy.thm_inversion_wage_ratio_monotone
+#check VerificationAsymmetry.Economy.thm_inversion_wage_ratio_strict
 #check VerificationAsymmetry.Economy.wageRatioAtCapacity_tendsto_atTop
 #check VerificationAsymmetry.Economy.Gstar
 #check VerificationAsymmetry.Economy.thetaInv
 #check VerificationAsymmetry.Economy.thm_inversion_threshold_closed_form
 #check VerificationAsymmetry.Economy.thm_inversion_threshold_in_unit_interval
 #check VerificationAsymmetry.Economy.thm_inversion_threshold_monotone_in_rBar
+#check VerificationAsymmetry.Economy.Gstar_strict_in_rBar
+#check VerificationAsymmetry.Economy.thm_inversion_threshold_strict_in_rBar
 #check VerificationAsymmetry.Economy.thetaInvAtCapacity_antitone
+#check VerificationAsymmetry.Economy.thetaInvAtCapacity_strictAnti
 #check VerificationAsymmetry.Economy.thetaInvAtCapacity_tendsto_zero
 
 /-! ## Theorem 10 and Eqs. (9)--(10): hard collapse and exact step path. -/
@@ -76,16 +88,28 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.thetaStar_in_unit_interval
 #check VerificationAsymmetry.Economy.eBar_ge_tauStar_iff_theta_le_thetaStar
 #check VerificationAsymmetry.Economy.thm_collapse_below_threshold
+#check VerificationAsymmetry.Economy.hardStockSlopeBelow
+#check VerificationAsymmetry.Economy.hasDerivAt_hard_stock_below
+#check VerificationAsymmetry.Economy.hardStockSlopeBelow_neg
 #check VerificationAsymmetry.Economy.thm_collapse_jump_magnitude
 #check VerificationAsymmetry.Economy.thm_collapse_jump_diff
+#check VerificationAsymmetry.Economy.VinfHard_tendsto_left_at_thetaStar
+#check VerificationAsymmetry.Economy.VinfHard_tendsto_right_zero_at_thetaStar
 #check VerificationAsymmetry.Economy.thm_collapse_above_threshold
 #check VerificationAsymmetry.Economy.cStar
 #check VerificationAsymmetry.Economy.cStar_mem_open_interval
 #check VerificationAsymmetry.Economy.stepExperience
+#check VerificationAsymmetry.Economy.stepSubstitutionPath
+#check VerificationAsymmetry.Economy.cumulativeExperience_step_eq_stepExperience
 #check VerificationAsymmetry.Economy.stepExperience_ge_tauStar_iff
 #check VerificationAsymmetry.Economy.gHard_stepExperience_eq_one_iff
 #check VerificationAsymmetry.Economy.exactStepStock
 #check VerificationAsymmetry.Economy.exactStepStock_eq_cohort_integral
+#check VerificationAsymmetry.Economy.timeIndexedStock_step_eq_exactStepStock
+#check VerificationAsymmetry.Economy.preStepStockIntegral
+#check VerificationAsymmetry.Economy.preStepStockIntegral_eq_linear
+#check VerificationAsymmetry.Economy.preStepStockIntegral_zero_after_Ts
+#check VerificationAsymmetry.Economy.preStepStockIntegral_eq_transientStock
 #check VerificationAsymmetry.Economy.transientStock
 #check VerificationAsymmetry.Economy.thm_collapse_transient_linear
 #check VerificationAsymmetry.Economy.exactStepStock_zero_after_last_straddle
@@ -116,6 +140,8 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.thm_externality_residual_identity
 #check VerificationAsymmetry.Economy.wedge
 #check VerificationAsymmetry.Economy.thm_externality_wedge_identity
+#check VerificationAsymmetry.Economy.hardPromotion_externalityResidual_zero_above
+#check VerificationAsymmetry.Economy.hardPromotion_wedge_zero_above
 #check VerificationAsymmetry.Economy.wedgeGrowthCore
 #check VerificationAsymmetry.Economy.wedgeGrowthCoefficient
 #check VerificationAsymmetry.Economy.wedgeExplicit
@@ -126,6 +152,10 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.smoothWedgePower_tendsto_atTop
 #check VerificationAsymmetry.Economy.smoothWedgePower_eq_one
 #check VerificationAsymmetry.Economy.smoothWedgePower_tendsto_zero
+#check VerificationAsymmetry.Economy.smoothWedgeLeadingTerm
+#check VerificationAsymmetry.Economy.smoothWedgeLeadingTerm_tendsto_atTop
+#check VerificationAsymmetry.Economy.smoothWedgeLeadingTerm_eq_constant
+#check VerificationAsymmetry.Economy.smoothWedgeLeadingTerm_tendsto_zero
 #check VerificationAsymmetry.Economy.thm_externality_pigouvian_cobb_douglas_from_axioms
 #check VerificationAsymmetry.Economy.internalizedWedge
 #check VerificationAsymmetry.Economy.prop_internalization

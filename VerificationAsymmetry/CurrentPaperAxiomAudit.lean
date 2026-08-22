@@ -7,22 +7,41 @@ import VerificationAsymmetry.TheoremMap
 #print axioms VerificationAsymmetry.Economy.axiom_cobb_douglas_factor_share
 
 -- Theorem 9.
+#print axioms VerificationAsymmetry.Economy.G_tendsto_at_one
+#print axioms VerificationAsymmetry.Economy.G_rpow_tendsto_at_one
+#print axioms VerificationAsymmetry.Economy.G_rpow_endpoint_pos
 #print axioms VerificationAsymmetry.Economy.wageRatio_eq_ces_marginal_product_ratio
 #print axioms VerificationAsymmetry.Economy.thm_inversion_wage_ratio_monotone
+#print axioms VerificationAsymmetry.Economy.thm_inversion_wage_ratio_strict
 #print axioms VerificationAsymmetry.Economy.wageRatioAtCapacity_tendsto_atTop
 #print axioms VerificationAsymmetry.Economy.thm_inversion_threshold_closed_form
 #print axioms VerificationAsymmetry.Economy.thm_inversion_threshold_in_unit_interval
+#print axioms VerificationAsymmetry.Economy.Gstar_strict_in_rBar
+#print axioms VerificationAsymmetry.Economy.thm_inversion_threshold_strict_in_rBar
 #print axioms VerificationAsymmetry.Economy.thetaInvAtCapacity_antitone
+#print axioms VerificationAsymmetry.Economy.thetaInvAtCapacity_strictAnti
 #print axioms VerificationAsymmetry.Economy.thetaInvAtCapacity_tendsto_zero
 
 -- Theorem 10 and Proposition 11.
 #print axioms VerificationAsymmetry.Economy.cumulativeExperience_const
+#print axioms VerificationAsymmetry.Economy.timeIndexedStock_eq_cohort_integral
+#print axioms VerificationAsymmetry.Economy.timeIndexedStock_const_eq_Vinf
+#print axioms VerificationAsymmetry.Economy.verificationAsymmetryDiagnostic_of_V2
+#print axioms VerificationAsymmetry.Economy.cumulativeExperience_step_eq_stepExperience
 #print axioms VerificationAsymmetry.Economy.cStar_mem_open_interval
 #print axioms VerificationAsymmetry.Economy.stepExperience_ge_tauStar_iff
 #print axioms VerificationAsymmetry.Economy.gHard_stepExperience_eq_one_iff
 #print axioms VerificationAsymmetry.Economy.exactStepStock_eq_cohort_integral
+#print axioms VerificationAsymmetry.Economy.timeIndexedStock_step_eq_exactStepStock
+#print axioms VerificationAsymmetry.Economy.preStepStockIntegral_eq_linear
+#print axioms VerificationAsymmetry.Economy.preStepStockIntegral_zero_after_Ts
+#print axioms VerificationAsymmetry.Economy.preStepStockIntegral_eq_transientStock
 #print axioms VerificationAsymmetry.Economy.exactStepStock_zero_after_last_straddle
 #print axioms VerificationAsymmetry.Economy.prop_smooth_collapse_above
+#print axioms VerificationAsymmetry.Economy.hasDerivAt_hard_stock_below
+#print axioms VerificationAsymmetry.Economy.hardStockSlopeBelow_neg
+#print axioms VerificationAsymmetry.Economy.VinfHard_tendsto_left_at_thetaStar
+#print axioms VerificationAsymmetry.Economy.VinfHard_tendsto_right_zero_at_thetaStar
 #print axioms VerificationAsymmetry.Economy.hasDerivAt_smooth_stock_below_at_threshold
 #print axioms VerificationAsymmetry.Economy.hasDerivAt_smooth_stock_above_at_threshold
 #print axioms VerificationAsymmetry.Economy.prop_smooth_collapse_kink
@@ -30,9 +49,14 @@ import VerificationAsymmetry.TheoremMap
 -- Theorem 13.
 #print axioms VerificationAsymmetry.Economy.thm_externality_residual_identity
 #print axioms VerificationAsymmetry.Economy.thm_externality_wedge_identity
+#print axioms VerificationAsymmetry.Economy.hardPromotion_externalityResidual_zero_above
+#print axioms VerificationAsymmetry.Economy.hardPromotion_wedge_zero_above
 #print axioms VerificationAsymmetry.Economy.wedgeExplicit_monotone
 #print axioms VerificationAsymmetry.Economy.smoothWedgePower_tendsto_atTop
 #print axioms VerificationAsymmetry.Economy.smoothWedgePower_tendsto_zero
+#print axioms VerificationAsymmetry.Economy.smoothWedgeLeadingTerm_tendsto_atTop
+#print axioms VerificationAsymmetry.Economy.smoothWedgeLeadingTerm_eq_constant
+#print axioms VerificationAsymmetry.Economy.smoothWedgeLeadingTerm_tendsto_zero
 #print axioms VerificationAsymmetry.Economy.thm_externality_pigouvian_cobb_douglas_from_axioms
 
 -- Proposition 14.

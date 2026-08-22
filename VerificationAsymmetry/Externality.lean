@@ -171,6 +171,17 @@ theorem thm_externality_residual_pos
   rw [h_eq]
   exact mul_pos this hLambda
 
+/-- Above the hard promotion threshold, the future-verification residual is
+    exactly zero by direct substitution, matching the boundary paragraph after
+    the paper's Cobb--Douglas transfer formula. -/
+theorem hardPromotion_externalityResidual_zero_above
+    (wV hE Lambda theta : ℝ) (htheta : E.thetaStar < theta) :
+    externalityResidual wV (E.gHard (E.eBar theta)) hE Lambda = 0 := by
+  have heBar : E.eBar theta < E.tauStar :=
+    (E.eBar_lt_tauStar_iff_theta_gt_thetaStar theta).2 htheta
+  rw [E.gHard_of_lt heBar]
+  simp [externalityResidual]
+
 /-! ### Apprenticeship wedge. -/
 
 /-- *Apprenticeship wedge* `W_E(θ) := (MP_J^S - MP_J^P)/MP_J^P`,
@@ -193,6 +204,17 @@ theorem thm_externality_wedge_identity
   have hwG_ne : wG ≠ 0 := ne_of_gt hwG
   have hLambdaJ_ne : LambdaJ ≠ 0 := ne_of_gt hLambdaJ
   field_simp
+
+/-- Under hard promotion above the threshold, the paper's normalized wedge is
+    zero immediately to the right because the promotion factor is zero. -/
+theorem hardPromotion_wedge_zero_above
+    (wG wV hE LambdaJ Lambda theta : ℝ)
+    (htheta : E.thetaStar < theta) :
+    wedge wG wV (E.gHard (E.eBar theta)) hE LambdaJ Lambda theta = 0 := by
+  have heBar : E.eBar theta < E.tauStar :=
+    (E.eBar_lt_tauStar_iff_theta_gt_thetaStar theta).2 htheta
+  rw [E.gHard_of_lt heBar]
+  simp [wedge, externalityResidual]
 
 /-! ### Theorem~\ref{thm:externality} Part 1: wedge growth below the
     hard threshold. -/
@@ -338,6 +360,35 @@ theorem smoothWedgePower_tendsto_zero
   have hid : Tendsto (fun x : ℝ => x) (nhdsWithin 0 (Set.Ioi 0)) (𝓝 0) :=
     tendsto_id.mono_left inf_le_left
   exact hid.rpow_const_nhds_zero h
+
+/-- Leading post-collapse wedge term after the positive endpoint value of
+    `G(theta)^(1-rho)` and all theta-independent factors are collected into
+    `C`.  This is the paper's `W_E proportional to
+    (1-theta)^((a+b)rho-1)` statement with `x=1-theta`. -/
+noncomputable def smoothWedgeLeadingTerm (C a b x : ℝ) : ℝ :=
+  C * x ^ E.smoothWedgeExponent a b
+
+/-- Negative exponent: the full positive leading term diverges. -/
+theorem smoothWedgeLeadingTerm_tendsto_atTop
+    {C a b : ℝ} (hC : 0 < C) (hexponent : E.smoothWedgeExponent a b < 0) :
+    Tendsto (fun x : ℝ => E.smoothWedgeLeadingTerm C a b x)
+      (nhdsWithin 0 (Set.Ioi 0)) atTop := by
+  unfold smoothWedgeLeadingTerm
+  exact Tendsto.const_mul_atTop hC (E.smoothWedgePower_tendsto_atTop hexponent)
+
+/-- Zero exponent: the full leading term is the finite nonzero constant `C`. -/
+theorem smoothWedgeLeadingTerm_eq_constant
+    {C a b x : ℝ} (hexponent : E.smoothWedgeExponent a b = 0) :
+    E.smoothWedgeLeadingTerm C a b x = C := by
+  simp [smoothWedgeLeadingTerm, hexponent]
+
+/-- Positive exponent: the full finite leading term converges to zero. -/
+theorem smoothWedgeLeadingTerm_tendsto_zero
+    (C : ℝ) {a b : ℝ} (hexponent : 0 < E.smoothWedgeExponent a b) :
+    Tendsto (fun x : ℝ => E.smoothWedgeLeadingTerm C a b x)
+      (nhdsWithin 0 (Set.Ioi 0)) (𝓝 0) := by
+  unfold smoothWedgeLeadingTerm
+  simpa using Tendsto.const_mul C (E.smoothWedgePower_tendsto_zero hexponent)
 
 /-! ### Theorem~\ref{thm:externality} Part 3: residual-equalizing transfer. -/
 

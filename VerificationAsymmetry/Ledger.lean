@@ -413,13 +413,12 @@ def gap_thm_inversion_threshold_monotone_CLOSED : GapEntry := {
     "(monotonicity in r̄)"
   attackHistory := []
   scope :=
-    "`thetaInv V rBar` is non-decreasing in `rBar` (parametric in " ++
-    "the `Gstar`-monotonicity hypothesis).  Algebraic monotonicity " ++
-    "of `r̄ ↦ r̄^{1/(1-ρ)}` for `1/(1-ρ) > 0` underlies the " ++
-    "`Gstar`-monotonicity hypothesis; this entry covers the lifted " ++
-    "monotonicity from `Gstar` to `thetaInv` via division.  The current " ++
-    "paper's capacity comparative statics are additionally closed by " ++
-    "`thetaInvAtCapacity_antitone` and " ++
+    "The parametric weak bridge `thm_inversion_threshold_monotone_in_rBar` " ++
+    "is supplemented by `Gstar_strict_in_rBar` and " ++
+    "`thm_inversion_threshold_strict_in_rBar`, which derive the paper's " ++
+    "strict positive-target monotonicity from `Real.rpow_lt_rpow`.  Capacity " ++
+    "comparative statics are closed in weak and strict forms by " ++
+    "`thetaInvAtCapacity_antitone`, `thetaInvAtCapacity_strictAnti`, and " ++
     "`thetaInvAtCapacity_tendsto_zero`."
   notes :=
     "Parametric bridge — `thm_inversion_threshold_monotone_in_rBar` " ++
@@ -457,7 +456,8 @@ def gap_thm_inversion_wage_ratio_CLOSED : GapEntry := {
     "`\\label{thm:inversion}` Part 1 uses 'non-decreasing' (`G(θ)` " ++
     "is non-decreasing in `θ` assuming `K_AI ≥ L_G`, the relevant " ++
     "case).  Lean follows the proof body (`non-decreasing`).  " ++
-    "Strict monotonicity requires `K_AI > L_G` (strict).\n\n" ++
+    "Strict monotonicity under `K_AI > L_G` and `θ₁ < θ₂` is proved by " ++
+    "`thm_inversion_wage_ratio_strict`.\n\n" ++
     "**axiom_ces_wage_ratio relationship:** the substantive " ++
     "monotonicity claim is proved here from the closed-form " ++
     "`wageRatio` def via `Real.rpow_le_rpow` (Mathlib) on " ++
@@ -567,8 +567,10 @@ def gap_thm_collapse_jump_diff_CLOSED : GapEntry := {
     "`V_∞(θ*) - V_∞(θ_above) = ν T_s (τ*)^a` for any `θ_above > θ*`. " ++
     "Reduces to combining `thm_collapse_above_threshold` (uniform " ++
     "vanishing above `θ*`) with `thm_collapse_jump_magnitude` " ++
-    "(left-limit value).  Continuous right-limit machinery not " ++
-    "required."
+    "(left-limit value).  Exact one-sided limit theorems " ++
+    "`VinfHard_tendsto_left_at_thetaStar` and " ++
+    "`VinfHard_tendsto_right_zero_at_thetaStar` additionally close the " ++
+    "paper's left-continuity/right-zero wording."
 }
 
 /-- Theorem~\ref{thm:collapse} Part 3: long-run zero stock above θ*. -/
@@ -598,13 +600,15 @@ def gap_thm_collapse_transient_CLOSED : GapEntry := {
     "The legacy pre-shock component remains covered by four pointwise theorems: " ++
     "`thm_collapse_transient_at_zero`, `thm_collapse_transient_at_Ts`, " ++
     "`thm_collapse_transient_linear`, `thm_collapse_transient_zero_after_Ts`. " ++
-    "These close the linear decay of the PRE-SHOCK SENIOR COMPONENT " ++
-    "`V_pre(t) = V_∞(θ_0) · (1 - t/T_s)_+`, formalized via " ++
-    "`transientStock`.  `CohortPath.lean` now additionally closes " ++
-    "`cumulativeExperience_const`, the three branches of `stepExperience`, " ++
+    "`preStepStockIntegral_eq_transientStock` derives the linear PRE-SHOCK " ++
+    "SENIOR COMPONENT exactly from its cohort integral.  `CohortPath.lean` " ++
+    "also closes the general Assumption 6 stock, its constant-path " ++
+    "specialization to `Vinf`, the actual permanent-step path integral, " ++
+    "the three branches of `stepExperience`, " ++
     "`cStar_mem_open_interval`, `stepExperience_ge_tauStar_iff`, " ++
     "`gHard_stepExperience_eq_one_iff`, the exact `exactStepStock` cohort " ++
-    "integral, `exactStepStock_zero_after_last_straddle`, and the last " ++
+    "integral and equality to the general stock specialization, " ++
+    "`exactStepStock_zero_after_last_straddle`, and the last " ++
     "retirement-time identity."
 }
 
@@ -785,9 +789,11 @@ def gap_thm_externality_wedge_CLOSED : GapEntry := {
     "whose defining equations hold by `rfl` — definitional notation, not " ++
     "standalone Cat 3 atoms.  The current paper's Part 1 growth argument is " ++
     "closed by `thm_externality_wedge_growth_core_monotone` and " ++
-    "`thm_externality_wedge_growth_monotone`; the smooth post-collapse " ++
-    "exponent trichotomy is closed by the `smoothWedgeExponent_*` and " ++
-    "`smoothWedgePower_*` theorems."
+    "`thm_externality_wedge_growth_monotone`; hard-threshold right-side " ++
+    "zero is closed by `hardPromotion_wedge_zero_above`; the smooth " ++
+    "post-collapse exponent trichotomy, including the full positive leading " ++
+    "coefficient, is closed by `smoothWedgeExponent_*`, " ++
+    "`smoothWedgePower_*`, and `smoothWedgeLeadingTerm_*`."
 }
 
 /-- Theorem~\ref{thm:externality} (non-negativity / strict
@@ -804,7 +810,9 @@ def gap_thm_externality_nonneg_CLOSED : GapEntry := {
     "`thm_externality_residual_nonneg` (`wV · g · h · Λ ≥ 0` from " ++
     "non-negativity of the factors) and " ++
     "`thm_externality_residual_pos` (strict positivity for " ++
-    "`g · h > 0` and `wV, Λ > 0`)."
+    "`g · h > 0` and `wV, Λ > 0`) plus " ++
+    "`hardPromotion_externalityResidual_zero_above` for the hard-threshold " ++
+    "zero boundary."
 }
 
 /-- Theorem~\ref{thm:externality} Part 3: Cobb-Douglas residual-transfer
@@ -1709,8 +1717,9 @@ def gap_V2_TacitAccumulation_predicate : GapEntry := {
     "`h_zero_at_zero : h 0 = 0` and `h_monotone : Monotone h`.  " ++
     "Encodes paper's `def:diagnostic` V2 condition. Definitional " ++
     "atom; 永不 close.  V1 (non-substitutability) and V3 (experience " ++
-    "displacement) are structural properties of the carrier types " ++
-    "themselves and not separately encoded.  Both fields are " ++
+    "displacement) are earned structural equations of the exact carriers and " ++
+    "are bundled with V2 by `VerificationAsymmetryDiagnostic` in " ++
+    "CohortPath.lean; they are not additional atomic inputs.  Both V2 fields are " ++
     "Lean-load-bearing: `h_zero_at_zero` is consumed by " ++
     "`Vinf_zero_at_theta_one_under_V2` (Basic.lean) and " ++
     "`h_monotone` is consumed by `h_eBar_nonneg_under_V2` " ++
@@ -1732,6 +1741,24 @@ def gap_V2_TacitAccumulation_predicate : GapEntry := {
     "`h(0) ≤ h(ē(θ))`, which combined with `h_zero_at_zero` " ++
     "yields `0 ≤ h(ē(θ))`.  Verifiable by `#print axioms` on " ++
     "each consumer (both are listed in `AxiomAudit.lean`)."
+}
+
+/-- Numbered Definition 8 bundle.  V1 and V3 are exact carrier equations and
+    V2 is the explicit paper-novel predicate above. -/
+def gap_verification_asymmetry_diagnostic_DEFINITIONAL : GapEntry := {
+  name := "VerificationAsymmetryDiagnostic"
+  status := GapStatus.gapDefinitional
+  inputCategory := InputCategory.notInput
+  cat3SubType := Cat3SubType.notCat3
+  paperSource := "Li 2026, `\\label{def:diagnostic}` (V1--V3 bundle)"
+  attackHistory := []
+  scope := "Derived definitional bundle (`notInput`): " ++
+    "`VerificationAsymmetryDiagnostic theta g h` records the exact " ++
+    "Assumption 6 `timeIndexedStock` equation (V1), embeds " ++
+    "`V2_TacitAccumulation h` (V2), and records the exact " ++
+    "`cumulativeExperience` equation (V3).  " ++
+    "`verificationAsymmetryDiagnostic_of_V2` constructs the full bundle " ++
+    "from V2 because V1 and V3 are earned by `rfl` from the literal carriers."
 }
 
 /-! ### Aggregated ledger inventory -/
@@ -1761,6 +1788,7 @@ def allGaps : List GapEntry := [
   gap_IsCobbDouglas_predicate,
   gap_IsCES_predicate,
   gap_V2_TacitAccumulation_predicate,
+  gap_verification_asymmetry_diagnostic_DEFINITIONAL,
   -- gapClosed: paper-level theorems formalized
   gap_thm_decomp_CLOSED,
   gap_thm_inversion_threshold_CLOSED,

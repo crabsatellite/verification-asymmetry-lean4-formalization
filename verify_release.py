@@ -35,9 +35,9 @@ EXPECTED_CURRENT_AXIOMS = {
 }
 EXPECTED_LEDGER = (
     "open=7 partial=2 blocked=0 deadEnd=0 closed=30 "
-    "closedConditional=6 definitional=6"
+    "closedConditional=6 definitional=7"
 )
-EXPECTED_STATUS = "current-paper theorem coverage: entries=24 unfinishedDerived=0"
+EXPECTED_STATUS = "current-paper theorem coverage: entries=25 unfinishedDerived=0"
 NUMBERED_MARKERS = (
     "Definition 1",
     "Remark 2",
@@ -53,6 +53,31 @@ NUMBERED_MARKERS = (
     "Theorem 13",
     "Proposition 14",
 )
+REQUIRED_MAP_SYMBOLS = (
+    "G_tendsto_at_one",
+    "G_rpow_tendsto_at_one",
+    "G_rpow_endpoint_pos",
+    "timeIndexedStock_eq_cohort_integral",
+    "timeIndexedStock_const_eq_Vinf",
+    "VerificationAsymmetryDiagnostic",
+    "verificationAsymmetryDiagnostic_of_V2",
+    "thm_inversion_wage_ratio_strict",
+    "thm_inversion_threshold_strict_in_rBar",
+    "thetaInvAtCapacity_strictAnti",
+    "hasDerivAt_hard_stock_below",
+    "hardStockSlopeBelow_neg",
+    "VinfHard_tendsto_left_at_thetaStar",
+    "VinfHard_tendsto_right_zero_at_thetaStar",
+    "cumulativeExperience_step_eq_stepExperience",
+    "timeIndexedStock_step_eq_exactStepStock",
+    "preStepStockIntegral_eq_transientStock",
+    "hardPromotion_externalityResidual_zero_above",
+    "hardPromotion_wedge_zero_above",
+    "smoothWedgeLeadingTerm_tendsto_atTop",
+    "smoothWedgeLeadingTerm_eq_constant",
+    "smoothWedgeLeadingTerm_tendsto_zero",
+    "prop_aggregation_near_cobb_douglas_limit",
+)
 REQUIRED_DEFAULT_TARGETS = (
     "VerificationAsymmetry",
     "VerificationAsymmetry.Ledger",
@@ -62,6 +87,7 @@ REQUIRED_DEFAULT_TARGETS = (
 )
 EXPECTED_TOOLCHAIN = "leanprover/lean4:v4.30.0-rc2"
 EXPECTED_MATHLIB_REV = "388f44f89d70fbad0e1accb8fd62fc8c97714a85"
+EXPECTED_PAPER_CONCEPT_DOI = "10.5281/zenodo.20038847"
 
 
 def strip_lean_comments_and_strings(source: str) -> str:
@@ -157,6 +183,9 @@ def check_source_policy() -> None:
     missing_markers = [marker for marker in NUMBERED_MARKERS if marker not in theorem_map]
     if missing_markers:
         raise SystemExit("theorem map lacks numbered markers: " + ", ".join(missing_markers))
+    missing_symbols = [symbol for symbol in REQUIRED_MAP_SYMBOLS if symbol not in theorem_map]
+    if missing_symbols:
+        raise SystemExit("theorem map lacks required consumers: " + ", ".join(missing_symbols))
 
     lakefile = (ROOT / "lakefile.toml").read_text(encoding="utf-8")
     missing_targets = [target for target in REQUIRED_DEFAULT_TARGETS if f'"{target}"' not in lakefile]
@@ -170,6 +199,25 @@ def check_source_policy() -> None:
         raise SystemExit("lakefile.toml and CITATION.cff versions are missing or inconsistent")
     if not (ROOT / "LICENSE").is_file():
         raise SystemExit("LICENSE is missing")
+
+    zenodo_path = ROOT / ".zenodo.json"
+    if not zenodo_path.is_file():
+        raise SystemExit(".zenodo.json is required for the software archive")
+    zenodo = json.loads(zenodo_path.read_text(encoding="utf-8"))
+    if zenodo.get("version") != lake_version.group(1):
+        raise SystemExit("lakefile.toml and .zenodo.json versions are inconsistent")
+    if zenodo.get("upload_type") != "software" or zenodo.get("license") != "mit":
+        raise SystemExit(".zenodo.json must declare open MIT software")
+    expected_creator = {"name": "Li, Alex Chengyu", "orcid": "0009-0008-4516-8946"}
+    if expected_creator not in zenodo.get("creators", []):
+        raise SystemExit(".zenodo.json lacks the canonical creator and ORCID")
+    paper_relation = {
+        "identifier": f"https://doi.org/{EXPECTED_PAPER_CONCEPT_DOI}",
+        "relation": "isSupplementTo",
+        "resource_type": "publication-workingpaper",
+    }
+    if paper_relation not in zenodo.get("related_identifiers", []):
+        raise SystemExit(".zenodo.json lacks the paper concept-DOI supplement relation")
 
     toolchain = (ROOT / "lean-toolchain").read_text(encoding="utf-8").strip()
     if toolchain != EXPECTED_TOOLCHAIN:
@@ -194,7 +242,7 @@ def check_source_policy() -> None:
     print("source policy: 0 proof escapes, exact 3-name project axiom boundary")
     print("publication map: all numbered markers and required default targets present")
     print(
-        f"release metadata: version {lake_version.group(1)}, CITATION.cff and LICENSE present"
+        f"release metadata: version {lake_version.group(1)}, CITATION.cff, .zenodo.json, and LICENSE present"
     )
     print(f"dependency lock: {EXPECTED_TOOLCHAIN}, Mathlib {EXPECTED_MATHLIB_REV}")
 
@@ -221,8 +269,9 @@ def check_kernel_outputs(skip_build: bool) -> None:
         print(run(["lake", "build"]), end="")
 
     theorem_map = run(["lake", "env", "lean", "VerificationAsymmetry/TheoremMap.lean"])
-    if "prop_aggregation_near_cobb_douglas_limit" not in theorem_map:
-        raise SystemExit("theorem-map output lacks the near-Cobb-Douglas endpoint")
+    missing_outputs = [symbol for symbol in REQUIRED_MAP_SYMBOLS if symbol not in theorem_map]
+    if missing_outputs:
+        raise SystemExit("compiled theorem-map output lacks consumers: " + ", ".join(missing_outputs))
 
     status = run(["lake", "env", "lean", "VerificationAsymmetry/CurrentPaperStatus.lean"])
     if EXPECTED_STATUS not in status:

@@ -127,7 +127,7 @@ The authoritative current-paper surfaces are:
 | [`VerificationAsymmetry/Ledger.lean`](VerificationAsymmetry/Ledger.lean) | Typed gap ledger: each closed top-level result and each deferred paper claim is one `GapEntry`, with `GapStatus` × `InputCategory` × `Cat3SubType` classification |
 | [`VerificationAsymmetry/TheoremMap.lean`](VerificationAsymmetry/TheoremMap.lean) | Publication-facing `#check` map for every numbered current-paper object and derivation |
 | [`VerificationAsymmetry/CurrentPaperAxiomAudit.lean`](VerificationAsymmetry/CurrentPaperAxiomAudit.lean) | Current-paper-only `#print axioms` audit; allowed project axioms are exactly CES wage ratio and Cobb-Douglas factor share |
-| [`VerificationAsymmetry/CurrentPaperStatus.lean`](VerificationAsymmetry/CurrentPaperStatus.lean) | Current-paper ledger; evaluates to 24 entries and zero unfinished derived mathematics |
+| [`VerificationAsymmetry/CurrentPaperStatus.lean`](VerificationAsymmetry/CurrentPaperStatus.lean) | Current-paper ledger; evaluates to 25 entries and zero unfinished derived mathematics |
 
 ## Building
 
@@ -184,7 +184,7 @@ submission text.
 ## Citation
 
 Repository citation metadata is provided in [`CITATION.cff`](CITATION.cff).
-Until a release DOI is minted for version 0.4.1, cite the repository URL with
+Until the Zenodo archive for version 0.4.2 is minted, cite the repository URL with
 the exact commit or release tag used. The SSRN and Zenodo identifiers above are
 historical paper surfaces and are not software-release identifiers.
 

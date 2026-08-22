@@ -35,6 +35,64 @@ theorem cumulativeExperience_const (theta c : ℝ) :
   simp [cumulativeExperience]
   ring
 
+/-! ### Assumption 6 and Definition 8: general time-indexed stock. -/
+
+/-- Paper Assumption 6: verification is supplied only by active senior cohorts,
+    with no direct AI contribution to the stock integral.  The cohort birth
+    interval `[t-T,t-T_j]` is the exact paper carrier. -/
+noncomputable def timeIndexedStock
+    (theta : ℝ → ℝ) (g h : ℝ → ℝ) (t : ℝ) : ℝ :=
+  E.nu * ∫ c in t - E.T..t - E.Tj,
+    g (E.cumulativeExperience theta c) * h (E.cumulativeExperience theta c)
+
+/-- Named unfolding theorem for the exact Assumption 6 integral. -/
+theorem timeIndexedStock_eq_cohort_integral
+    (theta : ℝ → ℝ) (g h : ℝ → ℝ) (t : ℝ) :
+    E.timeIndexedStock theta g h t =
+      E.nu * ∫ c in t - E.T..t - E.Tj,
+        g (E.cumulativeExperience theta c) *
+          h (E.cumulativeExperience theta c) := rfl
+
+/-- Lemma 7 is the constant-path specialization of the exact Assumption 6
+    cohort integral. -/
+theorem timeIndexedStock_const_eq_Vinf
+    (theta : ℝ) (g h : ℝ → ℝ) (t : ℝ) :
+    E.timeIndexedStock (fun _ => theta) g h t = E.Vinf theta g h := by
+  unfold timeIndexedStock Vinf
+  simp [E.cumulativeExperience_const, Ts, eBar]
+  ring
+
+/-- Paper Definition 8 as one explicit predicate.  V1 is the exact
+    no-direct-AI stock equation, V2 is the tacit-accumulation predicate, and V3
+    is the exact experience-displacement integral. -/
+structure VerificationAsymmetryDiagnostic
+    (theta : ℝ → ℝ) (g h : ℝ → ℝ) : Prop where
+  v1_verification_non_substitutability :
+    ∀ t, E.timeIndexedStock theta g h t =
+      E.nu * ∫ c in t - E.T..t - E.Tj,
+        g (E.cumulativeExperience theta c) *
+          h (E.cumulativeExperience theta c)
+  v2_tacit_accumulation : V2_TacitAccumulation h
+  v3_generation_displacement :
+    ∀ c, E.cumulativeExperience theta c =
+      ∫ s in c..c + E.Tj, (1 - theta s)
+
+/-- V1 and V3 are earned from the exact carriers; V2 remains the explicit
+    empirical/model premise. -/
+theorem verificationAsymmetryDiagnostic_of_V2
+    (theta : ℝ → ℝ) (g h : ℝ → ℝ) (hV2 : V2_TacitAccumulation h) :
+    E.VerificationAsymmetryDiagnostic theta g h := by
+  exact {
+    v1_verification_non_substitutability := fun t =>
+      E.timeIndexedStock_eq_cohort_integral theta g h t
+    v2_tacit_accumulation := hV2
+    v3_generation_displacement := fun _ => rfl
+  }
+
+/-- Permanent substitution step used in Theorem 10 Part 4. -/
+noncomputable def stepSubstitutionPath (theta0 theta1 t : ℝ) : ℝ :=
+  if t ≤ 0 then theta0 else theta1
+
 /-- Paper Theorem 10 Part 4: the straddling-cohort distance from time zero. -/
 noncomputable def cStar (theta0 theta1 : ℝ) : ℝ :=
   E.Tj * (theta1 - E.thetaStar) / (theta1 - theta0)
@@ -62,6 +120,70 @@ noncomputable def stepExperience (theta0 theta1 c : ℝ) : ℝ :=
     (1 - theta0) * (-c) + (1 - theta1) * (c + E.Tj)
   else
     (1 - theta1) * E.Tj
+
+/-- The displayed three-branch `e_01(c)` is exactly the arbitrary-path cohort
+    integral specialized to a permanent step; it is not a surrogate path. -/
+theorem cumulativeExperience_step_eq_stepExperience
+    (theta0 theta1 c : ℝ) :
+    E.cumulativeExperience (stepSubstitutionPath theta0 theta1) c =
+      E.stepExperience theta0 theta1 c := by
+  unfold cumulativeExperience
+  by_cases hpre : c ≤ -E.Tj
+  · simp only [stepExperience, if_pos hpre]
+    have hend : c + E.Tj ≤ 0 := by linarith
+    calc
+      (∫ s in c..c + E.Tj,
+          (1 - stepSubstitutionPath theta0 theta1 s)) =
+          ∫ _ in c..c + E.Tj, (1 - theta0) := by
+            apply intervalIntegral.integral_congr
+            intro s hs
+            rw [Set.uIcc_of_le (by linarith [E.Tj_pos])] at hs
+            simp [stepSubstitutionPath, show s ≤ 0 by linarith [hs.2]]
+      _ = (1 - theta0) * E.Tj := by simp; ring
+  · by_cases hzero : c ≤ 0
+    · simp only [stepExperience, if_neg hpre, if_pos hzero]
+      have hstart : 0 < c + E.Tj := by linarith
+      let f : ℝ → ℝ := fun s => 1 - stepSubstitutionPath theta0 theta1 s
+      have hleft_int : IntervalIntegrable f volume c 0 := by
+        apply (intervalIntegrable_const :
+          IntervalIntegrable (fun _ : ℝ => 1 - theta0) volume c 0).congr_ae
+        filter_upwards [ae_restrict_mem measurableSet_uIoc] with s hs
+        simp only [Set.uIoc_of_le hzero] at hs
+        simp [f, stepSubstitutionPath, show s ≤ 0 by linarith [hs.2]]
+      have hright_int : IntervalIntegrable f volume 0 (c + E.Tj) := by
+        apply (intervalIntegrable_const :
+          IntervalIntegrable (fun _ : ℝ => 1 - theta1) volume 0 (c + E.Tj)).congr_ae
+        filter_upwards [ae_restrict_mem measurableSet_uIoc] with s hs
+        simp only [Set.uIoc_of_le hstart.le] at hs
+        simp [f, stepSubstitutionPath, show ¬ s ≤ 0 by linarith [hs.1]]
+      have hleft : (∫ s in c..0, f s) = ∫ _ in c..0, (1 - theta0) := by
+        apply intervalIntegral.integral_congr
+        intro s hs
+        rw [Set.uIcc_of_le hzero] at hs
+        simp [f, stepSubstitutionPath, show s ≤ 0 by linarith [hs.2]]
+      have hright : (∫ s in 0..c + E.Tj, f s) =
+          ∫ _ in 0..c + E.Tj, (1 - theta1) := by
+        apply intervalIntegral.integral_congr_ae
+        filter_upwards with s
+        intro hs
+        rw [Set.uIoc_of_le hstart.le] at hs
+        simp [f, stepSubstitutionPath, show ¬ s ≤ 0 by linarith [hs.1]]
+      change (∫ s in c..c + E.Tj, f s) = _
+      rw [← intervalIntegral.integral_add_adjacent_intervals hleft_int hright_int,
+        hleft, hright]
+      simp
+      ring
+    · have hc_pos : 0 < c := lt_of_not_ge hzero
+      simp only [stepExperience, if_neg hpre, if_neg hzero]
+      calc
+        (∫ s in c..c + E.Tj,
+            (1 - stepSubstitutionPath theta0 theta1 s)) =
+            ∫ _ in c..c + E.Tj, (1 - theta1) := by
+              apply intervalIntegral.integral_congr
+              intro s hs
+              rw [Set.uIcc_of_le (by linarith [E.Tj_pos])] at hs
+              simp [stepSubstitutionPath, show ¬ s ≤ 0 by linarith [hs.1]]
+        _ = (1 - theta1) * E.Tj := by simp; ring
 
 @[simp] theorem stepExperience_pre
     (theta0 theta1 c : ℝ) (hc : c ≤ -E.Tj) :
@@ -161,6 +283,126 @@ theorem exactStepStock_eq_cohort_integral
         if c ≤ -E.cStar theta0 theta1 then
           h (E.stepExperience theta0 theta1 c)
         else 0 := rfl
+
+/-- The exact-step stock is the general Assumption 6 stock specialized to the
+    paper's permanent substitution path and hard promotion rule. -/
+theorem timeIndexedStock_step_eq_exactStepStock
+    {theta0 theta1 : ℝ} (h : ℝ → ℝ) (t : ℝ)
+    (h0 : theta0 < E.thetaStar) (h1 : E.thetaStar < theta1) :
+    E.timeIndexedStock (stepSubstitutionPath theta0 theta1) E.gHard h t =
+      E.exactStepStock theta0 theta1 h t := by
+  unfold timeIndexedStock exactStepStock
+  congr 1
+  apply intervalIntegral.integral_congr
+  intro c _hc
+  change E.gHard (E.cumulativeExperience (stepSubstitutionPath theta0 theta1) c) *
+      h (E.cumulativeExperience (stepSubstitutionPath theta0 theta1) c) =
+    if c ≤ -E.cStar theta0 theta1 then h (E.stepExperience theta0 theta1 c) else 0
+  rw [E.cumulativeExperience_step_eq_stepExperience theta0 theta1 c]
+  by_cases hcut : c ≤ -E.cStar theta0 theta1
+  · have hg : E.gHard (E.stepExperience theta0 theta1 c) = 1 :=
+      (E.gHard_stepExperience_eq_one_iff h0 h1).2 hcut
+    simp [hcut, hg]
+  · have hnot : ¬ E.tauStar ≤ E.stepExperience theta0 theta1 c := by
+      rw [E.stepExperience_ge_tauStar_iff h0 h1]
+      exact hcut
+    have hg : E.gHard (E.stepExperience theta0 theta1 c) = 0 :=
+      E.gHard_of_lt (lt_of_not_ge hnot)
+    simp [hcut, hg]
+
+/-- Cohort-integral carrier for the component supplied by cohorts that had
+    completed junior training before the permanent step. -/
+noncomputable def preStepStockIntegral
+    (theta0 : ℝ) (h : ℝ → ℝ) (t : ℝ) : ℝ :=
+  E.nu * ∫ c in t - E.T..t - E.Tj,
+    if c ≤ -E.Tj then h ((1 - theta0) * E.Tj) else 0
+
+/-- On `0 ≤ t ≤ T_s`, the pre-trained component has exactly the interval
+    length `T_s-t`; this earns the paper's linear component formula from the
+    cohort integral. -/
+theorem preStepStockIntegral_eq_linear
+    (theta0 : ℝ) (h : ℝ → ℝ) {t : ℝ}
+    (ht0 : 0 ≤ t) (htTs : t ≤ E.Ts) :
+    E.preStepStockIntegral theta0 h t =
+      E.nu * h ((1 - theta0) * E.Tj) * (E.Ts - t) := by
+  let H : ℝ := h ((1 - theta0) * E.Tj)
+  let f : ℝ → ℝ := fun c => if c ≤ -E.Tj then H else 0
+  have ha : t - E.T ≤ -E.Tj := by
+    unfold Ts at htTs
+    linarith
+  have hb : -E.Tj ≤ t - E.Tj := by linarith
+  have hleft_int : IntervalIntegrable f volume (t - E.T) (-E.Tj) := by
+    apply (intervalIntegrable_const :
+      IntervalIntegrable (fun _ : ℝ => H) volume (t - E.T) (-E.Tj)).congr
+    intro c hc
+    rw [Set.uIoc_of_le ha] at hc
+    simp [f, show c ≤ -E.Tj by linarith [hc.2]]
+  have hright_int : IntervalIntegrable f volume (-E.Tj) (t - E.Tj) := by
+    apply (intervalIntegrable_const :
+      IntervalIntegrable (fun _ : ℝ => (0 : ℝ)) volume (-E.Tj) (t - E.Tj)).congr_ae
+    filter_upwards [ae_restrict_mem measurableSet_uIoc] with c hc
+    rw [Set.uIoc_of_le hb] at hc
+    simp [f, show ¬ c ≤ -E.Tj by linarith [hc.1]]
+  have hleft : (∫ c in t - E.T..-E.Tj, f c) =
+      ∫ _ in t - E.T..-E.Tj, H := by
+    apply intervalIntegral.integral_congr
+    intro c hc
+    rw [Set.uIcc_of_le ha] at hc
+    simp [f, show c ≤ -E.Tj by linarith [hc.2]]
+  have hright : (∫ c in -E.Tj..t - E.Tj, f c) = 0 := by
+    apply intervalIntegral.integral_zero_ae
+    filter_upwards with c
+    intro hc
+    rw [Set.uIoc_of_le hb] at hc
+    simp [f, show ¬ c ≤ -E.Tj by linarith [hc.1]]
+  unfold preStepStockIntegral
+  change E.nu * (∫ c in t - E.T..t - E.Tj, f c) = _
+  rw [← intervalIntegral.integral_add_adjacent_intervals hleft_int hright_int,
+    hleft, hright]
+  simp [H, Ts]
+  ring
+
+/-- After `T_s`, no pre-trained senior remains in the active cohort window. -/
+theorem preStepStockIntegral_zero_after_Ts
+    (theta0 : ℝ) (h : ℝ → ℝ) {t : ℝ} (ht : E.Ts ≤ t) :
+    E.preStepStockIntegral theta0 h t = 0 := by
+  unfold preStepStockIntegral
+  have horder : t - E.T ≤ t - E.Tj := by linarith [E.Tj_lt_T]
+  have hstart : -E.Tj ≤ t - E.T := by
+    unfold Ts at ht
+    linarith
+  have hintegral :
+      (∫ c in t - E.T..t - E.Tj,
+        if c ≤ -E.Tj then h ((1 - theta0) * E.Tj) else 0) = 0 := by
+    apply intervalIntegral.integral_zero_ae
+    filter_upwards with c
+    intro hc
+    rw [Set.uIoc_of_le horder] at hc
+    have hc_gt : -E.Tj < c := by linarith [hc.1]
+    simp [not_le.mpr hc_gt]
+  rw [hintegral, mul_zero]
+
+/-- The paper's `V_pre(t)=V_infinity(theta0)(1-t/T_s)_+` is exactly
+    the pre-trained cohort integral for every `t≥0`. -/
+theorem preStepStockIntegral_eq_transientStock
+    (theta0 : ℝ) (h : ℝ → ℝ) {t : ℝ}
+    (ht0 : 0 ≤ t) (htheta0 : theta0 < E.thetaStar) :
+    E.preStepStockIntegral theta0 h t =
+      E.transientStock (E.Vinf theta0 E.gHard h) t := by
+  by_cases htTs : t ≤ E.Ts
+  · rw [E.preStepStockIntegral_eq_linear theta0 h ht0 htTs,
+      E.thm_collapse_transient_linear (E.Vinf theta0 E.gHard h) t ht0 htTs]
+    have hge : E.tauStar ≤ E.eBar theta0 :=
+      (E.eBar_ge_tauStar_iff_theta_le_thetaStar theta0).2 htheta0.le
+    have hg : E.gHard (E.eBar theta0) = 1 := E.gHard_of_ge hge
+    unfold Vinf
+    rw [hg]
+    unfold eBar
+    have hTs_ne : E.Ts ≠ 0 := ne_of_gt E.Ts_pos
+    field_simp
+  · have ht : E.Ts ≤ t := le_of_not_ge htTs
+    rw [E.preStepStockIntegral_zero_after_Ts theta0 h ht,
+      E.thm_collapse_transient_zero_after_Ts (E.Vinf theta0 E.gHard h) t ht]
 
 /-- Once `t >= T-c*`, every cohort in the active-senior integration window was
     born after the last promoting cohort (up to the measure-zero endpoint), so

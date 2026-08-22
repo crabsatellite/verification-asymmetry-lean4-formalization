@@ -17,7 +17,8 @@
     Part 3.  Long-run zero stock above θ*: V_∞(θ) = 0.
     Part 4.  Pre-shock-senior component:
               V_pre(t) = V_∞(θ₀) · (1 - t/T_s)_+.
-              The complete straddling-cohort path is not encoded here.
+              The complete straddling-cohort path and exact clearance time are
+              encoded in `CohortPath.lean`.
     Part 5.  Threshold value for arbitrary h; a left-limit statement
               additionally needs the paper's one-sided-continuity premise.
 
@@ -40,6 +41,8 @@ namespace VerificationAsymmetry
 namespace Economy
 
 variable (E : Economy)
+
+open Filter
 
 /-! ### Apprenticeship collapse threshold `θ*`. -/
 
@@ -122,6 +125,49 @@ theorem thm_collapse_below_threshold
     (E.eBar_ge_tauStar_iff_theta_le_thetaStar θ).mpr h
   exact E.VinfHard_eq_pow_of_eBar_ge_tauStar a θ h'
 
+/-- The derivative displayed in Theorem 10 Part 1. -/
+noncomputable def hardStockSlopeBelow (a theta : ℝ) : ℝ :=
+  -a * E.nu * E.Ts * E.Tj * (E.eBar theta) ^ (a - 1)
+
+/-- **Theorem~\ref{thm:collapse} Part 1 (displayed derivative).**
+    At every point strictly below the hard threshold, the displayed power-law
+    stock has derivative
+    `-a * nu * T_s * T_j * ((1-theta)T_j)^(a-1)`. -/
+theorem hasDerivAt_hard_stock_below
+    (a theta : ℝ) (htheta : theta < E.thetaStar) :
+    HasDerivAt
+      (fun x => E.nu * E.Ts * (E.eBar x) ^ a)
+      (E.hardStockSlopeBelow a theta) theta := by
+  have htheta_one : theta < 1 := lt_trans htheta E.thetaStar_in_unit_interval.2
+  have heBar_pos : 0 < E.eBar theta := by
+    unfold eBar
+    exact mul_pos (by linarith) E.Tj_pos
+  have hlinear : HasDerivAt (fun x : ℝ => 1 - x) (-1) theta := by
+    simpa using (hasDerivAt_const theta (1 : ℝ)).sub (hasDerivAt_id theta)
+  have heBar : HasDerivAt (fun x => E.eBar x) (-E.Tj) theta := by
+    simpa [eBar] using hlinear.mul_const E.Tj
+  have hpow := heBar.rpow_const (p := a) (Or.inl (ne_of_gt heBar_pos))
+  have hscaled := hpow.const_mul (E.nu * E.Ts)
+  convert hscaled using 1
+  unfold hardStockSlopeBelow
+  ring
+
+/-- Under the paper's `a>0` premise, the below-threshold derivative is strictly
+    negative, not merely non-positive. -/
+theorem hardStockSlopeBelow_neg
+    {a theta : ℝ} (ha : 0 < a) (htheta : theta < E.thetaStar) :
+    E.hardStockSlopeBelow a theta < 0 := by
+  have htheta_one : theta < 1 := lt_trans htheta E.thetaStar_in_unit_interval.2
+  have heBar_pos : 0 < E.eBar theta := by
+    unfold eBar
+    exact mul_pos (by linarith) E.Tj_pos
+  have hpow : 0 < (E.eBar theta) ^ (a - 1) :=
+    Real.rpow_pos_of_pos heBar_pos _
+  unfold hardStockSlopeBelow
+  have hproduct : 0 < a * E.nu * E.Ts * E.Tj * (E.eBar theta) ^ (a - 1) := by
+    exact mul_pos (mul_pos (mul_pos (mul_pos ha E.nu_pos) E.Ts_pos) E.Tj_pos) hpow
+  nlinarith
+
 /-! ### Theorem~\ref{thm:collapse} Part 3: zero stock above θ*. -/
 
 /-- **Theorem~\ref{thm:collapse} Part 3 (above collapse).** For
@@ -172,6 +218,48 @@ theorem thm_collapse_jump_diff
   rw [E.thm_collapse_above_threshold a θ_above h,
       E.thm_collapse_jump_magnitude a]
   ring
+
+/-- The hard-threshold stock is left-continuous at `thetaStar`, with the exact
+    paper value `nu*T_s*(tauStar)^a`. -/
+theorem VinfHard_tendsto_left_at_thetaStar (a : ℝ) :
+    Tendsto (fun theta => E.VinfHard a theta)
+      (nhdsWithin E.thetaStar (Set.Iic E.thetaStar))
+      (nhds (E.nu * E.Ts * E.tauStar ^ a)) := by
+  have heBar_cont : ContinuousAt (fun theta => E.eBar theta) E.thetaStar := by
+    unfold eBar
+    fun_prop
+  have hpow_cont : ContinuousAt (fun theta => E.eBar theta ^ a) E.thetaStar :=
+    heBar_cont.rpow_const (Or.inl (by
+      rw [E.eBar_thetaStar]
+      exact ne_of_gt E.tauStar_pos))
+  have hcont : ContinuousAt
+      (fun theta => E.nu * E.Ts * E.eBar theta ^ a) E.thetaStar := by
+    fun_prop
+  have htend : Tendsto (fun theta => E.nu * E.Ts * E.eBar theta ^ a)
+      (nhdsWithin E.thetaStar (Set.Iic E.thetaStar))
+      (nhds (E.nu * E.Ts * E.tauStar ^ a)) := by
+    convert hcont.tendsto.mono_left inf_le_left using 1
+    rw [E.eBar_thetaStar]
+  have heq :
+      (fun theta => E.VinfHard a theta) =ᶠ[
+        nhdsWithin E.thetaStar (Set.Iic E.thetaStar)]
+      (fun theta => E.nu * E.Ts * E.eBar theta ^ a) := by
+    filter_upwards [self_mem_nhdsWithin] with theta htheta
+    exact E.thm_collapse_below_threshold a theta htheta
+  exact htend.congr' heq.symm
+
+/-- Immediately to the right of `thetaStar`, the hard-threshold stock has
+    right limit zero. -/
+theorem VinfHard_tendsto_right_zero_at_thetaStar (a : ℝ) :
+    Tendsto (fun theta => E.VinfHard a theta)
+      (nhdsWithin E.thetaStar (Set.Ioi E.thetaStar)) (nhds 0) := by
+  have heq :
+      (fun theta => E.VinfHard a theta) =ᶠ[
+        nhdsWithin E.thetaStar (Set.Ioi E.thetaStar)]
+      (fun _ => (0 : ℝ)) := by
+    filter_upwards [self_mem_nhdsWithin] with theta htheta
+    exact E.thm_collapse_above_threshold a theta htheta
+  exact tendsto_const_nhds.congr' heq.symm
 
 /-! ### Theorem~\ref{thm:collapse} Part 4: transient decay. -/
 
