@@ -184,9 +184,12 @@ submission text.
 ## Citation
 
 Repository citation metadata is provided in [`CITATION.cff`](CITATION.cff).
-Until the Zenodo archive for version 0.4.2 is minted, cite the repository URL with
-the exact commit or release tag used. The SSRN and Zenodo identifiers above are
-historical paper surfaces and are not software-release identifiers.
+The software archive has Zenodo concept DOI
+[`10.5281/zenodo.22058379`](https://doi.org/10.5281/zenodo.22058379).  For the
+exact release formalizing the current manuscript, cite version 0.4.2 at
+[`10.5281/zenodo.22058380`](https://doi.org/10.5281/zenodo.22058380).  The paper
+has a separate concept DOI, `10.5281/zenodo.20038847`; the software record is
+linked to it as a supplement.
 
 ## License
 
