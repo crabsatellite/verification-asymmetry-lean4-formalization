@@ -21,8 +21,8 @@ it declares no separate provider-premise endpoints.
 truth-bearing statement inside a protected mathematical environment has an
 invisible TeX claim marker and one unique declaration whose complete type,
 proof term, named consumers, and project-axiom dependency set are pinned by the
-paper infrastructure. The live contract contains 111 atomic fragments: 59
-unique typed formal claims, 13 explicit scope-only fragments, and 39 proof
+paper infrastructure. The live contract contains 112 atomic fragments: 59
+unique typed formal claims, 13 explicit scope-only fragments, and 40 proof
 relations with exact target, premise, and conclusion sets. All 35 protected
 mathematical and proof environments have zero unmarked body text.
 The strict roots preserve the full production/cohort carriers, both weak and
