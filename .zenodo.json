@@ -6,7 +6,7 @@
     }
   ],
   "title": "Verification Asymmetry: Lean 4 Formalization",
-  "version": "0.4.11",
+  "version": "0.4.12",
   "description": "Machine-checked Lean 4 and Mathlib formal companion for Verification Asymmetry under AI Substitution. Formal-contract schema 2 partitions all 35 protected mathematical and proof environments into 114 atomic markers: 59 unique formal roots, 14 explicit scope-only fragments, 40 proof relations with exact formal targets and premise/conclusion sets, and one theorem-restatement relation, with zero unmarked environment text. Each formal claim pins its complete declaration type, proof term, named consumers, exact project-axiom set, manuscript-visible premise traces, and registered division guards. The capacity results retain the literal capacity-indexed marginal-product price family and actual infimum at the final roots. The normalized apprenticeship wedge is restricted to theta below one and consumes positive-denominator evidence; at theta equal to one only the unnormalized residual is asserted. The CES equation is bound on strictly positive inputs, the smooth closed form is bound on the open post-threshold interval, the permanent-step result states verified zero-stock bounds rather than an unproved first-clearance time, and the Cobb-Douglas root derives positive stock from the manuscript's literal positive promotion-capacity product. The release has zero executable sorry/admit; the only current-paper project axioms are the disclosed textbook CES and Cobb-Douglas identities.",
   "access_right": "open",
   "upload_type": "software",

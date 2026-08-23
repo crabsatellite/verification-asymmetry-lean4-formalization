@@ -98,14 +98,16 @@ theorem paper_theorem9_wage_ratio_large_capacity_atomic
 
 theorem paper_theorem9_threshold_objects_atomic
     (F : ℝ → ℝ → ℝ) (V : ℝ) (wG wV : ℝ → ℝ)
-    (_P : E.CESPricePathOn F (fun _ => V) wG wV (Icc (0 : ℝ) 1))
+    (P : E.CESPricePathOn F (fun _ => V) wG wV (Icc (0 : ℝ) 1))
     (rBar : ℝ) (_hrBar : 0 < rBar) :
-    thetaInvMarginalProductInf wG wV rBar =
-        sInf (marginalProductCrossingSet wG wV rBar) ∧
-      E.Gstar V rBar =
-        V * (rBar * E.eta / ((1 - E.eta) * E.lam ^ E.rho)) ^
-          (1 / (1 - E.rho)) := by
-  exact ⟨rfl, rfl⟩
+    E.rho < 1 ∧ E.rho ≠ 0 ∧ 0 < V ∧
+      thetaInvMarginalProductInf wG wV rBar =
+          sInf (marginalProductCrossingSet wG wV rBar) ∧
+        E.Gstar V rBar =
+          V * (rBar * E.eta / ((1 - E.eta) * E.lam ^ E.rho)) ^
+            (1 / (1 - E.rho)) := by
+  exact ⟨P.hrho_lt, P.hrho_ne,
+    P.hV_pos 0 ⟨le_rfl, zero_le_one⟩, rfl, rfl⟩
 
 theorem paper_theorem9_target_strict_atomic
     (F : ℝ → ℝ → ℝ) (V : ℝ) (wG wV : ℝ → ℝ)
@@ -159,12 +161,14 @@ theorem paper_theorem9_actual_threshold_limit_atomic
 
 theorem paper_theorem9_baseline_zero_atomic
     (F : ℝ → ℝ → ℝ) (V : ℝ) (wG wV : ℝ → ℝ)
-    (_P : E.CESPricePathOn F (fun _ => V) wG wV (Icc (0 : ℝ) 1))
-    (rBar : ℝ) (_hrBar : 0 < rBar)
+    (P : E.CESPricePathOn F (fun _ => V) wG wV (Icc (0 : ℝ) 1))
+    (rBar : ℝ) (hrBar : 0 < rBar)
     (hbaseline : rBar ≤ wV 0 / wG 0) :
-    thetaInvMarginalProductInf wG wV rBar = 0 :=
-  thetaInvMarginalProductInf_eq_zero_of_target_le_baseline wG wV rBar
-    hbaseline
+    0 < rBar ∧ 0 < wG 0 ∧
+      thetaInvMarginalProductInf wG wV rBar = 0 :=
+  ⟨hrBar, P.hwG_pos 0 ⟨le_rfl, zero_le_one⟩,
+    thetaInvMarginalProductInf_eq_zero_of_target_le_baseline wG wV rBar
+      hbaseline⟩
 
 /-! ## Theorem 10 -/
 

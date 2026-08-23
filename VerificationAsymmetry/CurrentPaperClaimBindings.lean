@@ -52,11 +52,12 @@ theorem paper_definition1_parameters_exact
 
 theorem paper_equation1_ces_exact
     (F : ℝ → ℝ → ℝ) (hCES : IsCES F E.eta E.rho E.lam)
-    (_hrho_ne : E.rho ≠ 0) {G V : ℝ} (hG : 0 < G) (hV : 0 < V) :
-    F G V =
-      (E.eta * G ^ E.rho + (1 - E.eta) * (E.lam * V) ^ E.rho) ^
-        (1 / E.rho) :=
-  hCES G V hG hV
+    (hrho_ne : E.rho ≠ 0) {G V : ℝ} (hG : 0 < G) (hV : 0 < V) :
+    E.rho ≠ 0 ∧
+      F G V =
+        (E.eta * G ^ E.rho + (1 - E.eta) * (E.lam * V) ^ E.rho) ^
+          (1 / E.rho) :=
+  ⟨hrho_ne, hCES G V hG hV⟩
 
 theorem paper_definition3_generation_supply_exact
     (theta : ℝ) (_htheta : theta ∈ Icc (0 : ℝ) 1) :
