@@ -5,13 +5,13 @@ Companion machine-checked formalization for
 > Li, Alex Chengyu. *Verification Asymmetry under AI Substitution:
 > Wage-Ratio Inversion and Apprenticeship Thresholds.* 2026.
 
-The theorem map targets the current 22-page EINT submission manuscript. The
+The theorem map targets the current EINT submission manuscript. The
 public preprint identifiers near the end of this README refer to an earlier,
 longer manuscript version.
 
 ## Status
 
-The current 22-page EINT manuscript has a complete publication-facing theorem
+The current EINT manuscript has a complete publication-facing theorem
 map. Every derived mathematical claim in that manuscript has a named Lean
 carrier or theorem, and `CurrentPaperStatus.lean` evaluates to
 `unfinishedDerived=0`. The project contains zero executable `sorry` or `admit`.
@@ -21,9 +21,10 @@ it declares no separate provider-premise endpoints.
 truth-bearing statement inside a protected mathematical environment has an
 invisible TeX claim marker and one unique declaration whose complete type,
 proof term, named consumers, and project-axiom dependency set are pinned by the
-paper infrastructure. The live contract contains 72 atomic fragments: 59
-unique typed formal claims and 13 explicit scope-only fragments. All 29
-protected environments have zero unmarked body text.
+paper infrastructure. The live contract contains 111 atomic fragments: 59
+unique typed formal claims, 13 explicit scope-only fragments, and 39 proof
+relations with exact target, premise, and conclusion sets. All 35 protected
+mathematical and proof environments have zero unmarked body text.
 The strict roots preserve the full production/cohort carriers, both weak and
 strict capacity cases, displayed ranges, capacity monotonicity, actual
 piecewise-stock derivatives, the literal step integral, smooth continuity and
@@ -65,7 +66,7 @@ kernel (`propext`, `Classical.choice`, `Quot.sound`).
 [`VerificationAsymmetry/Axioms.lean`](VerificationAsymmetry/Axioms.lean)):
 
 - `axiom_euler_crs` — Euler's identity for CRS production. Historical-superset
-  input, not consumed by the current 22-page paper. Citations:
+  input, not consumed by the current submission paper. Citations:
   Euler 1755 (original); Mas-Colell, Whinston, Green 1995 §5.B.2 (modern
   textbook). Load-bearing: consumed by `thm_decomp`.
 - `axiom_ces_wage_ratio` — CES marginal-product wage-ratio closed form.
@@ -136,7 +137,7 @@ The authoritative current-paper surfaces are:
 | [`VerificationAsymmetry/Basic.lean`](VerificationAsymmetry/Basic.lean) | Definitions `def:gve`, `def:gen-supply`, `def:cohort`, `def:verification`, `def:diagnostic`; Lemma `lem:steady-state`; carriers `Economy`, `G`, `eBar`, `gHard`, `Vinf`, `VinfHard` |
 | [`VerificationAsymmetry/Axioms.lean`](VerificationAsymmetry/Axioms.lean) | Cat 2 textbook atomic axioms: `axiom_euler_crs`, `axiom_ces_wage_ratio`, `axiom_cobb_douglas_factor_share`; bridge theorems composing them with `steady_state_stock_identity` |
 | [`VerificationAsymmetry/Decomp.lean`](VerificationAsymmetry/Decomp.lean) | Theorem `thm:decomp` (stock-flow output decomposition; consumes `axiom_euler_crs`) |
-| [`VerificationAsymmetry/Inversion.lean`](VerificationAsymmetry/Inversion.lean) | Theorem `thm:inversion` (wage ratio scaling, closed-form threshold); Corollary `cor:bounded-AI` (endpoint identifications) |
+| [`VerificationAsymmetry/Inversion.lean`](VerificationAsymmetry/Inversion.lean) | Theorem `thm:inversion`, literal capacity-indexed marginal-product price family, consumed CES transport, actual-infimum interior/limit roots, and bounded-capacity endpoint identifications |
 | [`VerificationAsymmetry/Collapse.lean`](VerificationAsymmetry/Collapse.lean) | Steady-state hard/smooth threshold algebra, derivative formulas, and the verified slope kink |
 | [`VerificationAsymmetry/CohortPath.lean`](VerificationAsymmetry/CohortPath.lean) | Arbitrary-path experience integral, exact permanent-step cohort path, promotion cutoff, full stock integral, and clearing time |
 | [`VerificationAsymmetry/Credential.lean`](VerificationAsymmetry/Credential.lean) | Theorem `thm:credential` (Cobb-Douglas closed form, finite-capacity gross-peak FOC and uniqueness, multiplicative decay); Proposition `prop:junior-senior` (senior wage scaling) |
@@ -196,7 +197,7 @@ targets, and release-metadata consistency.
 
 ## Companion paper
 
-This formalization targets the current 22-page EINT submission manuscript named
+This formalization targets the current EINT submission manuscript named
 above. Its canonical TeX source is maintained with the submission package, not
 inside this public code repository. The identifiers below refer to an older
 public paper snapshot and must not be treated as identifiers for the current

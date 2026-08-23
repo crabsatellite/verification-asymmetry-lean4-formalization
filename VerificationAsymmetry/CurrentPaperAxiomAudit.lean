@@ -1,4 +1,4 @@
-/- Current 22-page EINT manuscript axiom audit. -/
+/- Current EINT submission manuscript axiom audit. -/
 
 import VerificationAsymmetry.TheoremMap
 

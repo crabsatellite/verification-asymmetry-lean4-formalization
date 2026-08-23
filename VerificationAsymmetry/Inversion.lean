@@ -589,6 +589,54 @@ noncomputable def wageRatioAtCapacity
   ((1 - eta) / eta) * lam ^ rho *
     (generationAtCapacity LG theta K / V) ^ (1 - rho)
 
+/-- Generation remains positive on the paper's literal substitution domain
+    for every finite positive AI capacity. -/
+theorem generationAtCapacity_pos
+    {K theta : ℝ} (hK : 0 < K) (htheta0 : 0 ≤ theta) (htheta1 : theta ≤ 1) :
+    0 < generationAtCapacity E.LG theta K := by
+  by_cases htheta_one : theta = 1
+  · simp [generationAtCapacity, htheta_one, hK]
+  · have htheta_lt : theta < 1 := lt_of_le_of_ne htheta1 htheta_one
+    have hhuman : 0 < (1 - theta) * E.LG :=
+      mul_pos (sub_pos.mpr htheta_lt) E.LG_pos
+    have hai : 0 ≤ theta * K := mul_nonneg htheta0 hK.le
+    simpa [generationAtCapacity] using add_pos_of_pos_of_nonneg hhuman hai
+
+/-- A capacity-indexed family of the paper's literal CES marginal-product
+    prices.  Unlike `wageRatioAtCapacity`, this carrier retains the production
+    function, both price functions, and their derivative witnesses for every
+    finite positive capacity and every `theta ∈ [0,1]`. -/
+structure CESCapacityPriceFamily
+    (F : ℝ → ℝ → ℝ) (V : ℝ) (wG wV : ℝ → ℝ → ℝ) : Prop where
+  hCES : IsCES F E.eta E.rho E.lam
+  hrho_lt : E.rho < 1
+  hrho_ne : E.rho ≠ 0
+  hV_pos : 0 < V
+  hwG_pos : ∀ K theta : ℝ, 0 < K → theta ∈ Set.Icc (0 : ℝ) 1 → 0 < wG K theta
+  hwV_pos : ∀ K theta : ℝ, 0 < K → theta ∈ Set.Icc (0 : ℝ) 1 → 0 < wV K theta
+  h_wG : ∀ K theta : ℝ, 0 < K → theta ∈ Set.Icc (0 : ℝ) 1 →
+    HasDerivAt (fun x => F x V) (wG K theta)
+      (generationAtCapacity E.LG theta K)
+  h_wV : ∀ K theta : ℝ, 0 < K → theta ∈ Set.Icc (0 : ℝ) 1 →
+    HasDerivAt (fun y => F (generationAtCapacity E.LG theta K) y) (wV K theta) V
+
+/-- The exact transport from a capacity-indexed marginal-product price family
+    to the closed-form CES ratio.  Every capacity comparative static stated for
+    the literal paper prices must consume this bridge. -/
+theorem CESCapacityPriceFamily.ratio_eq
+    {F : ℝ → ℝ → ℝ} {V : ℝ} {wG wV : ℝ → ℝ → ℝ}
+    (P : E.CESCapacityPriceFamily F V wG wV)
+    {K theta : ℝ} (hK : 0 < K) (htheta : theta ∈ Set.Icc (0 : ℝ) 1) :
+    wV K theta / wG K theta =
+      wageRatioAtCapacity E.eta E.rho E.lam E.LG V theta K := by
+  simpa [wageRatioAtCapacity] using
+    E.wageRatio_eq_ces_marginal_product_ratio F
+      (generationAtCapacity E.LG theta K) V (wG K theta) (wV K theta)
+      P.hCES (P.h_wG K theta hK htheta) (P.h_wV K theta hK htheta)
+      (P.hwG_pos K theta hK htheta)
+      (E.generationAtCapacity_pos hK htheta.1 htheta.2) P.hV_pos
+      P.hrho_lt P.hrho_ne
+
 /-- Paper Theorem 9 Part 1: for fixed `theta>0`, `V>0`, `rho<1`, and
     admissible positive CES parameters, the wage ratio diverges along the
     large-capacity limit. -/
@@ -610,6 +658,25 @@ theorem wageRatioAtCapacity_tendsto_atTop
     exact mul_pos (div_pos (by linarith) heta_pos)
       (Real.rpow_pos_of_pos hlam_pos _)
   exact Tendsto.const_mul_atTop hpref hpow
+
+/-- Paper Theorem 9 Part 1 on the literal price carrier: for a fixed admissible
+    positive substitution rate, the actual marginal-product wage ratio diverges
+    along the finite-capacity family. -/
+theorem marginalProductWageRatioAtCapacity_tendsto_atTop
+    {F : ℝ → ℝ → ℝ} {V : ℝ} {wG wV : ℝ → ℝ → ℝ}
+    (P : E.CESCapacityPriceFamily F V wG wV)
+    {theta : ℝ} (htheta_pos : 0 < theta) (htheta_one : theta ≤ 1) :
+    Tendsto (fun K : ℝ => wV K theta / wG K theta) atTop atTop := by
+  have hclosed := wageRatioAtCapacity_tendsto_atTop
+    (eta := E.eta) (rho := E.rho) (lam := E.lam) (LG := E.LG)
+    (V := V) (theta := theta) E.eta_pos E.eta_lt_one E.lam_pos
+    P.hV_pos htheta_pos P.hrho_lt
+  have heq :
+      (fun K : ℝ => wV K theta / wG K theta) =ᶠ[atTop]
+        (fun K : ℝ => wageRatioAtCapacity E.eta E.rho E.lam E.LG V theta K) := by
+    filter_upwards [eventually_gt_atTop (0 : ℝ)] with K hK
+    exact P.ratio_eq E hK ⟨htheta_pos.le, htheta_one⟩
+  exact hclosed.congr' heq.symm
 
 /-- Inversion threshold with AI capacity exposed as a varying argument. -/
 noncomputable def thetaInvAtCapacity (LG Gcrit K : ℝ) : ℝ :=
@@ -677,6 +744,35 @@ noncomputable def thetaInvRatioInfAtCapacity
     (eta rho lam LG V rBar K : ℝ) : ℝ :=
   sInf (capacityRatioCrossingSet eta rho lam LG V rBar K)
 
+/-- The paper's literal capacity-indexed crossing set, retaining the two
+    marginal-product price functions rather than substituting their CES closed
+    form into the definition. -/
+def capacityMarginalProductCrossingSet
+    (wG wV : ℝ → ℝ → ℝ) (rBar K : ℝ) : Set ℝ :=
+  {theta | theta ∈ Set.Icc (0 : ℝ) 1 ∧ rBar ≤ wV K theta / wG K theta}
+
+/-- The actual infimum threshold of the paper's capacity-indexed
+    marginal-product price family. -/
+noncomputable def thetaInvMarginalProductInfAtCapacity
+    (wG wV : ℝ → ℝ → ℝ) (rBar K : ℝ) : ℝ :=
+  sInf (capacityMarginalProductCrossingSet wG wV rBar K)
+
+/-- Pointwise CES transport identifies the literal capacity-indexed crossing
+    set with the auxiliary closed-form crossing set. -/
+theorem capacityMarginalProductCrossingSet_eq_capacityRatioCrossingSet
+    (wG wV : ℝ → ℝ → ℝ) (V rBar K : ℝ)
+    (hwage : ∀ theta ∈ Set.Icc (0 : ℝ) 1,
+      wV K theta / wG K theta =
+        wageRatioAtCapacity E.eta E.rho E.lam E.LG V theta K) :
+    capacityMarginalProductCrossingSet wG wV rBar K =
+      capacityRatioCrossingSet E.eta E.rho E.lam E.LG V rBar K := by
+  ext theta
+  constructor
+  · rintro ⟨htheta, hcross⟩
+    exact ⟨htheta, by simpa [hwage theta htheta] using hcross⟩
+  · rintro ⟨htheta, hcross⟩
+    exact ⟨htheta, by simpa [hwage theta htheta] using hcross⟩
+
 /-- For every interior-reachable finite capacity, the actual infimum of the
     CES wage-ratio crossing set equals the displayed closed form. -/
 theorem thetaInvRatioInfAtCapacity_eq_closedForm
@@ -693,6 +789,28 @@ theorem thetaInvRatioInfAtCapacity_eq_closedForm
   simpa [thetaInvRatioInfAtCapacity, capacityRatioCrossingSet,
     inversionCrossingSet, wageRatioAtCapacity, wageRatio,
     generationAtCapacity, G, thetaInvAtCapacity, thetaInv, EK] using hEq
+
+/-- For an interior-reachable finite capacity, the literal marginal-product
+    infimum equals the displayed closed form.  The proof consumes the exact CES
+    transport for that capacity before using the auxiliary algebraic result. -/
+theorem thetaInvMarginalProductInfAtCapacity_eq_closedForm
+    {F : ℝ → ℝ → ℝ} {V : ℝ} {wG wV : ℝ → ℝ → ℝ}
+    (P : E.CESCapacityPriceFamily F V wG wV)
+    (rBar K : ℝ) (hrBar_pos : 0 < rBar)
+    (hGstar_lo : E.LG < E.Gstar V rBar)
+    (hGstar_hi : E.Gstar V rBar < K) :
+    thetaInvMarginalProductInfAtCapacity wG wV rBar K =
+      thetaInvAtCapacity E.LG (E.Gstar V rBar) K := by
+  have hK_pos : 0 < K := lt_trans E.LG_pos hGstar_lo |>.trans hGstar_hi
+  have hwage : ∀ theta ∈ Set.Icc (0 : ℝ) 1,
+      wV K theta / wG K theta =
+        wageRatioAtCapacity E.eta E.rho E.lam E.LG V theta K :=
+    fun theta htheta => P.ratio_eq E hK_pos htheta
+  unfold thetaInvMarginalProductInfAtCapacity
+  rw [capacityMarginalProductCrossingSet_eq_capacityRatioCrossingSet E
+    wG wV V rBar K hwage]
+  exact E.thetaInvRatioInfAtCapacity_eq_closedForm V rBar K P.hV_pos
+    hrBar_pos P.hrho_lt hGstar_lo hGstar_hi
 
 /-- Above the no-AI target, the actual infimum threshold exists in `(0,1)` for
     all sufficiently large finite capacities and equals the paper's closed form. -/
@@ -717,6 +835,31 @@ theorem thetaInvRatioInfAtCapacity_eventually_interior
       linarith
   exact ⟨heq, by simpa [heq] using hrange⟩
 
+/-- Above the no-AI target, the literal marginal-product infimum eventually
+    exists in `(0,1)` along the finite-capacity family. -/
+theorem thetaInvMarginalProductInfAtCapacity_eventually_interior
+    {F : ℝ → ℝ → ℝ} {V : ℝ} {wG wV : ℝ → ℝ → ℝ}
+    (P : E.CESCapacityPriceFamily F V wG wV)
+    (rBar : ℝ) (hrBar_pos : 0 < rBar)
+    (hGstar_lo : E.LG < E.Gstar V rBar) :
+    ∀ᶠ K : ℝ in atTop,
+      thetaInvMarginalProductInfAtCapacity wG wV rBar K =
+          thetaInvAtCapacity E.LG (E.Gstar V rBar) K ∧
+        thetaInvMarginalProductInfAtCapacity wG wV rBar K ∈
+          Set.Ioo (0 : ℝ) 1 := by
+  filter_upwards [eventually_ge_atTop (E.Gstar V rBar + 1)] with K hK
+  have hGstar_hi : E.Gstar V rBar < K := by linarith
+  have heq := E.thetaInvMarginalProductInfAtCapacity_eq_closedForm P rBar K
+    hrBar_pos hGstar_lo hGstar_hi
+  have hrange : thetaInvAtCapacity E.LG (E.Gstar V rBar) K ∈
+      Set.Ioo (0 : ℝ) 1 := by
+    constructor
+    · exact div_pos (by linarith) (by linarith)
+    · unfold thetaInvAtCapacity
+      rw [div_lt_one (by linarith)]
+      linarith
+  exact ⟨heq, by simpa [heq] using hrange⟩
+
 /-- The actual capacity-indexed infimum threshold tends to zero from above. -/
 theorem thetaInvRatioInfAtCapacity_tendsto_zero_right
     (V rBar : ℝ) (hV_pos : 0 < V) (hrBar_pos : 0 < rBar)
@@ -730,6 +873,25 @@ theorem thetaInvRatioInfAtCapacity_tendsto_zero_right
       (fun K => thetaInvRatioInfAtCapacity E.eta E.rho E.lam E.LG V rBar K)
         =ᶠ[atTop]
       (fun K => thetaInvAtCapacity E.LG (E.Gstar V rBar) K) := by
+    filter_upwards [heventual] with K hK
+    exact hK.1
+  exact (thetaInvAtCapacity_tendsto_zero_right hGstar_lo).congr' heq.symm
+
+/-- The literal capacity-indexed marginal-product infimum tends to zero from
+    the positive side. -/
+theorem thetaInvMarginalProductInfAtCapacity_tendsto_zero_right
+    {F : ℝ → ℝ → ℝ} {V : ℝ} {wG wV : ℝ → ℝ → ℝ}
+    (P : E.CESCapacityPriceFamily F V wG wV)
+    (rBar : ℝ) (hrBar_pos : 0 < rBar)
+    (hGstar_lo : E.LG < E.Gstar V rBar) :
+    Tendsto
+      (fun K => thetaInvMarginalProductInfAtCapacity wG wV rBar K)
+      atTop (nhdsWithin 0 (Set.Ioi 0)) := by
+  have heventual := E.thetaInvMarginalProductInfAtCapacity_eventually_interior
+    P rBar hrBar_pos hGstar_lo
+  have heq :
+      (fun K => thetaInvMarginalProductInfAtCapacity wG wV rBar K) =ᶠ[atTop]
+        (fun K => thetaInvAtCapacity E.LG (E.Gstar V rBar) K) := by
     filter_upwards [heventual] with K hK
     exact hK.1
   exact (thetaInvAtCapacity_tendsto_zero_right hGstar_lo).congr' heq.symm

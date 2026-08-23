@@ -12,9 +12,9 @@ variable (E : Economy)
 /-! ## Atomic model-definition fragments -/
 
 theorem paper_definition3_large_capacity_atomic
-    (theta : ℝ) (htheta : 0 < theta) :
+    (theta : ℝ) (htheta : theta ∈ Ioc (0 : ℝ) 1) :
     Tendsto (fun K => generationAtCapacity E.LG theta K) atTop atTop :=
-  generationAtCapacity_tendsto_atTop htheta
+  generationAtCapacity_tendsto_atTop htheta.1
 
 theorem paper_definition4_lifecycle_atomic
     (P : E.PaperCohortPrimitives) (c t : ℝ) :
@@ -61,9 +61,11 @@ theorem paper_theorem9_context_atomic
     (F : ℝ → ℝ → ℝ) (V : ℝ) (wG wV : ℝ → ℝ)
     (P : E.CESPricePathOn F (fun _ => V) wG wV (Icc (0 : ℝ) 1)) :
     IsCES F E.eta E.rho E.lam ∧ E.rho < 1 ∧ E.rho ≠ 0 ∧
-      0 < V ∧ 0 < E.KAI := by
+      0 < V ∧ 0 < E.KAI ∧
+      (∀ theta ∈ Icc (0 : ℝ) 1, 0 < wG theta ∧ 0 < wV theta) := by
   exact ⟨P.hCES, P.hrho_lt, P.hrho_ne,
-    P.hV_pos 0 ⟨le_rfl, zero_le_one⟩, E.KAI_pos⟩
+    P.hV_pos 0 ⟨le_rfl, zero_le_one⟩, E.KAI_pos,
+    fun theta htheta => ⟨P.hwG_pos theta htheta, P.hwV_pos theta htheta⟩⟩
 
 theorem paper_theorem9_wage_ratio_monotone_atomic
     (F : ℝ → ℝ → ℝ) (V : ℝ) (wG wV : ℝ → ℝ)
@@ -88,16 +90,14 @@ theorem paper_theorem9_wage_ratio_strict_atomic
     (P.hV_pos 0 ⟨le_rfl, zero_le_one⟩) hKAI P.hrho_lt h0 h1 h12
 
 theorem paper_theorem9_wage_ratio_large_capacity_atomic
-    (V theta : ℝ) (hV : 0 < V) (htheta : 0 < theta)
-    (hrho : E.rho < 1) :
-    Tendsto
-      (fun K => wageRatioAtCapacity E.eta E.rho E.lam E.LG V theta K)
-      atTop atTop :=
-  wageRatioAtCapacity_tendsto_atTop E.eta_pos E.eta_lt_one E.lam_pos
-    hV htheta hrho
+    (F : ℝ → ℝ → ℝ) (V : ℝ) (wG wV : ℝ → ℝ → ℝ)
+    (P : E.CESCapacityPriceFamily F V wG wV)
+    (theta : ℝ) (htheta : theta ∈ Ioc (0 : ℝ) 1) :
+    Tendsto (fun K => wV K theta / wG K theta) atTop atTop :=
+  E.marginalProductWageRatioAtCapacity_tendsto_atTop P htheta.1 htheta.2
 
 theorem paper_theorem9_threshold_objects_atomic
-    (wG wV : ℝ → ℝ) (V rBar : ℝ) :
+    (wG wV : ℝ → ℝ) (V rBar : ℝ) (_hrBar : 0 < rBar) :
     thetaInvMarginalProductInf wG wV rBar =
         sInf (marginalProductCrossingSet wG wV rBar) ∧
       E.Gstar V rBar =
@@ -126,29 +126,33 @@ theorem paper_theorem9_target_strict_atomic
     (hlo.trans (hG12.trans hhi)) P.hrho_lt
 
 theorem paper_theorem9_capacity_strict_atomic
-    {Gcrit K1 K2 : ℝ} (hcrit : E.LG < Gcrit)
-    (hK1 : Gcrit < K1) (hK12 : K1 < K2) :
-    thetaInvAtCapacity E.LG Gcrit K2 < thetaInvAtCapacity E.LG Gcrit K1 :=
+    {V rBar K1 K2 : ℝ} (_hrBar : 0 < rBar)
+    (hcrit : E.LG < E.Gstar V rBar)
+    (hK1 : E.Gstar V rBar < K1) (hK12 : K1 < K2) :
+    thetaInvAtCapacity E.LG (E.Gstar V rBar) K2 <
+      thetaInvAtCapacity E.LG (E.Gstar V rBar) K1 :=
   thetaInvAtCapacity_strictAnti hcrit hK1 hK12
 
 theorem paper_theorem9_eventual_actual_threshold_atomic
-    (V rBar : ℝ) (hV : 0 < V) (hrBar : 0 < rBar)
-    (hrho : E.rho < 1) (hbaseline : E.LG < E.Gstar V rBar) :
+    (F : ℝ → ℝ → ℝ) (V rBar : ℝ) (wG wV : ℝ → ℝ → ℝ)
+    (P : E.CESCapacityPriceFamily F V wG wV)
+    (hrBar : 0 < rBar) (hbaseline : E.LG < E.Gstar V rBar) :
     ∀ᶠ K : ℝ in atTop,
-      thetaInvRatioInfAtCapacity E.eta E.rho E.lam E.LG V rBar K =
+      thetaInvMarginalProductInfAtCapacity wG wV rBar K =
           thetaInvAtCapacity E.LG (E.Gstar V rBar) K ∧
-        thetaInvRatioInfAtCapacity E.eta E.rho E.lam E.LG V rBar K ∈
+        thetaInvMarginalProductInfAtCapacity wG wV rBar K ∈
           Ioo (0 : ℝ) 1 :=
-  E.thetaInvRatioInfAtCapacity_eventually_interior V rBar hV hrBar hrho
+  E.thetaInvMarginalProductInfAtCapacity_eventually_interior P rBar hrBar
     hbaseline
 
 theorem paper_theorem9_actual_threshold_limit_atomic
-    (V rBar : ℝ) (hV : 0 < V) (hrBar : 0 < rBar)
-    (hrho : E.rho < 1) (hbaseline : E.LG < E.Gstar V rBar) :
+    (F : ℝ → ℝ → ℝ) (V rBar : ℝ) (wG wV : ℝ → ℝ → ℝ)
+    (P : E.CESCapacityPriceFamily F V wG wV)
+    (hrBar : 0 < rBar) (hbaseline : E.LG < E.Gstar V rBar) :
     Tendsto
-      (fun K => thetaInvRatioInfAtCapacity E.eta E.rho E.lam E.LG V rBar K)
+      (fun K => thetaInvMarginalProductInfAtCapacity wG wV rBar K)
       atTop (nhdsWithin 0 (Ioi 0)) :=
-  E.thetaInvRatioInfAtCapacity_tendsto_zero_right V rBar hV hrBar hrho
+  E.thetaInvMarginalProductInfAtCapacity_tendsto_zero_right P rBar hrBar
     hbaseline
 
 theorem paper_theorem9_baseline_zero_atomic
@@ -166,14 +170,12 @@ theorem paper_theorem10_context_atomic {a : ℝ} (ha : 0 < a) :
   exact ⟨ha, fun _ => rfl, rfl⟩
 
 theorem paper_theorem10_step_context_atomic
-    {theta0 theta1 : ℝ} (h0 : 0 ≤ theta0)
-    (h0star : theta0 < E.thetaStar) (hstar1 : E.thetaStar < theta1)
-    (h1 : theta1 ≤ 1) :
+    {theta0 theta1 : ℝ} (P : E.PaperStepContext theta0 theta1) :
     theta0 ∈ Ico (0 : ℝ) E.thetaStar ∧ theta1 ∈ Ioc E.thetaStar 1 :=
-  ⟨⟨h0, h0star⟩, hstar1, h1⟩
+  ⟨P.theta0_range, P.theta1_range⟩
 
 theorem paper_theorem10_stock_below_atomic
-    {a theta : ℝ} (ha : 0 < a) (h0 : 0 ≤ theta)
+    {a theta : ℝ} (ha : 0 < a) (_h0 : 0 ≤ theta)
     (htheta : theta < E.thetaStar) :
     E.VinfHard a theta = E.nu * E.Ts * ((1 - theta) * E.Tj) ^ a ∧
       HasDerivAt (fun x => E.VinfHard a x)
@@ -184,7 +186,7 @@ theorem paper_theorem10_stock_below_atomic
   rw [E.thm_collapse_below_threshold a theta htheta.le]
   rfl
 
-theorem paper_theorem10_jump_atomic (a : ℝ) :
+theorem paper_theorem10_jump_atomic (a : ℝ) (_ha : 0 < a) :
     E.VinfHard a E.thetaStar = E.nu * E.Ts * E.tauStar ^ a ∧
       Tendsto (fun theta => E.VinfHard a theta)
         (nhdsWithin E.thetaStar (Iic E.thetaStar))
@@ -196,19 +198,18 @@ theorem paper_theorem10_jump_atomic (a : ℝ) :
     E.VinfHard_tendsto_right_zero_at_thetaStar a⟩
 
 theorem paper_theorem10_zero_above_atomic
-    {a theta : ℝ} (htheta : E.thetaStar < theta) (htheta1 : theta ≤ 1) :
+    {a theta : ℝ} (_ha : 0 < a)
+    (htheta : E.thetaStar < theta) (_htheta1 : theta ≤ 1) :
     E.VinfHard a theta = 0 := by
   exact E.thm_collapse_above_threshold a theta htheta
 
 theorem paper_theorem10_step_cutoff_atomic
-    {theta0 theta1 : ℝ} (h0 : 0 ≤ theta0)
-    (h0star : theta0 < E.thetaStar) (hstar1 : E.thetaStar < theta1)
-    (h1 : theta1 ≤ 1) :
+    {theta0 theta1 : ℝ} (P : E.PaperStepContext theta0 theta1) :
     0 < E.cStar theta0 theta1 ∧ E.cStar theta0 theta1 < E.Tj :=
-  E.cStar_mem_open_interval h0star hstar1
+  E.cStar_mem_open_interval P.theta0_range.2 P.theta1_range.1
 
 theorem paper_theorem10_step_experience_atomic
-    (theta0 theta1 c : ℝ) :
+    (theta0 theta1 c : ℝ) (_P : E.PaperStepContext theta0 theta1) :
     E.cumulativeExperience (stepSubstitutionPath theta0 theta1) c =
         E.stepExperience theta0 theta1 c ∧
       E.stepExperience theta0 theta1 c =
@@ -219,16 +220,14 @@ theorem paper_theorem10_step_experience_atomic
   exact ⟨E.cumulativeExperience_step_eq_stepExperience theta0 theta1 c, rfl⟩
 
 theorem paper_theorem10_step_promotion_atomic
-    {theta0 theta1 c : ℝ} (h0 : theta0 < E.thetaStar)
-    (h1 : E.thetaStar < theta1) :
+    {theta0 theta1 c : ℝ} (P : E.PaperStepContext theta0 theta1) :
     E.tauStar ≤ E.stepExperience theta0 theta1 c ↔
       c ≤ -E.cStar theta0 theta1 :=
-  E.stepExperience_ge_tauStar_iff h0 h1
+  E.stepExperience_ge_tauStar_iff P.theta0_range.2 P.theta1_range.1
 
 theorem paper_theorem10_step_stock_atomic
-    {a theta0 theta1 t : ℝ} (h0 : 0 ≤ theta0)
-    (h0star : theta0 < E.thetaStar) (hstar1 : E.thetaStar < theta1)
-    (h1 : theta1 ≤ 1) (ht : 0 ≤ t) :
+    {a theta0 theta1 t : ℝ} (_ha : 0 < a)
+    (P : E.PaperStepContext theta0 theta1) (_ht : 0 ≤ t) :
     E.timeIndexedStock (stepSubstitutionPath theta0 theta1) E.gHard
       (fun tau => tau ^ a) t =
       E.nu * (∫ cohort in t - E.T..t - E.Tj,
@@ -237,12 +236,14 @@ theorem paper_theorem10_step_stock_atomic
   calc
     _ = E.exactStepStock theta0 theta1 (fun tau => tau ^ a) t :=
       E.timeIndexedStock_step_eq_exactStepStock (fun tau => tau ^ a) t
-        h0star hstar1
+        P.theta0_range.2 P.theta1_range.1
     _ = _ := E.exactStepStock_eq_cohort_integral theta0 theta1
       (fun tau => tau ^ a) t
 
 theorem paper_theorem10_step_clear_atomic
-    {a theta0 theta1 t : ℝ} (ht : E.T - E.cStar theta0 theta1 ≤ t) :
+    {a theta0 theta1 t : ℝ} (_ha : 0 < a)
+    (_P : E.PaperStepContext theta0 theta1)
+    (ht : E.T - E.cStar theta0 theta1 ≤ t) :
     E.exactStepStock theta0 theta1 (fun tau => tau ^ a) t = 0 :=
   E.exactStepStock_zero_after_last_straddle theta0 theta1
     (fun tau => tau ^ a) ht
@@ -250,11 +251,11 @@ theorem paper_theorem10_step_clear_atomic
 /-! ## Proposition 11 -/
 
 theorem paper_proposition11_context_atomic
-    {a b : ℝ} (ha : 0 < a) (ha1 : a ≤ 1) (hb : 0 < b) :
+    {a b : ℝ} (P : PaperSmoothThresholdContext a b) :
     0 < a ∧ a ≤ 1 ∧ 0 < b ∧
       ∀ tau : ℝ, 0 ≤ tau → tau ≤ E.tauStar →
         E.gSmooth b tau = (tau / E.tauStar) ^ b := by
-  refine ⟨ha, ha1, hb, ?_⟩
+  refine ⟨P.ha_pos, P.ha_le_one, P.hb_pos, ?_⟩
   intro tau htau htauStar
   unfold gSmooth
   by_cases h : E.tauStar ≤ tau
@@ -270,11 +271,12 @@ theorem paper_proposition11_continuity_atomic (a b : ℝ) :
   E.continuousAt_smoothStock_threshold a b
 
 theorem paper_proposition11_endpoint_atomic
-    {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
+    {a b : ℝ} (P : PaperSmoothThresholdContext a b) :
     a < a + b ∧
       Tendsto (fun theta => E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a))
         (nhdsWithin 1 (Iio 1)) (𝓝 0) :=
-  ⟨by linarith, E.smoothStock_tendsto_zero (by linarith)⟩
+  ⟨by linarith [P.ha_pos, P.hb_pos],
+    E.smoothStock_tendsto_zero (by linarith [P.ha_pos, P.hb_pos])⟩
 
 theorem paper_proposition11_kink_atomic
     {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
@@ -283,30 +285,24 @@ theorem paper_proposition11_kink_atomic
   E.prop_smooth_collapse_kink ha hb
 
 theorem paper_proposition11_continuity_kink_atomic
-    {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
-    ContinuousAt
+    {a b : ℝ} (P : PaperSmoothThresholdContext a b) :
+    HasDerivWithinAt
+        (fun theta => E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a))
+        (E.smoothSlopeBelowAtThreshold a) (Iic E.thetaStar) E.thetaStar ∧
+      HasDerivWithinAt
+        (fun theta => E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a))
+        (E.smoothSlopeAboveAtThreshold a b) (Ici E.thetaStar) E.thetaStar ∧
+      ContinuousAt
         (fun theta => E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a))
         E.thetaStar ∧
       |E.smoothSlopeBelowAtThreshold a| <
         |E.smoothSlopeAboveAtThreshold a b| :=
-  ⟨E.continuousAt_smoothStock_threshold a b,
-    E.prop_smooth_collapse_kink ha hb⟩
+  ⟨E.hasDerivWithinAt_smoothStock_left a b,
+    E.hasDerivWithinAt_smoothStock_right a b,
+    E.continuousAt_smoothStock_threshold a b,
+    E.prop_smooth_collapse_kink P.ha_pos P.hb_pos⟩
 
 /-! ## Theorem 13 -/
-
-structure PaperExternalityIncidenceContext
-    (F : ℝ → ℝ → ℝ) (g h : ℝ → ℝ) (theta V r wG wV : ℝ)
-    (stationaryThetaAndPrices employerCapturesJuniorGeneration
-      employerCapturesNoLaterVerificationRent entrantIsPriceTaking : Prop) : Prop where
-  theta_range : theta ∈ Icc (0 : ℝ) 1
-  steady_stock : V = E.Vinf theta g h
-  discount_pos : 0 < r
-  generation_price : HasDerivAt (fun x => F x V) wG (E.G theta)
-  verification_price : HasDerivAt (fun y => F (E.G theta) y) wV V
-  h_stationary : stationaryThetaAndPrices
-  h_capture_generation : employerCapturesJuniorGeneration
-  h_no_capture_verification : employerCapturesNoLaterVerificationRent
-  h_price_taking : entrantIsPriceTaking
 
 theorem paper_theorem13_context_atomic
     (F : ℝ → ℝ → ℝ) (g h : ℝ → ℝ) (theta V r wG wV : ℝ)
@@ -316,11 +312,13 @@ theorem paper_theorem13_context_atomic
       stationaryThetaAndPrices employerCapturesJuniorGeneration
       employerCapturesNoLaterVerificationRent entrantIsPriceTaking) :
     theta ∈ Icc (0 : ℝ) 1 ∧ V = E.Vinf theta g h ∧ 0 < r ∧
+      0 < wG ∧ 0 < wV ∧
       HasDerivAt (fun x => F x V) wG (E.G theta) ∧
       HasDerivAt (fun y => F (E.G theta) y) wV V ∧
       stationaryThetaAndPrices ∧ employerCapturesJuniorGeneration ∧
       employerCapturesNoLaterVerificationRent ∧ entrantIsPriceTaking :=
-  ⟨P.theta_range, P.steady_stock, P.discount_pos, P.generation_price,
+  ⟨P.theta_range, P.steady_stock, P.discount_pos,
+    P.generation_price_pos, P.verification_price_pos, P.generation_price,
     P.verification_price, P.h_stationary, P.h_capture_generation,
     P.h_no_capture_verification, P.h_price_taking⟩
 
@@ -331,8 +329,14 @@ theorem paper_theorem13_discount_horizons_atomic {r : ℝ} (hr : 0 < r) :
     E.intervalIntegral_exp_neg_eq_Lambda hr⟩
 
 theorem paper_theorem13_private_value_atomic
-    (wG LambdaJ theta : ℝ) :
-    MPpriv wG LambdaJ theta = (1 - theta) * wG * LambdaJ := rfl
+    (F : ℝ → ℝ → ℝ) (g h : ℝ → ℝ) (theta V r wG wV : ℝ)
+    {stationaryThetaAndPrices employerCapturesJuniorGeneration
+      employerCapturesNoLaterVerificationRent entrantIsPriceTaking : Prop}
+    (_P : E.PaperExternalityIncidenceContext F g h theta V r wG wV
+      stationaryThetaAndPrices employerCapturesJuniorGeneration
+      employerCapturesNoLaterVerificationRent entrantIsPriceTaking) :
+    MPpriv wG (E.LambdaJ r) theta =
+      (1 - theta) * wG * E.LambdaJ r := rfl
 
 theorem paper_theorem13_hard_monotone_atomic
     (F : ℝ → ℝ → ℝ) (wG wV : ℝ → ℝ) (r a : ℝ)
@@ -354,6 +358,7 @@ theorem paper_theorem13_hard_monotone_atomic
 
 theorem paper_theorem13_smooth_trichotomy_atomic
     (F : ℝ → ℝ → ℝ) (wG wV : ℝ → ℝ) (r a b : ℝ)
+    (_Q : PaperSmoothThresholdContext a b)
     (P : E.CESPricePathOn F
       (fun theta => E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a))
       wG wV (Ioo E.thetaStar 1)) (hr : 0 < r) :
@@ -377,7 +382,7 @@ theorem paper_theorem13_smooth_trichotomy_atomic
 
 theorem paper_theorem13_hard_boundary_atomic
     (wV h : ℝ) (r theta : ℝ) (htheta : E.thetaStar < theta)
-    (htheta1 : theta ≤ 1) :
+    (_htheta1 : theta ≤ 1) (_hr : 0 < r) :
     E.gHard (E.eBar E.thetaStar) = 1 ∧
       externalityResidual wV (E.gHard (E.eBar theta)) h (E.Lambda r) = 0 := by
   exact ⟨E.gHard_of_ge (by simp),
@@ -393,15 +398,24 @@ theorem paper_theorem13_partial_capture_atomic
   prop_internalization zeta wG wV gE hE LambdaJ Lambda theta
 
 theorem paper_theorem13_residual_transfer_atomic
-    (wG wV gE hE LambdaJ Lambda theta : ℝ) :
-    MPsoc wG wV gE hE LambdaJ Lambda theta -
-        MPpriv wG LambdaJ theta =
-      externalityResidual wV gE hE Lambda := by
-  exact thm_externality_residual_identity wG wV gE hE LambdaJ Lambda theta
+    (F : ℝ → ℝ → ℝ) (g h : ℝ → ℝ) (theta V r wG wV : ℝ)
+    {stationaryThetaAndPrices employerCapturesJuniorGeneration
+      employerCapturesNoLaterVerificationRent entrantIsPriceTaking : Prop}
+    (_P : E.PaperExternalityIncidenceContext F g h theta V r wG wV
+      stationaryThetaAndPrices employerCapturesJuniorGeneration
+      employerCapturesNoLaterVerificationRent entrantIsPriceTaking) :
+    MPsoc wG wV (g (E.eBar theta)) (h (E.eBar theta))
+        (E.LambdaJ r) (E.Lambda r) theta -
+        MPpriv wG (E.LambdaJ r) theta =
+      externalityResidual wV (g (E.eBar theta)) (h (E.eBar theta))
+        (E.Lambda r) := by
+  exact thm_externality_residual_identity wG wV (g (E.eBar theta))
+    (h (E.eBar theta)) (E.LambdaJ r) (E.Lambda r) theta
 
 theorem paper_theorem13_cobb_douglas_transfer_atomic
     (F : ℝ → ℝ → ℝ) (g h : ℝ → ℝ)
-    (theta G Y wV r : ℝ) (htheta : theta ∈ Icc (0 : ℝ) 1)
+    (theta G Y wV r : ℝ) (_htheta : theta ∈ Icc (0 : ℝ) 1)
+    (_hr : 0 < r)
     (hCD : IsCobbDouglas F E.eta E.lam)
     (h_wV : HasDerivAt (fun y => F G y) wV (E.Vinf theta g h))
     (hY : Y = F G (E.Vinf theta g h))
@@ -416,7 +430,7 @@ theorem paper_theorem13_cobb_douglas_transfer_atomic
 
 theorem paper_theorem13_zero_boundary_atomic
     (a wV h r theta : ℝ) (htheta : E.thetaStar < theta)
-    (htheta1 : theta ≤ 1) :
+    (_htheta1 : theta ≤ 1) (_ha : 0 < a) (_hr : 0 < r) :
     E.VinfHard a theta = 0 ∧
       externalityResidual wV (E.gHard (E.eBar theta)) h (E.Lambda r) = 0 :=
   ⟨E.thm_collapse_above_threshold a theta htheta,
@@ -427,38 +441,34 @@ theorem paper_theorem13_zero_boundary_atomic
 
 theorem paper_proposition14_context_atomic
     {ι : Type*} [DecidableEq ι] (s : Finset ι) (Y w : ι → ℝ)
-    (hY : ∀ i ∈ s, 0 ≤ Y i) (hw : ∀ i ∈ s, 0 < w i)
-    (hsum : ∑ i ∈ s, w i = 1)
-    (hzero : ∃ i ∈ s, Y i = 0) (hpositive : ∃ i ∈ s, 0 < Y i) :
+    (P : PaperAggregationContext s Y w) :
     (∀ i ∈ s, 0 ≤ Y i) ∧ (∀ i ∈ s, 0 < w i) ∧
       (∑ i ∈ s, w i = 1) ∧ (∃ i ∈ s, Y i = 0) ∧
       (∃ i ∈ s, 0 < Y i) :=
-  ⟨hY, hw, hsum, hzero, hpositive⟩
+  ⟨P.output_nonneg, P.weight_pos, P.weight_sum, P.has_zero, P.has_positive⟩
 
 theorem paper_proposition14_cobb_douglas_zero_atomic
     {ι : Type*} [DecidableEq ι] (s : Finset ι) (Y w : ι → ℝ)
-    (hzero : ∃ i ∈ s, Y i = 0) (hw : ∀ i ∈ s, 0 < w i) :
+    (P : PaperAggregationContext s Y w) :
     (∏ i ∈ s, Y i ^ w i) = 0 := by
-  obtain ⟨i, hi, hYi⟩ := hzero
-  exact thm_aggregation_cobb_douglas_zero s Y w i hi hYi (hw i hi)
+  obtain ⟨i, hi, hYi⟩ := P.has_zero
+  exact thm_aggregation_cobb_douglas_zero s Y w i hi hYi (P.weight_pos i hi)
 
 theorem paper_proposition14_fixed_sigma_atomic
     {ι : Type*} [DecidableEq ι] (s : Finset ι) (Y w : ι → ℝ)
     {sigma : ℝ} (hsigma : 1 < sigma)
-    (hY : ∀ i ∈ s, 0 ≤ Y i) (hw : ∀ i ∈ s, 0 < w i)
-    (hpositive : ∃ i ∈ s, 0 < Y i) :
+    (P : PaperAggregationContext s Y w) :
     0 < aggregateCES s Y w sigma := by
-  apply prop_aggregation_fixed_sigma_positive s Y w hsigma hY
-    (fun i hi => (hw i hi).le)
-  obtain ⟨i, hi, hYi⟩ := hpositive
-  exact ⟨i, hi, hYi, hw i hi⟩
+  apply prop_aggregation_fixed_sigma_positive s Y w hsigma P.output_nonneg
+    (fun i hi => (P.weight_pos i hi).le)
+  obtain ⟨i, hi, hYi⟩ := P.has_positive
+  exact ⟨i, hi, hYi, P.weight_pos i hi⟩
 
 theorem paper_proposition14_limit_atomic
     {ι : Type*} [DecidableEq ι] (s : Finset ι) (Y w : ι → ℝ)
-    (hY : ∀ i ∈ s, 0 ≤ Y i) (hw : ∀ i ∈ s, 0 < w i)
-    (hsum : ∑ i ∈ s, w i = 1)
-    (hzero : ∃ i ∈ s, Y i = 0) (hpositive : ∃ i ∈ s, 0 < Y i) :
+    (P : PaperAggregationContext s Y w) :
     Tendsto (aggregateCES s Y w) (nhdsWithin 1 (Ioi 1)) (𝓝 0) :=
-  prop_aggregation_near_cobb_douglas_limit s Y w hY hw hsum hzero hpositive
+  prop_aggregation_near_cobb_douglas_limit s Y w P.output_nonneg P.weight_pos
+    P.weight_sum P.has_zero P.has_positive
 
 end VerificationAsymmetry.Economy

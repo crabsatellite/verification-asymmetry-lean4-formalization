@@ -3,7 +3,7 @@
 
   Current-journal-paper theorem map, following the publication-facing pattern
   used by the Gray Code project.  Every numbered mathematical object and every
-  load-bearing displayed derivation in the 22-page EINT manuscript has a named
+  load-bearing displayed derivation in the current EINT manuscript has a named
   Lean carrier or theorem below.
 
   Scope rule:
@@ -74,6 +74,9 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.thm_inversion_wage_ratio_monotone
 #check VerificationAsymmetry.Economy.thm_inversion_wage_ratio_strict
 #check VerificationAsymmetry.Economy.wageRatioAtCapacity_tendsto_atTop
+#check VerificationAsymmetry.Economy.CESCapacityPriceFamily
+#check VerificationAsymmetry.Economy.CESCapacityPriceFamily.ratio_eq
+#check VerificationAsymmetry.Economy.marginalProductWageRatioAtCapacity_tendsto_atTop
 #check VerificationAsymmetry.Economy.Gstar
 #check VerificationAsymmetry.Economy.thetaInv
 #check VerificationAsymmetry.Economy.inversionCrossingSet
@@ -97,9 +100,19 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.thetaInvRatioInfAtCapacity
 #check VerificationAsymmetry.Economy.thetaInvRatioInfAtCapacity_eventually_interior
 #check VerificationAsymmetry.Economy.thetaInvRatioInfAtCapacity_tendsto_zero_right
+#check VerificationAsymmetry.Economy.capacityMarginalProductCrossingSet
+#check VerificationAsymmetry.Economy.thetaInvMarginalProductInfAtCapacity
+#check VerificationAsymmetry.Economy.capacityMarginalProductCrossingSet_eq_capacityRatioCrossingSet
+#check VerificationAsymmetry.Economy.thetaInvMarginalProductInfAtCapacity_eq_closedForm
+#check VerificationAsymmetry.Economy.thetaInvMarginalProductInfAtCapacity_eventually_interior
+#check VerificationAsymmetry.Economy.thetaInvMarginalProductInfAtCapacity_tendsto_zero_right
 #check VerificationAsymmetry.Economy.thetaInvMarginalProductInf_eq_zero_of_target_le_baseline
+#check VerificationAsymmetry.Economy.paper_theorem9_wage_ratio_large_capacity_atomic
+#check VerificationAsymmetry.Economy.paper_theorem9_eventual_actual_threshold_atomic
+#check VerificationAsymmetry.Economy.paper_theorem9_actual_threshold_limit_atomic
 
 /-! ## Theorem 10 and Eqs. (9)--(10): hard collapse and exact step path. -/
+#check VerificationAsymmetry.Economy.PaperStepContext
 #check VerificationAsymmetry.Economy.thetaStar
 #check VerificationAsymmetry.Economy.thetaStar_in_unit_interval
 #check VerificationAsymmetry.Economy.eBar_ge_tauStar_iff_theta_le_thetaStar
@@ -132,6 +145,7 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.last_straddling_retirement_time
 
 /-! ## Proposition 11 and Eq. (11): smooth-threshold collapse and kink. -/
+#check VerificationAsymmetry.Economy.PaperSmoothThresholdContext
 #check VerificationAsymmetry.Economy.gSmooth
 #check VerificationAsymmetry.Economy.prop_smooth_collapse_below
 #check VerificationAsymmetry.Economy.prop_smooth_collapse_above
@@ -148,6 +162,7 @@ open VerificationAsymmetry.Economy
     the actual derivative theorems, and the strict kink theorem above. -/
 
 /-! ## Theorem 13 and Eqs. (12)--(14): apprenticeship residual. -/
+#check VerificationAsymmetry.Economy.PaperExternalityIncidenceContext
 #check VerificationAsymmetry.Economy.LambdaJ
 #check VerificationAsymmetry.Economy.Lambda
 #check VerificationAsymmetry.Economy.LambdaJ_pos
@@ -192,6 +207,7 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.prop_internalization
 
 /-! ## Proposition 14 and Eq. (15): cross-profession aggregation. -/
+#check VerificationAsymmetry.Economy.PaperAggregationContext
 #check VerificationAsymmetry.Economy.thm_aggregation_cobb_douglas_zero
 #check VerificationAsymmetry.Economy.thm_aggregation_least_resilient_collapse
 #check VerificationAsymmetry.Economy.cesInner

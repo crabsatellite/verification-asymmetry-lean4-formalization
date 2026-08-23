@@ -65,7 +65,7 @@
     1995 §5.B.2; Acemoglu 2009 §15) whose Lean derivation from
     Mathlib's `Real.rpow` calculus is mechanically possible but
     suppressed here for clarity of the audit boundary.  The current
-    22-page paper consumes only `axiom_ces_wage_ratio` and
+    current submission paper consumes only `axiom_ces_wage_ratio` and
     `axiom_cobb_douglas_factor_share`; `axiom_euler_crs` belongs to
     the historical longer-model superset.
 

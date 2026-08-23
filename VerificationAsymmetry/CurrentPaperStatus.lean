@@ -1,4 +1,4 @@
-/- Current 22-page journal-paper coverage status. -/
+/- Current journal-paper submission coverage status. -/
 
 import VerificationAsymmetry.Ledger
 import VerificationAsymmetry.TheoremMap
@@ -6,7 +6,7 @@ import VerificationAsymmetry.TheoremMap
 namespace VerificationAsymmetry.Ledger
 
 /-- Ledger entries consumed by the current paper.  Historical results omitted
-    from the 22-page manuscript deliberately do not enter this list. -/
+    from the current submission manuscript deliberately do not enter this list. -/
 def currentPaperEntries : List GapEntry := [
   gap_axiom_ces_wage_ratio,
   gap_axiom_cobb_douglas_factor_share,

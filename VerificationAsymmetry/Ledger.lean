@@ -103,7 +103,7 @@
   The current paper's complete permanent-step cohort path and
   near-Cobb--Douglas variable-exponent finite-sum limit are now `gapClosed`.
   The remaining partial/open entries belong to mathematical or empirical
-  branches omitted from the current 22-page journal manuscript.
+  branches omitted from the current journal submission manuscript.
 
   A separate `gapDefinitional` record,
   `gap_thm_recursive_invariance_DEFINITIONAL`, records the μ-invariance

@@ -65,6 +65,18 @@ REQUIRED_MAP_SYMBOLS = (
     "thetaInvMarginalProductInf_eq_thetaInv",
     "thm_inversion_threshold_strict_in_rBar",
     "thetaInvAtCapacity_strictAnti",
+    "CESCapacityPriceFamily.ratio_eq",
+    "marginalProductWageRatioAtCapacity_tendsto_atTop",
+    "thetaInvMarginalProductInfAtCapacity_eq_closedForm",
+    "thetaInvMarginalProductInfAtCapacity_eventually_interior",
+    "thetaInvMarginalProductInfAtCapacity_tendsto_zero_right",
+    "paper_theorem9_wage_ratio_large_capacity_atomic",
+    "paper_theorem9_eventual_actual_threshold_atomic",
+    "paper_theorem9_actual_threshold_limit_atomic",
+    "PaperStepContext",
+    "PaperSmoothThresholdContext",
+    "PaperExternalityIncidenceContext",
+    "PaperAggregationContext",
     "hasDerivAt_hard_stock_below",
     "hardStockSlopeBelow_neg",
     "VinfHard_tendsto_left_at_thetaStar",
@@ -122,6 +134,8 @@ REQUIRED_DEFAULT_TARGETS = (
     "VerificationAsymmetry.CurrentPaperAxiomAudit",
     "VerificationAsymmetry.PaperExactnessAudit",
     "VerificationAsymmetry.CurrentPaperClaimBindings",
+    "VerificationAsymmetry.AtomicPaperClaimBindings",
+    "VerificationAsymmetry.AtomicPaperAxiomAudit",
 )
 EXPECTED_TOOLCHAIN = "leanprover/lean4:v4.30.0-rc2"
 EXPECTED_MATHLIB_REV = "388f44f89d70fbad0e1accb8fd62fc8c97714a85"

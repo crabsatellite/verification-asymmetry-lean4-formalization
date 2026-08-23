@@ -1,5 +1,5 @@
 name = "VerificationAsymmetry"
-version = "0.4.7"
+version = "0.4.8"
 keywords = ["ai-economics", "apprenticeship", "verification-asymmetry", "phase-transition", "polanyi-residual"]
 defaultTargets = [
   "VerificationAsymmetry",
@@ -8,7 +8,9 @@ defaultTargets = [
   "VerificationAsymmetry.CurrentPaperStatus",
   "VerificationAsymmetry.CurrentPaperAxiomAudit",
   "VerificationAsymmetry.PaperExactnessAudit",
-  "VerificationAsymmetry.CurrentPaperClaimBindings"
+  "VerificationAsymmetry.CurrentPaperClaimBindings",
+  "VerificationAsymmetry.AtomicPaperClaimBindings",
+  "VerificationAsymmetry.AtomicPaperAxiomAudit"
 ]
 
 [leanOptions]

@@ -58,13 +58,15 @@ theorem paper_equation1_ces_exact
         (1 / E.rho) :=
   hCES G V hG hV
 
-theorem paper_definition3_generation_supply_exact (theta : ℝ) :
+theorem paper_definition3_generation_supply_exact
+    (theta : ℝ) (_htheta : theta ∈ Icc (0 : ℝ) 1) :
     E.G theta = (1 - theta) * E.LG + theta * E.KAI ∧
     (0 < theta → Tendsto (fun K => generationAtCapacity E.LG theta K)
       atTop atTop) := by
   exact ⟨rfl, generationAtCapacity_tendsto_atTop⟩
 
-theorem paper_equation2_generation_supply_exact (theta : ℝ) :
+theorem paper_equation2_generation_supply_exact
+    (theta : ℝ) (_htheta : theta ∈ Icc (0 : ℝ) 1) :
     E.G theta = (1 - theta) * E.LG + theta * E.KAI := rfl
 
 structure PaperCohortPrimitives where
@@ -113,17 +115,18 @@ theorem paper_definition4_cohort_dynamics_exact
     P.hh_monotone, P.hh_zero⟩
 
 theorem paper_equation3_cumulative_experience_exact
-    (theta : ℝ → ℝ) (c : ℝ) :
+    (theta : ℝ → ℝ) (c : ℝ)
+    (_htheta : ∀ t, theta t ∈ Icc (0 : ℝ) 1) :
     E.cumulativeExperience theta c =
       ∫ s in c..c + E.Tj, (1 - theta s) := rfl
 
 theorem paper_assumption6_time_indexed_stock_exact
-    (theta : ℝ → ℝ) (g h : ℝ → ℝ) (t : ℝ) :
-    E.timeIndexedStock theta g h t =
+    (P : E.PaperCohortPrimitives) (t : ℝ) :
+    E.timeIndexedStock P.theta P.g P.h t =
       E.nu * ∫ c in t - E.T..t - E.Tj,
-        g (E.cumulativeExperience theta c) *
-          h (E.cumulativeExperience theta c) :=
-  E.timeIndexedStock_eq_cohort_integral theta g h t
+        P.g (E.cumulativeExperience P.theta c) *
+          P.h (E.cumulativeExperience P.theta c) :=
+  E.timeIndexedStock_eq_cohort_integral P.theta P.g P.h t
 
 theorem paper_lemma7_steady_state_stock_exact
     (theta : ℝ) (g h : ℝ → ℝ) (t : ℝ) :
@@ -133,12 +136,15 @@ theorem paper_lemma7_steady_state_stock_exact
   rfl
 
 theorem paper_equation4_steady_state_stock_exact
-    (theta : ℝ) (g h : ℝ → ℝ) :
-    E.Vinf theta g h =
-      E.nu * E.Ts * g ((1 - theta) * E.Tj) * h ((1 - theta) * E.Tj) := rfl
+    (theta : ℝ) (P : E.PaperCohortPrimitives)
+    (_htheta : theta ∈ Icc (0 : ℝ) 1) :
+    E.Vinf theta P.g P.h =
+      E.nu * E.Ts * P.g ((1 - theta) * E.Tj) *
+        P.h ((1 - theta) * E.Tj) := rfl
 
 theorem paper_equation5_hard_stock_exact
-    (a theta : ℝ) (_ha : 0 < a) (_ha_le : a ≤ 1) :
+    (a theta : ℝ) (_ha : 0 < a) (_ha_le : a ≤ 1)
+    (_htheta : theta ∈ Icc (0 : ℝ) 1) :
     E.VinfHard a theta =
       if theta ≤ E.thetaStar then
         E.nu * E.Ts * ((1 - theta) * E.Tj) ^ a
@@ -150,7 +156,8 @@ theorem paper_equation5_hard_stock_exact
     rw [if_neg htheta, E.thm_collapse_above_threshold a theta hthetaStar]
 
 theorem paper_equation6_smooth_stock_exact
-    (a b theta : ℝ) (_ha : 0 < a) (_ha_le : a ≤ 1) (_hb : 0 < b) :
+    (a b theta : ℝ) (_ha : 0 < a) (_ha_le : a ≤ 1) (_hb : 0 < b)
+    (_htheta : theta ∈ Icc (0 : ℝ) 1) :
     E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a) =
       if theta ≤ E.thetaStar then
         E.nu * E.Ts * ((1 - theta) * E.Tj) ^ a
@@ -195,6 +202,7 @@ structure CESPricePathOn
   hG_pos : ∀ theta ∈ domain, 0 < E.G theta
   hV_pos : ∀ theta ∈ domain, 0 < Vstock theta
   hwG_pos : ∀ theta ∈ domain, 0 < wG theta
+  hwV_pos : ∀ theta ∈ domain, 0 < wV theta
   h_wG : ∀ theta ∈ domain,
     HasDerivAt (fun x => F x (Vstock theta)) (wG theta) (E.G theta)
   h_wV : ∀ theta ∈ domain,
@@ -247,88 +255,116 @@ theorem paper_equation8_inversion_threshold_exact
     exact hrange
 
 theorem paper_theorem9_inversion_exact
-    (F : ℝ → ℝ → ℝ) (V : ℝ) (wG wV : ℝ → ℝ)
-    (P : E.CESPricePathOn F (fun _ => V) wG wV (Icc (0 : ℝ) 1)) :
+    (F : ℝ → ℝ → ℝ) (V : ℝ) (wG wV : ℝ → ℝ → ℝ)
+    (P : E.CESCapacityPriceFamily F V wG wV) :
     (∀ theta ∈ Icc (0 : ℝ) 1,
-      wV theta / wG theta = E.wageRatio V theta) ∧
+      wV E.KAI theta / wG E.KAI theta = E.wageRatio V theta) ∧
     (E.LG ≤ E.KAI →
       ∀ ⦃theta1 theta2 : ℝ⦄, 0 ≤ theta1 → theta2 ≤ 1 → theta1 ≤ theta2 →
-        wV theta1 / wG theta1 ≤ wV theta2 / wG theta2) ∧
+        wV E.KAI theta1 / wG E.KAI theta1 ≤
+          wV E.KAI theta2 / wG E.KAI theta2) ∧
     (E.LG < E.KAI →
       ∀ ⦃theta1 theta2 : ℝ⦄, 0 ≤ theta1 → theta2 ≤ 1 → theta1 < theta2 →
-        wV theta1 / wG theta1 < wV theta2 / wG theta2) ∧
+        wV E.KAI theta1 / wG E.KAI theta1 <
+          wV E.KAI theta2 / wG E.KAI theta2) ∧
     (∀ rBar : ℝ, 0 < rBar → E.LG < E.Gstar V rBar →
       E.Gstar V rBar < E.KAI →
-        thetaInvMarginalProductInf wG wV rBar =
+        thetaInvMarginalProductInf (wG E.KAI) (wV E.KAI) rBar =
             (E.Gstar V rBar - E.LG) / (E.KAI - E.LG) ∧
-          thetaInvMarginalProductInf wG wV rBar ∈ Ioo (0 : ℝ) 1) ∧
+          thetaInvMarginalProductInf (wG E.KAI) (wV E.KAI) rBar ∈
+            Ioo (0 : ℝ) 1) ∧
     (∀ {rBar1 rBar2 : ℝ}, 0 < rBar1 → rBar1 < rBar2 →
       E.LG < E.Gstar V rBar1 → E.Gstar V rBar2 < E.KAI →
-        thetaInvMarginalProductInf wG wV rBar1 <
-          thetaInvMarginalProductInf wG wV rBar2) ∧
-    (∀ {Gcrit K1 K2 : ℝ}, E.LG < Gcrit → Gcrit < K1 → K1 < K2 →
-      thetaInvAtCapacity E.LG Gcrit K2 < thetaInvAtCapacity E.LG Gcrit K1) ∧
-    (∀ rBar : ℝ, E.LG < E.Gstar V rBar →
-      Tendsto (fun K => thetaInvAtCapacity E.LG (E.Gstar V rBar) K)
-        atTop (nhdsWithin 0 (Ioi 0))) ∧
-    (∀ theta : ℝ, 0 < theta →
+        thetaInvMarginalProductInf (wG E.KAI) (wV E.KAI) rBar1 <
+          thetaInvMarginalProductInf (wG E.KAI) (wV E.KAI) rBar2) ∧
+    (∀ {rBar K1 K2 : ℝ}, 0 < rBar →
+      E.LG < E.Gstar V rBar → E.Gstar V rBar < K1 → K1 < K2 →
+      thetaInvAtCapacity E.LG (E.Gstar V rBar) K2 <
+        thetaInvAtCapacity E.LG (E.Gstar V rBar) K1) ∧
+    (∀ theta ∈ Ioc (0 : ℝ) 1,
+      Tendsto (fun K => wV K theta / wG K theta) atTop atTop) ∧
+    (∀ rBar : ℝ, 0 < rBar → E.LG < E.Gstar V rBar →
+      ∀ᶠ K : ℝ in atTop,
+        thetaInvMarginalProductInfAtCapacity wG wV rBar K =
+            thetaInvAtCapacity E.LG (E.Gstar V rBar) K ∧
+          thetaInvMarginalProductInfAtCapacity wG wV rBar K ∈
+            Ioo (0 : ℝ) 1) ∧
+    (∀ rBar : ℝ, 0 < rBar → E.LG < E.Gstar V rBar →
       Tendsto
-        (fun K => wageRatioAtCapacity E.eta E.rho E.lam E.LG V theta K)
-        atTop atTop) := by
+        (fun K => thetaInvMarginalProductInfAtCapacity wG wV rBar K)
+        atTop (nhdsWithin 0 (Ioi 0))) ∧
+    (∀ rBar : ℝ, rBar ≤ wV E.KAI 0 / wG E.KAI 0 →
+      thetaInvMarginalProductInf (wG E.KAI) (wV E.KAI) rBar = 0) := by
   have hwage : ∀ theta ∈ Icc (0 : ℝ) 1,
-      wV theta / wG theta = E.wageRatio V theta := by
+      wV E.KAI theta / wG E.KAI theta = E.wageRatio V theta := by
     intro theta htheta
-    exact CESPricePathOn.ratio_eq E P htheta
-  have hV_pos : 0 < V := P.hV_pos 0 ⟨le_rfl, zero_le_one⟩
-  refine ⟨hwage, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    simpa [wageRatioAtCapacity, generationAtCapacity, wageRatio, G] using
+      P.ratio_eq E E.KAI_pos htheta
+  refine ⟨hwage, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro hKAI_ge theta1 theta2 htheta1 htheta2 htheta12
     rw [hwage theta1 ⟨htheta1, le_trans htheta12 htheta2⟩,
       hwage theta2 ⟨le_trans htheta1 htheta12, htheta2⟩]
-    exact E.thm_inversion_wage_ratio_monotone V hV_pos hKAI_ge
+    exact E.thm_inversion_wage_ratio_monotone V P.hV_pos hKAI_ge
       P.hrho_lt htheta1 htheta2 htheta12
   · intro hKAI_gt theta1 theta2 htheta1 htheta2 htheta12
     rw [hwage theta1 ⟨htheta1, le_trans htheta12.le htheta2⟩,
       hwage theta2 ⟨le_trans htheta1 htheta12.le, htheta2⟩]
-    exact E.thm_inversion_wage_ratio_strict V hV_pos hKAI_gt P.hrho_lt
+    exact E.thm_inversion_wage_ratio_strict V P.hV_pos hKAI_gt P.hrho_lt
       htheta1 htheta2 htheta12
   · intro rBar hrBar hGstar_lo hGstar_hi
-    exact E.paper_equation8_inversion_threshold_exact F V rBar wG wV P
-      hrBar (lt_trans hGstar_lo hGstar_hi) hGstar_lo hGstar_hi
+    have hactual := E.thetaInvMarginalProductInf_eq_thetaInv V rBar
+      (wG E.KAI) (wV E.KAI) P.hV_pos hrBar
+      (lt_trans hGstar_lo hGstar_hi) P.hrho_lt hGstar_lo hGstar_hi hwage
+    have hrange := E.thm_inversion_threshold_in_unit_interval V rBar
+      (lt_trans hGstar_lo hGstar_hi) hGstar_lo hGstar_hi
+    exact ⟨hactual, by rw [hactual]; exact hrange⟩
   · intro rBar1 rBar2 hrBar1 hrBar12 hGstar1_lo hGstar2_hi
-    have hGstar12 := E.Gstar_strict_in_rBar V hV_pos hrBar1 hrBar12 P.hrho_lt
+    have hGstar12 := E.Gstar_strict_in_rBar V P.hV_pos hrBar1 hrBar12 P.hrho_lt
     have hGstar1_hi : E.Gstar V rBar1 < E.KAI :=
       lt_trans hGstar12 hGstar2_hi
     have hGstar2_lo : E.LG < E.Gstar V rBar2 :=
       lt_trans hGstar1_lo hGstar12
-    rw [E.thetaInvMarginalProductInf_eq_thetaInv V rBar1 wG wV hV_pos
+    rw [E.thetaInvMarginalProductInf_eq_thetaInv V rBar1
+        (wG E.KAI) (wV E.KAI) P.hV_pos
         hrBar1 (lt_trans hGstar1_lo hGstar1_hi) P.hrho_lt hGstar1_lo
         hGstar1_hi hwage,
-      E.thetaInvMarginalProductInf_eq_thetaInv V rBar2 wG wV hV_pos
+      E.thetaInvMarginalProductInf_eq_thetaInv V rBar2
+        (wG E.KAI) (wV E.KAI) P.hV_pos
         (lt_trans hrBar1 hrBar12) (lt_trans hGstar2_lo hGstar2_hi) P.hrho_lt
         hGstar2_lo hGstar2_hi hwage]
-    exact E.thm_inversion_threshold_strict_in_rBar V hV_pos hrBar1 hrBar12
+    exact E.thm_inversion_threshold_strict_in_rBar V P.hV_pos hrBar1 hrBar12
       (lt_trans hGstar1_lo hGstar1_hi) P.hrho_lt
-  · intro Gcrit K1 K2 hcrit hK1 hK12
+  · intro rBar K1 K2 _hrBar hcrit hK1 hK12
     exact thetaInvAtCapacity_strictAnti hcrit hK1 hK12
-  · intro rBar hcrit
-    exact thetaInvAtCapacity_tendsto_zero_right hcrit
   · intro theta htheta
-    exact wageRatioAtCapacity_tendsto_atTop E.eta_pos E.eta_lt_one
-      E.lam_pos hV_pos htheta P.hrho_lt
+    exact E.marginalProductWageRatioAtCapacity_tendsto_atTop P htheta.1 htheta.2
+  · intro rBar hrBar hbaseline
+    exact E.thetaInvMarginalProductInfAtCapacity_eventually_interior P rBar
+      hrBar hbaseline
+  · intro rBar hrBar hbaseline
+    exact E.thetaInvMarginalProductInfAtCapacity_tendsto_zero_right P rBar
+      hrBar hbaseline
+  · intro rBar hbaseline
+    exact thetaInvMarginalProductInf_eq_zero_of_target_le_baseline
+      (wG E.KAI) (wV E.KAI) rBar hbaseline
 
 /-! ## Theorem 10 and Equations (9)--(10). -/
+
+structure PaperStepContext (theta0 theta1 : ℝ) : Prop where
+  theta0_range : theta0 ∈ Ico (0 : ℝ) E.thetaStar
+  theta1_range : theta1 ∈ Ioc E.thetaStar 1
 
 theorem paper_equation9_collapse_threshold_exact :
     E.thetaStar = 1 - E.tauStar / E.Tj := rfl
 
 theorem paper_equation10_transient_stock_exact
-    (a theta0 t : ℝ) (_ha : 0 < a)
-    (ht0 : 0 ≤ t) (htheta0 : theta0 < E.thetaStar) :
+    (a theta0 theta1 t : ℝ) (_ha : 0 < a)
+    (P : E.PaperStepContext theta0 theta1) (ht0 : 0 ≤ t) :
     E.preStepStockIntegral theta0 (fun tau => tau ^ a) t =
       E.Vinf theta0 E.gHard (fun tau => tau ^ a) *
         max 0 (1 - t / E.Ts) := by
   rw [E.preStepStockIntegral_eq_transientStock theta0 (fun tau => tau ^ a)
-    ht0 htheta0]
+    ht0 P.theta0_range.2]
   rfl
 
 theorem hasDerivAt_VinfHard_below
@@ -406,6 +442,11 @@ theorem paper_theorem10_pipeline_collapse_exact
 
 /-! ## Proposition 11 and Equation (11). -/
 
+structure PaperSmoothThresholdContext (a b : ℝ) : Prop where
+  ha_pos : 0 < a
+  ha_le_one : a ≤ 1
+  hb_pos : 0 < b
+
 theorem smoothStockAbove_eq_paperClosedForm
     {a b theta : ℝ} (hthetaStar : E.thetaStar < theta)
     (htheta1 : theta < 1) :
@@ -431,7 +472,7 @@ theorem smoothStockAbove_eq_paperClosedForm
   field_simp
 
 theorem paper_equation11_smooth_stock_exact
-    {a b theta : ℝ} (_ha : 0 < a) (_ha_le : a ≤ 1) (_hb : 0 < b)
+    {a b theta : ℝ} (_P : PaperSmoothThresholdContext a b)
     (hthetaStar : E.thetaStar < theta)
     (htheta1 : theta < 1) :
     E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a) =
@@ -508,18 +549,50 @@ theorem paper_proposition11_smooth_collapse_exact
 
 /-! ## Theorem 13 and Equations (12)--(14). -/
 
+structure PaperExternalityIncidenceContext
+    (F : ℝ → ℝ → ℝ) (g h : ℝ → ℝ) (theta V r wG wV : ℝ)
+    (stationaryThetaAndPrices employerCapturesJuniorGeneration
+      employerCapturesNoLaterVerificationRent entrantIsPriceTaking : Prop) : Prop where
+  theta_range : theta ∈ Icc (0 : ℝ) 1
+  steady_stock : V = E.Vinf theta g h
+  discount_pos : 0 < r
+  generation_price_pos : 0 < wG
+  verification_price_pos : 0 < wV
+  generation_price : HasDerivAt (fun x => F x V) wG (E.G theta)
+  verification_price : HasDerivAt (fun y => F (E.G theta) y) wV V
+  h_stationary : stationaryThetaAndPrices
+  h_capture_generation : employerCapturesJuniorGeneration
+  h_no_capture_verification : employerCapturesNoLaterVerificationRent
+  h_price_taking : entrantIsPriceTaking
+
 theorem paper_equation12_social_present_value_exact
-    (wG wV gE hE LambdaJ Lambda theta : ℝ) :
-    MPsoc wG wV gE hE LambdaJ Lambda theta =
-      MPpriv wG LambdaJ theta + wV * gE * hE * Lambda := rfl
+    (F : ℝ → ℝ → ℝ) (g h : ℝ → ℝ) (theta V r wG wV : ℝ)
+    {stationaryThetaAndPrices employerCapturesJuniorGeneration
+      employerCapturesNoLaterVerificationRent entrantIsPriceTaking : Prop}
+    (_P : E.PaperExternalityIncidenceContext F g h theta V r wG wV
+      stationaryThetaAndPrices employerCapturesJuniorGeneration
+      employerCapturesNoLaterVerificationRent entrantIsPriceTaking) :
+    MPsoc wG wV (g (E.eBar theta)) (h (E.eBar theta))
+        (E.LambdaJ r) (E.Lambda r) theta =
+      MPpriv wG (E.LambdaJ r) theta +
+        wV * g (E.eBar theta) * h (E.eBar theta) * E.Lambda r := rfl
 
 theorem paper_equation13_apprenticeship_wedge_exact
-    (wG wV gE hE LambdaJ Lambda theta : ℝ)
-    (hwG : 0 < wG) (hLambdaJ : 0 < LambdaJ) (htheta1 : theta < 1) :
-    wedge wG wV gE hE LambdaJ Lambda theta =
-      (wV / wG) * (gE * hE * Lambda) / ((1 - theta) * LambdaJ) :=
-  thm_externality_wedge_identity wG wV gE hE LambdaJ Lambda theta
-    hwG hLambdaJ htheta1
+    (F : ℝ → ℝ → ℝ) (g h : ℝ → ℝ) (theta V r wG wV : ℝ)
+    {stationaryThetaAndPrices employerCapturesJuniorGeneration
+      employerCapturesNoLaterVerificationRent entrantIsPriceTaking : Prop}
+    (P : E.PaperExternalityIncidenceContext F g h theta V r wG wV
+      stationaryThetaAndPrices employerCapturesJuniorGeneration
+      employerCapturesNoLaterVerificationRent entrantIsPriceTaking)
+    (htheta1 : theta < 1) :
+    wedge wG wV (g (E.eBar theta)) (h (E.eBar theta))
+        (E.LambdaJ r) (E.Lambda r) theta =
+      (wV / wG) *
+        (g (E.eBar theta) * h (E.eBar theta) * E.Lambda r) /
+          ((1 - theta) * E.LambdaJ r) :=
+  thm_externality_wedge_identity wG wV (g (E.eBar theta))
+    (h (E.eBar theta)) (E.LambdaJ r) (E.Lambda r) theta
+    P.generation_price_pos (E.LambdaJ_pos P.discount_pos) htheta1
 
 theorem paper_equation14_explicit_wedge_exact
     (F : ℝ → ℝ → ℝ) (wG wV : ℝ → ℝ)
@@ -623,8 +696,17 @@ theorem paper_theorem13_externality_exact
 
 /-! ## Proposition 14 and Equation (15): finite profession set. -/
 
+structure PaperAggregationContext
+    {ι : Type*} [DecidableEq ι] (s : Finset ι) (Y w : ι → ℝ) : Prop where
+  output_nonneg : ∀ i ∈ s, 0 ≤ Y i
+  weight_pos : ∀ i ∈ s, 0 < w i
+  weight_sum : ∑ i ∈ s, w i = 1
+  has_zero : ∃ i ∈ s, Y i = 0
+  has_positive : ∃ i ∈ s, 0 < Y i
+
 theorem paper_equation15_aggregate_output_exact
-    {ι : Type*} (s : Finset ι) (Y w : ι → ℝ) (sigma : ℝ)
+    {ι : Type*} [DecidableEq ι] (s : Finset ι) (Y w : ι → ℝ)
+    (_P : PaperAggregationContext s Y w) (sigma : ℝ)
     (hsigma : 1 < sigma) :
     aggregateCES s Y w sigma =
       (∑ i ∈ s, w i * Y i ^ ((sigma - 1) / sigma)) ^
