@@ -97,7 +97,9 @@ theorem paper_theorem9_wage_ratio_large_capacity_atomic
   E.marginalProductWageRatioAtCapacity_tendsto_atTop P htheta.1 htheta.2
 
 theorem paper_theorem9_threshold_objects_atomic
-    (wG wV : ℝ → ℝ) (V rBar : ℝ) (_hrBar : 0 < rBar) :
+    (F : ℝ → ℝ → ℝ) (V : ℝ) (wG wV : ℝ → ℝ)
+    (_P : E.CESPricePathOn F (fun _ => V) wG wV (Icc (0 : ℝ) 1))
+    (rBar : ℝ) (_hrBar : 0 < rBar) :
     thetaInvMarginalProductInf wG wV rBar =
         sInf (marginalProductCrossingSet wG wV rBar) ∧
       E.Gstar V rBar =
@@ -156,7 +158,10 @@ theorem paper_theorem9_actual_threshold_limit_atomic
     hbaseline
 
 theorem paper_theorem9_baseline_zero_atomic
-    (wG wV : ℝ → ℝ) (rBar : ℝ) (hbaseline : rBar ≤ wV 0 / wG 0) :
+    (F : ℝ → ℝ → ℝ) (V : ℝ) (wG wV : ℝ → ℝ)
+    (_P : E.CESPricePathOn F (fun _ => V) wG wV (Icc (0 : ℝ) 1))
+    (rBar : ℝ) (_hrBar : 0 < rBar)
+    (hbaseline : rBar ≤ wV 0 / wG 0) :
     thetaInvMarginalProductInf wG wV rBar = 0 :=
   thetaInvMarginalProductInf_eq_zero_of_target_le_baseline wG wV rBar
     hbaseline
@@ -262,11 +267,13 @@ theorem paper_theorem10_step_clear_atomic
 /-! ## Proposition 11 -/
 
 theorem paper_proposition11_context_atomic
-    {a b : ℝ} (P : PaperSmoothThresholdContext a b) :
+    {a b theta : ℝ} (P : PaperSmoothThresholdContext a b)
+    (htheta : theta ∈ Ioo E.thetaStar 1) :
     0 < a ∧ a ≤ 1 ∧ 0 < b ∧
+      theta ∈ Ioo E.thetaStar 1 ∧
       ∀ tau : ℝ, 0 ≤ tau → tau ≤ E.tauStar →
         E.gSmooth b tau = (tau / E.tauStar) ^ b := by
-  refine ⟨P.ha_pos, P.ha_le_one, P.hb_pos, ?_⟩
+  refine ⟨P.ha_pos, P.ha_le_one, P.hb_pos, htheta, ?_⟩
   intro tau htau htauStar
   unfold gSmooth
   by_cases h : E.tauStar ≤ tau
@@ -322,7 +329,7 @@ theorem paper_theorem13_context_atomic
     (P : E.PaperExternalityIncidenceContext F g h theta V r wG wV
       stationaryThetaAndPrices employerCapturesJuniorGeneration
       employerCapturesNoLaterVerificationRent entrantIsPriceTaking) :
-    theta ∈ Icc (0 : ℝ) 1 ∧ V = E.Vinf theta g h ∧ 0 < r ∧
+    theta ∈ Ico (0 : ℝ) 1 ∧ V = E.Vinf theta g h ∧ 0 < r ∧
       0 < wG ∧ 0 < wV ∧
       HasDerivAt (fun x => F x V) wG (E.G theta) ∧
       HasDerivAt (fun y => F (E.G theta) y) wV V ∧
@@ -397,14 +404,15 @@ theorem paper_theorem13_smooth_trichotomy_atomic
 
 theorem paper_theorem13_hard_boundary_atomic
     (wG wV r a theta : ℝ) (htheta : E.thetaStar < theta)
-    (_htheta1 : theta ≤ 1) (_hr : 0 < r)
+    (htheta1 : theta < 1) (hwG : 0 < wG) (hr : 0 < r)
     (_ha : 0 < a) (_ha1 : a ≤ 1) :
     E.gHard (E.eBar E.thetaStar) = 1 ∧
       wedge wG wV (E.gHard (E.eBar theta)) (E.eBar theta ^ a)
         (E.LambdaJ r) (E.Lambda r) theta = 0 := by
   exact ⟨E.gHard_of_ge (by simp),
     E.hardPromotion_wedge_zero_above wG wV (E.eBar theta ^ a)
-      (E.LambdaJ r) (E.Lambda r) theta htheta⟩
+      (E.LambdaJ r) (E.Lambda r) theta hwG (E.LambdaJ_pos hr)
+      htheta htheta1⟩
 
 theorem paper_theorem13_partial_capture_atomic
     (zeta wG wV gE hE LambdaJ Lambda theta : ℝ) :
@@ -431,17 +439,23 @@ theorem paper_theorem13_residual_transfer_atomic
 
 theorem paper_theorem13_cobb_douglas_transfer_atomic
     (F : ℝ → ℝ → ℝ) (g h : ℝ → ℝ)
-    (theta G Y wV r : ℝ) (_htheta : theta ∈ Icc (0 : ℝ) 1)
+    (theta G Y wV r : ℝ) (_htheta : theta ∈ Ico (0 : ℝ) 1)
     (_hr : 0 < r)
     (hCD : IsCobbDouglas F E.eta E.lam)
     (h_wV : HasDerivAt (fun y => F G y) wV (E.Vinf theta g h))
     (hY : Y = F G (E.Vinf theta g h))
-    (hG : 0 < G) (hV : 0 < E.Vinf theta g h) :
+    (hG : 0 < G)
+    (hgh : 0 < g (E.eBar theta) * h (E.eBar theta)) :
     wV * E.Vinf theta g h = (1 - E.eta) * Y ∧
       wV = (1 - E.eta) * Y / E.Vinf theta g h ∧
       externalityResidual wV (g (E.eBar theta)) (h (E.eBar theta))
           (E.Lambda r) =
         (1 - E.eta) * Y * E.Lambda r / (E.nu * E.Ts) := by
+  have hV : 0 < E.Vinf theta g h := by
+    rw [E.steady_state_stock_identity]
+    rw [show E.nu * E.Ts * g (E.eBar theta) * h (E.eBar theta) =
+      (E.nu * E.Ts) * (g (E.eBar theta) * h (E.eBar theta)) by ring]
+    exact mul_pos (mul_pos E.nu_pos E.Ts_pos) hgh
   have hshare := axiom_cobb_douglas_factor_share F E.eta E.lam G
     (E.Vinf theta g h) wV Y hCD h_wV hY hG hV E.eta_pos
     E.eta_lt_one E.lam_pos

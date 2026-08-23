@@ -562,7 +562,7 @@ structure PaperExternalityIncidenceContext
     (F : ℝ → ℝ → ℝ) (g h : ℝ → ℝ) (theta V r wG wV : ℝ)
     (stationaryThetaAndPrices employerCapturesJuniorGeneration
       employerCapturesNoLaterVerificationRent entrantIsPriceTaking : Prop) : Prop where
-  theta_range : theta ∈ Icc (0 : ℝ) 1
+  theta_range : theta ∈ Ico (0 : ℝ) 1
   steady_stock : V = E.Vinf theta g h
   discount_pos : 0 < r
   generation_price_pos : 0 < wG
@@ -592,8 +592,7 @@ theorem paper_equation13_apprenticeship_wedge_exact
       employerCapturesNoLaterVerificationRent entrantIsPriceTaking : Prop}
     (P : E.PaperExternalityIncidenceContext F g h theta V r wG wV
       stationaryThetaAndPrices employerCapturesJuniorGeneration
-      employerCapturesNoLaterVerificationRent entrantIsPriceTaking)
-    (htheta1 : theta < 1) :
+      employerCapturesNoLaterVerificationRent entrantIsPriceTaking) :
     wedge wG wV (g (E.eBar theta)) (h (E.eBar theta))
         (E.LambdaJ r) (E.Lambda r) theta =
       (wV / wG) *
@@ -601,7 +600,7 @@ theorem paper_equation13_apprenticeship_wedge_exact
           ((1 - theta) * E.LambdaJ r) :=
   thm_externality_wedge_identity wG wV (g (E.eBar theta))
     (h (E.eBar theta)) (E.LambdaJ r) (E.Lambda r) theta
-    P.generation_price_pos (E.LambdaJ_pos P.discount_pos) htheta1
+    P.generation_price_pos (E.LambdaJ_pos P.discount_pos) P.theta_range.2
 
 theorem paper_equation14_explicit_wedge_exact
     (F : ℝ → ℝ → ℝ) (wG wV : ℝ → ℝ)
@@ -629,13 +628,15 @@ theorem paper_theorem13_externality_exact
     (hr : 0 < r) (hthetaHard : thetaHard ∈ Ico (0 : ℝ) E.thetaStar)
     (ha_pos : 0 < a) (ha_le : a ≤ 1) (_hb_pos : 0 < b)
     (hKAI_ge : E.LG ≤ E.KAI)
-    (hthetaAbove : E.thetaStar < thetaAbove) (_hthetaAbove1 : thetaAbove ≤ 1)
+    (hthetaAbove : E.thetaStar < thetaAbove) (hthetaAbove1 : thetaAbove < 1)
+    (hwGBoundary_pos : 0 < wGBoundary)
     (g h : ℝ → ℝ) (thetaCD G Y wVCD : ℝ)
-    (_hthetaCD : thetaCD ∈ Icc (0 : ℝ) 1)
+    (_hthetaCD : thetaCD ∈ Ico (0 : ℝ) 1)
     (hCD : IsCobbDouglas Fcd E.eta E.lam)
     (h_wVCD : HasDerivAt (fun y => Fcd G y) wVCD (E.Vinf thetaCD g h))
     (hY : Y = Fcd G (E.Vinf thetaCD g h))
-    (hG_pos : 0 < G) (hVCD_pos : 0 < E.Vinf thetaCD g h) :
+    (hG_pos : 0 < G)
+    (hghCD_pos : 0 < g (E.eBar thetaCD) * h (E.eBar thetaCD)) :
     (∫ s in (0 : ℝ)..E.Tj, Real.exp (-r * s)) = E.LambdaJ r ∧
     (∫ s in E.Tj..E.T, Real.exp (-r * s)) = E.Lambda r ∧
     wedge (wGHard thetaHard) (wVHard thetaHard)
@@ -682,6 +683,11 @@ theorem paper_theorem13_externality_exact
           (E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a)) theta := by
     intro theta htheta
     exact CESPricePathOn.ratio_eq E Psmooth htheta
+  have hVCD_pos : 0 < E.Vinf thetaCD g h := by
+    rw [E.steady_state_stock_identity]
+    rw [show E.nu * E.Ts * g (E.eBar thetaCD) * h (E.eBar thetaCD) =
+      (E.nu * E.Ts) * (g (E.eBar thetaCD) * h (E.eBar thetaCD)) by ring]
+    exact mul_pos (mul_pos E.nu_pos E.Ts_pos) hghCD_pos
   have hshare := axiom_cobb_douglas_factor_share Fcd E.eta E.lam G
     (E.Vinf thetaCD g h) wVCD Y hCD h_wVCD hY hG_pos hVCD_pos
     E.eta_pos E.eta_lt_one E.lam_pos
@@ -710,7 +716,7 @@ theorem paper_theorem13_externality_exact
   · exact E.gHard_of_ge (by simp)
   · exact E.hardPromotion_wedge_zero_above wGBoundary wVBoundary
       (E.eBar thetaAbove ^ a) (E.LambdaJ r) (E.Lambda r)
-      thetaAbove hthetaAbove
+      thetaAbove hwGBoundary_pos (E.LambdaJ_pos hr) hthetaAbove hthetaAbove1
   · exact hshare
   · exact hwVeq
   · exact E.thm_externality_pigouvian_cobb_douglas

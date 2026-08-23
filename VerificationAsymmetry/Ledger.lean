@@ -594,7 +594,7 @@ def gap_thm_collapse_transient_CLOSED : GapEntry := {
   cat3SubType := Cat3SubType.notCat3
   paperSource := "Li 2026, `\\label{thm:collapse}` Part 4, exact " ++
     "`e_01(c)` path, cohort integral, Eq. `\\eqref{eq:transient}`, and " ++
-    "full-stock clearing time"
+    "full-stock zero bound after the last straddling retirement"
   attackHistory := []
   scope :=
     "The legacy pre-shock component remains covered by four pointwise theorems: " ++

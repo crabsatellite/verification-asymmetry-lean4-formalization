@@ -251,12 +251,15 @@ theorem thm_externality_wedge_identity
     zero immediately to the right because the promotion factor is zero. -/
 theorem hardPromotion_wedge_zero_above
     (wG wV hE LambdaJ Lambda theta : ℝ)
-    (htheta : E.thetaStar < theta) :
+    (hwG : 0 < wG) (hLambdaJ : 0 < LambdaJ)
+    (htheta : E.thetaStar < theta) (htheta1 : theta < 1) :
     wedge wG wV (E.gHard (E.eBar theta)) hE LambdaJ Lambda theta = 0 := by
   have heBar : E.eBar theta < E.tauStar :=
     (E.eBar_lt_tauStar_iff_theta_gt_thetaStar theta).2 htheta
+  rw [thm_externality_wedge_identity wG wV (E.gHard (E.eBar theta))
+    hE LambdaJ Lambda theta hwG hLambdaJ htheta1]
   rw [E.gHard_of_lt heBar]
-  simp [wedge, externalityResidual]
+  simp
 
 /-! ### Theorem~\ref{thm:externality} Part 1: wedge growth below the
     hard threshold. -/

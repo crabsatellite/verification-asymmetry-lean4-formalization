@@ -108,7 +108,7 @@ standalone Cat 3 atoms.
 ### Current-paper closure and historical-superset gaps
 
 The current manuscript's exact post-step cohort path, straddling-cohort cutoff,
-full-stock clearing time, smooth-threshold derivative kink, externality-wedge
+full-stock zero bound after the last straddling retirement, smooth-threshold derivative kink, externality-wedge
 growth, post-collapse exponent trichotomy, large-capacity limits, fixed-CES
 positivity, and near-Cobb--Douglas variable-exponent limit are all Lean-closed.
 
@@ -140,7 +140,7 @@ The authoritative current-paper surfaces are:
 | [`VerificationAsymmetry/Decomp.lean`](VerificationAsymmetry/Decomp.lean) | Theorem `thm:decomp` (stock-flow output decomposition; consumes `axiom_euler_crs`) |
 | [`VerificationAsymmetry/Inversion.lean`](VerificationAsymmetry/Inversion.lean) | Theorem `thm:inversion`, literal capacity-indexed marginal-product price family, consumed CES transport, actual-infimum interior/limit roots, and bounded-capacity endpoint identifications |
 | [`VerificationAsymmetry/Collapse.lean`](VerificationAsymmetry/Collapse.lean) | Steady-state hard/smooth threshold algebra, derivative formulas, and the verified slope kink |
-| [`VerificationAsymmetry/CohortPath.lean`](VerificationAsymmetry/CohortPath.lean) | Arbitrary-path experience integral, exact permanent-step cohort path, promotion cutoff, full stock integral, and clearing time |
+| [`VerificationAsymmetry/CohortPath.lean`](VerificationAsymmetry/CohortPath.lean) | Arbitrary-path experience integral, exact permanent-step cohort path, promotion cutoff, full stock integral, and zero-stock bound |
 | [`VerificationAsymmetry/Credential.lean`](VerificationAsymmetry/Credential.lean) | Theorem `thm:credential` (Cobb-Douglas closed form, finite-capacity gross-peak FOC and uniqueness, multiplicative decay); Proposition `prop:junior-senior` (senior wage scaling) |
 | [`VerificationAsymmetry/Externality.lean`](VerificationAsymmetry/Externality.lean) | Present-value identities, wedge closed form and monotonicity, smooth exponent limits, Cobb-Douglas residual-transfer simplification, and partial-capture identity |
 | [`VerificationAsymmetry/Recursive.lean`](VerificationAsymmetry/Recursive.lean) | Conditional reduced-form μ-amplification, exact log-slope acceleration algebra, and threshold algebra; definitional cohort-side μ-invariance; technological reachability equivalence |
