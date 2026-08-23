@@ -262,14 +262,15 @@ theorem paper_theorem9_inversion_exact
         thetaInvMarginalProductInf wG wV rBar =
             (E.Gstar V rBar - E.LG) / (E.KAI - E.LG) ∧
           thetaInvMarginalProductInf wG wV rBar ∈ Ioo (0 : ℝ) 1) ∧
-    (E.LG < E.KAI →
-      ∀ {rBar1 rBar2 : ℝ}, 0 < rBar1 → rBar1 < rBar2 →
-        E.thetaInv V rBar1 < E.thetaInv V rBar2) ∧
+    (∀ {rBar1 rBar2 : ℝ}, 0 < rBar1 → rBar1 < rBar2 →
+      E.LG < E.Gstar V rBar1 → E.Gstar V rBar2 < E.KAI →
+        thetaInvMarginalProductInf wG wV rBar1 <
+          thetaInvMarginalProductInf wG wV rBar2) ∧
     (∀ {Gcrit K1 K2 : ℝ}, E.LG < Gcrit → Gcrit < K1 → K1 < K2 →
       thetaInvAtCapacity E.LG Gcrit K2 < thetaInvAtCapacity E.LG Gcrit K1) ∧
     (∀ rBar : ℝ, E.LG < E.Gstar V rBar →
       Tendsto (fun K => thetaInvAtCapacity E.LG (E.Gstar V rBar) K)
-        atTop (𝓝 0)) ∧
+        atTop (nhdsWithin 0 (Ioi 0))) ∧
     (∀ theta : ℝ, 0 < theta →
       Tendsto
         (fun K => wageRatioAtCapacity E.eta E.rho E.lam E.LG V theta K)
@@ -293,13 +294,24 @@ theorem paper_theorem9_inversion_exact
   · intro rBar hrBar hGstar_lo hGstar_hi
     exact E.paper_equation8_inversion_threshold_exact F V rBar wG wV P
       hrBar (lt_trans hGstar_lo hGstar_hi) hGstar_lo hGstar_hi
-  · intro hKAI_gt rBar1 rBar2 hrBar1 hrBar12
+  · intro rBar1 rBar2 hrBar1 hrBar12 hGstar1_lo hGstar2_hi
+    have hGstar12 := E.Gstar_strict_in_rBar V hV_pos hrBar1 hrBar12 P.hrho_lt
+    have hGstar1_hi : E.Gstar V rBar1 < E.KAI :=
+      lt_trans hGstar12 hGstar2_hi
+    have hGstar2_lo : E.LG < E.Gstar V rBar2 :=
+      lt_trans hGstar1_lo hGstar12
+    rw [E.thetaInvMarginalProductInf_eq_thetaInv V rBar1 wG wV hV_pos
+        hrBar1 (lt_trans hGstar1_lo hGstar1_hi) P.hrho_lt hGstar1_lo
+        hGstar1_hi hwage,
+      E.thetaInvMarginalProductInf_eq_thetaInv V rBar2 wG wV hV_pos
+        (lt_trans hrBar1 hrBar12) (lt_trans hGstar2_lo hGstar2_hi) P.hrho_lt
+        hGstar2_lo hGstar2_hi hwage]
     exact E.thm_inversion_threshold_strict_in_rBar V hV_pos hrBar1 hrBar12
-      hKAI_gt P.hrho_lt
+      (lt_trans hGstar1_lo hGstar1_hi) P.hrho_lt
   · intro Gcrit K1 K2 hcrit hK1 hK12
     exact thetaInvAtCapacity_strictAnti hcrit hK1 hK12
-  · intro rBar _hcrit
-    exact thetaInvAtCapacity_tendsto_zero E.LG (E.Gstar V rBar)
+  · intro rBar hcrit
+    exact thetaInvAtCapacity_tendsto_zero_right hcrit
   · intro theta htheta
     exact wageRatioAtCapacity_tendsto_atTop E.eta_pos E.eta_lt_one
       E.lam_pos hV_pos htheta P.hrho_lt
@@ -335,8 +347,10 @@ theorem paper_theorem10_pipeline_collapse_exact
     {a thetaBelow thetaAbove theta0 theta1 c t tclear : ℝ}
     (ha : 0 < a) (_hthetaBelow0 : 0 ≤ thetaBelow)
     (hthetaBelow : thetaBelow < E.thetaStar)
-    (hthetaAbove : E.thetaStar < thetaAbove)
-    (hstep0 : theta0 < E.thetaStar) (hstep1 : E.thetaStar < theta1)
+    (hthetaAbove : E.thetaStar < thetaAbove) (_hthetaAbove1 : thetaAbove ≤ 1)
+    (_hstep0_nonneg : 0 ≤ theta0) (hstep0 : theta0 < E.thetaStar)
+    (hstep1 : E.thetaStar < theta1) (_hstep1_le : theta1 ≤ 1)
+    (_ht_nonneg : 0 ≤ t)
     (htclear : E.T - E.cStar theta0 theta1 ≤ tclear) :
     E.thetaStar = 1 - E.tauStar / E.Tj ∧
     (0 < E.cStar theta0 theta1 ∧ E.cStar theta0 theta1 < E.Tj) ∧
@@ -531,9 +545,11 @@ theorem paper_theorem13_externality_exact
       (fun x => E.Vinf x (E.gSmooth b) (fun tau => tau ^ a))
       wGSmooth wVSmooth (Ioo E.thetaStar 1))
     (hr : 0 < r) (hthetaHard : thetaHard ∈ Ico (0 : ℝ) E.thetaStar)
-    (ha_pos : 0 < a) (ha_le : a ≤ 1) (hKAI_ge : E.LG ≤ E.KAI)
-    (hthetaAbove : E.thetaStar < thetaAbove)
+    (ha_pos : 0 < a) (ha_le : a ≤ 1) (_hb_pos : 0 < b)
+    (hKAI_ge : E.LG ≤ E.KAI)
+    (hthetaAbove : E.thetaStar < thetaAbove) (_hthetaAbove1 : thetaAbove ≤ 1)
     (g h : ℝ → ℝ) (thetaCD G Y wVCD : ℝ)
+    (_hthetaCD : thetaCD ∈ Icc (0 : ℝ) 1)
     (hCD : IsCobbDouglas Fcd E.eta E.lam)
     (h_wVCD : HasDerivAt (fun y => Fcd G y) wVCD (E.Vinf thetaCD g h))
     (hY : Y = Fcd G (E.Vinf thetaCD g h))
@@ -569,6 +585,7 @@ theorem paper_theorem13_externality_exact
           (fun theta => E.smoothMarginalProductWedge
             wGSmooth wVSmooth r a b theta)
           (nhdsWithin 1 (Iio 1)) (𝓝 0))) ∧
+    E.gHard (E.eBar E.thetaStar) = 1 ∧
     externalityResidual wVBoundary (E.gHard (E.eBar thetaAbove))
       hBoundary (E.Lambda r) = 0 ∧
     externalityResidual wVCD (g (E.eBar thetaCD)) (h (E.eBar thetaCD))
@@ -581,7 +598,7 @@ theorem paper_theorem13_externality_exact
     intro theta htheta
     exact CESPricePathOn.ratio_eq E Psmooth htheta
   refine ⟨E.intervalIntegral_exp_neg_eq_LambdaJ hr,
-    E.intervalIntegral_exp_neg_eq_Lambda hr, ?_, ?_, ?_, ?_, ?_⟩
+    E.intervalIntegral_exp_neg_eq_Lambda hr, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · exact E.wedge_eq_wedgeExplicit hr hthetaHard.1 hthetaHard.2
       (Phard.hwG_pos thetaHard hthetaHard) hwageHard
   · intro theta1 theta2 htheta1 htheta2 htheta12
@@ -597,6 +614,7 @@ theorem paper_theorem13_externality_exact
         Psmooth.hwG_pos hwageSmooth,
       E.smoothMarginalProductWedge_tendsto_zero hr
         Psmooth.hwG_pos hwageSmooth⟩
+  · exact E.gHard_of_ge (by simp)
   · exact E.hardPromotion_externalityResidual_zero_above
       wVBoundary hBoundary (E.Lambda r) thetaAbove hthetaAbove
   · exact E.thm_externality_pigouvian_cobb_douglas_from_axioms

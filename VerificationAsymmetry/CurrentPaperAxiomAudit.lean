@@ -23,6 +23,7 @@ import VerificationAsymmetry.TheoremMap
 #print axioms VerificationAsymmetry.Economy.thetaInvAtCapacity_antitone
 #print axioms VerificationAsymmetry.Economy.thetaInvAtCapacity_strictAnti
 #print axioms VerificationAsymmetry.Economy.thetaInvAtCapacity_tendsto_zero
+#print axioms VerificationAsymmetry.Economy.thetaInvAtCapacity_tendsto_zero_right
 
 -- Theorem 10 and Proposition 11.
 #print axioms VerificationAsymmetry.Economy.cumulativeExperience_const

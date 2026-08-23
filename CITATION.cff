@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this formalization, please cite the software repository and the companion paper."
 type: software
 title: "Verification Asymmetry: Lean 4 Formalization"
-version: 0.4.5
+version: 0.4.6
 date-released: 2026-08-23
 doi: "10.5281/zenodo.22058379"
 authors:

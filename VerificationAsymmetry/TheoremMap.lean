@@ -92,6 +92,7 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.thetaInvAtCapacity_antitone
 #check VerificationAsymmetry.Economy.thetaInvAtCapacity_strictAnti
 #check VerificationAsymmetry.Economy.thetaInvAtCapacity_tendsto_zero
+#check VerificationAsymmetry.Economy.thetaInvAtCapacity_tendsto_zero_right
 
 /-! ## Theorem 10 and Eqs. (9)--(10): hard collapse and exact step path. -/
 #check VerificationAsymmetry.Economy.thetaStar

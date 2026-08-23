@@ -651,6 +651,20 @@ theorem thetaInvAtCapacity_tendsto_zero (LG Gcrit : ℝ) :
     linarith
   simpa [thetaInvAtCapacity] using tendsto_const_nhds.div_atTop hden
 
+/-- Paper Theorem 9 Part 2, directional form: an interior-reachable
+    capacity threshold approaches zero from the positive side. -/
+theorem thetaInvAtCapacity_tendsto_zero_right
+    {LG Gcrit : ℝ} (hcrit : LG < Gcrit) :
+    Tendsto (fun K : ℝ => thetaInvAtCapacity LG Gcrit K) atTop
+      (nhdsWithin 0 (Set.Ioi 0)) := by
+  rw [tendsto_nhdsWithin_iff]
+  constructor
+  · exact thetaInvAtCapacity_tendsto_zero LG Gcrit
+  · filter_upwards [eventually_ge_atTop (Gcrit + 1)] with K hK
+    unfold thetaInvAtCapacity
+    change 0 < (Gcrit - LG) / (K - LG)
+    exact div_pos (by linarith) (by linarith)
+
 end Economy
 
 end VerificationAsymmetry
