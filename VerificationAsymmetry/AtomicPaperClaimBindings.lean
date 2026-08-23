@@ -192,10 +192,16 @@ theorem paper_theorem10_jump_atomic (a : ℝ) (_ha : 0 < a) :
         (nhdsWithin E.thetaStar (Iic E.thetaStar))
         (𝓝 (E.nu * E.Ts * E.tauStar ^ a)) ∧
       Tendsto (fun theta => E.VinfHard a theta)
-        (nhdsWithin E.thetaStar (Ioi E.thetaStar)) (𝓝 0) :=
-  ⟨E.thm_collapse_jump_magnitude a,
+        (nhdsWithin E.thetaStar (Ioi E.thetaStar)) (𝓝 0) ∧
+      E.VinfHard a E.thetaStar - 0 = E.nu * E.Ts * E.tauStar ^ a := by
+  have hdiff := E.thm_collapse_jump_diff a
+    (θ_above := (1 : ℝ)) E.thetaStar_in_unit_interval.2
+  have hzero := E.thm_collapse_above_threshold a 1
+    E.thetaStar_in_unit_interval.2
+  rw [hzero] at hdiff
+  exact ⟨E.thm_collapse_jump_magnitude a,
     E.VinfHard_tendsto_left_at_thetaStar a,
-    E.VinfHard_tendsto_right_zero_at_thetaStar a⟩
+    E.VinfHard_tendsto_right_zero_at_thetaStar a, hdiff⟩
 
 theorem paper_theorem10_zero_above_atomic
     {a theta : ℝ} (_ha : 0 < a)
@@ -242,11 +248,16 @@ theorem paper_theorem10_step_stock_atomic
 
 theorem paper_theorem10_step_clear_atomic
     {a theta0 theta1 t : ℝ} (_ha : 0 < a)
-    (_P : E.PaperStepContext theta0 theta1)
+    (P : E.PaperStepContext theta0 theta1)
     (ht : E.T - E.cStar theta0 theta1 ≤ t) :
-    E.exactStepStock theta0 theta1 (fun tau => tau ^ a) t = 0 :=
-  E.exactStepStock_zero_after_last_straddle theta0 theta1
-    (fun tau => tau ^ a) ht
+    E.exactStepStock theta0 theta1 (fun tau => tau ^ a) t = 0 ∧
+      E.Ts < E.T - E.cStar theta0 theta1 := by
+  have hc := E.cStar_mem_open_interval P.theta0_range.2 P.theta1_range.1
+  constructor
+  · exact E.exactStepStock_zero_after_last_straddle theta0 theta1
+      (fun tau => tau ^ a) ht
+  · unfold Ts
+    linarith [hc.2]
 
 /-! ## Proposition 11 -/
 
@@ -366,9 +377,10 @@ theorem paper_theorem13_smooth_trichotomy_atomic
       Tendsto (fun theta => E.smoothMarginalProductWedge wG wV r a b theta)
         (nhdsWithin 1 (Iio 1)) atTop) ∧
     (E.smoothWedgeExponent a b = 0 →
-      Tendsto (fun theta => E.smoothMarginalProductWedge wG wV r a b theta)
-        (nhdsWithin 1 (Iio 1))
-        (𝓝 (E.smoothWedgeEndpointCoefficient r a b))) ∧
+      0 < E.smoothWedgeEndpointCoefficient r a b ∧
+        Tendsto (fun theta => E.smoothMarginalProductWedge wG wV r a b theta)
+          (nhdsWithin 1 (Iio 1))
+          (𝓝 (E.smoothWedgeEndpointCoefficient r a b))) ∧
     (0 < E.smoothWedgeExponent a b →
       Tendsto (fun theta => E.smoothMarginalProductWedge wG wV r a b theta)
         (nhdsWithin 1 (Iio 1)) (𝓝 0)) := by
@@ -376,18 +388,23 @@ theorem paper_theorem13_smooth_trichotomy_atomic
       wV theta / wG theta = E.wageRatio
         (E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a)) theta :=
     fun theta htheta => CESPricePathOn.ratio_eq E P htheta
-  exact ⟨E.smoothMarginalProductWedge_tendsto_atTop hr P.hwG_pos hwage,
-    E.smoothMarginalProductWedge_tendsto_endpoint hr P.hwG_pos hwage,
-    E.smoothMarginalProductWedge_tendsto_zero hr P.hwG_pos hwage⟩
+  refine ⟨E.smoothMarginalProductWedge_tendsto_atTop hr P.hwG_pos hwage,
+    ?_, E.smoothMarginalProductWedge_tendsto_zero hr P.hwG_pos hwage⟩
+  intro hexponent
+  exact ⟨E.smoothWedgeEndpointCoefficient_pos hr,
+    E.smoothMarginalProductWedge_tendsto_endpoint hr P.hwG_pos hwage
+      hexponent⟩
 
 theorem paper_theorem13_hard_boundary_atomic
-    (wV h : ℝ) (r theta : ℝ) (htheta : E.thetaStar < theta)
-    (_htheta1 : theta ≤ 1) (_hr : 0 < r) :
+    (wG wV r a theta : ℝ) (htheta : E.thetaStar < theta)
+    (_htheta1 : theta ≤ 1) (_hr : 0 < r)
+    (_ha : 0 < a) (_ha1 : a ≤ 1) :
     E.gHard (E.eBar E.thetaStar) = 1 ∧
-      externalityResidual wV (E.gHard (E.eBar theta)) h (E.Lambda r) = 0 := by
+      wedge wG wV (E.gHard (E.eBar theta)) (E.eBar theta ^ a)
+        (E.LambdaJ r) (E.Lambda r) theta = 0 := by
   exact ⟨E.gHard_of_ge (by simp),
-    E.hardPromotion_externalityResidual_zero_above wV h (E.Lambda r)
-      theta htheta⟩
+    E.hardPromotion_wedge_zero_above wG wV (E.eBar theta ^ a)
+      (E.LambdaJ r) (E.Lambda r) theta htheta⟩
 
 theorem paper_theorem13_partial_capture_atomic
     (zeta wG wV gE hE LambdaJ Lambda theta : ℝ) :
@@ -420,13 +437,20 @@ theorem paper_theorem13_cobb_douglas_transfer_atomic
     (h_wV : HasDerivAt (fun y => F G y) wV (E.Vinf theta g h))
     (hY : Y = F G (E.Vinf theta g h))
     (hG : 0 < G) (hV : 0 < E.Vinf theta g h) :
-    externalityResidual wV (g (E.eBar theta)) (h (E.eBar theta))
-        (E.Lambda r) =
-      (1 - E.eta) * Y * E.Lambda r / (E.nu * E.Ts) := by
-  simpa [pigouvianSubsidy_CD] using
-    E.thm_externality_pigouvian_cobb_douglas_from_axioms F E.eta E.lam
-      G Y wV (E.Lambda r) g h theta hCD h_wV hY hG hV E.eta_pos
-      E.eta_lt_one E.lam_pos rfl
+    wV * E.Vinf theta g h = (1 - E.eta) * Y ∧
+      wV = (1 - E.eta) * Y / E.Vinf theta g h ∧
+      externalityResidual wV (g (E.eBar theta)) (h (E.eBar theta))
+          (E.Lambda r) =
+        (1 - E.eta) * Y * E.Lambda r / (E.nu * E.Ts) := by
+  have hshare := axiom_cobb_douglas_factor_share F E.eta E.lam G
+    (E.Vinf theta g h) wV Y hCD h_wV hY hG hV E.eta_pos
+    E.eta_lt_one E.lam_pos
+  have hwV : wV = (1 - E.eta) * Y / E.Vinf theta g h :=
+    (eq_div_iff hV.ne').2 hshare
+  have hsteady := E.cobb_douglas_steady_state_identity Y wV g h theta hshare
+  have hresidual := E.thm_externality_pigouvian_cobb_douglas
+    Y wV (g (E.eBar theta)) (h (E.eBar theta)) (E.Lambda r) hsteady
+  exact ⟨hshare, hwV, by simpa [pigouvianSubsidy_CD] using hresidual⟩
 
 theorem paper_theorem13_zero_boundary_atomic
     (a wV h r theta : ℝ) (htheta : E.thetaStar < theta)

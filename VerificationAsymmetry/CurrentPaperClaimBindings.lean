@@ -402,6 +402,7 @@ theorem paper_theorem10_pipeline_collapse_exact
       (𝓝 (E.nu * E.Ts * E.tauStar ^ a)) ∧
     Tendsto (fun theta => E.VinfHard a theta)
       (nhdsWithin E.thetaStar (Ioi E.thetaStar)) (𝓝 0) ∧
+    E.VinfHard a E.thetaStar - 0 = E.nu * E.Ts * E.tauStar ^ a ∧
     E.VinfHard a thetaAbove = 0 ∧
     E.cumulativeExperience (stepSubstitutionPath theta0 theta1) c =
       E.stepExperience theta0 theta1 c ∧
@@ -413,8 +414,9 @@ theorem paper_theorem10_pipeline_collapse_exact
         if cohort ≤ -E.cStar theta0 theta1 then
           (E.stepExperience theta0 theta1 cohort) ^ a
         else 0) ∧
-    E.exactStepStock theta0 theta1 (fun tau => tau ^ a) tclear = 0 := by
-  refine ⟨rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    E.exactStepStock theta0 theta1 (fun tau => tau ^ a) tclear = 0 ∧
+    E.Ts < E.T - E.cStar theta0 theta1 := by
+  refine ⟨rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · exact E.cStar_mem_open_interval hstep0 hstep1
   · rw [E.thm_collapse_below_threshold a thetaBelow hthetaBelow.le]
     rfl
@@ -423,6 +425,10 @@ theorem paper_theorem10_pipeline_collapse_exact
   · exact E.thm_collapse_jump_magnitude a
   · exact E.VinfHard_tendsto_left_at_thetaStar a
   · exact E.VinfHard_tendsto_right_zero_at_thetaStar a
+  · have hdiff := E.thm_collapse_jump_diff a hthetaAbove
+    have hzero := E.thm_collapse_above_threshold a thetaAbove hthetaAbove
+    rw [hzero] at hdiff
+    exact hdiff
   · exact E.thm_collapse_above_threshold a thetaAbove hthetaAbove
   · exact E.cumulativeExperience_step_eq_stepExperience theta0 theta1 c
   · exact E.stepExperience_ge_tauStar_iff hstep0 hstep1
@@ -439,6 +445,9 @@ theorem paper_theorem10_pipeline_collapse_exact
             (fun tau => tau ^ a) t
   · exact E.exactStepStock_zero_after_last_straddle theta0 theta1
       (fun tau => tau ^ a) htclear
+  · have hc := E.cStar_mem_open_interval hstep0 hstep1
+    unfold Ts
+    linarith [hc.2]
 
 /-! ## Proposition 11 and Equation (11). -/
 
@@ -611,7 +620,7 @@ theorem paper_equation14_explicit_wedge_exact
 theorem paper_theorem13_externality_exact
     (Fces Fcd : ℝ → ℝ → ℝ)
     (wGHard wVHard wGSmooth wVSmooth : ℝ → ℝ)
-    (r a b thetaHard thetaAbove wVBoundary hBoundary : ℝ)
+    (r a b thetaHard thetaAbove wGBoundary wVBoundary : ℝ)
     (Phard : E.CESPricePathOn Fces (fun x => E.VinfHard a x)
       wGHard wVHard (Ico (0 : ℝ) E.thetaStar))
     (Psmooth : E.CESPricePathOn Fces
@@ -648,19 +657,22 @@ theorem paper_theorem13_externality_exact
             wGSmooth wVSmooth r a b theta)
           (nhdsWithin 1 (Iio 1)) atTop) ∧
       (E.smoothWedgeExponent a b = 0 →
-        Tendsto
-          (fun theta => E.smoothMarginalProductWedge
-            wGSmooth wVSmooth r a b theta)
-          (nhdsWithin 1 (Iio 1))
-          (𝓝 (E.smoothWedgeEndpointCoefficient r a b))) ∧
+        0 < E.smoothWedgeEndpointCoefficient r a b ∧
+          Tendsto
+            (fun theta => E.smoothMarginalProductWedge
+              wGSmooth wVSmooth r a b theta)
+            (nhdsWithin 1 (Iio 1))
+            (𝓝 (E.smoothWedgeEndpointCoefficient r a b))) ∧
       (0 < E.smoothWedgeExponent a b →
         Tendsto
           (fun theta => E.smoothMarginalProductWedge
             wGSmooth wVSmooth r a b theta)
           (nhdsWithin 1 (Iio 1)) (𝓝 0))) ∧
     E.gHard (E.eBar E.thetaStar) = 1 ∧
-    externalityResidual wVBoundary (E.gHard (E.eBar thetaAbove))
-      hBoundary (E.Lambda r) = 0 ∧
+    wedge wGBoundary wVBoundary (E.gHard (E.eBar thetaAbove))
+      (E.eBar thetaAbove ^ a) (E.LambdaJ r) (E.Lambda r) thetaAbove = 0 ∧
+    wVCD * E.Vinf thetaCD g h = (1 - E.eta) * Y ∧
+    wVCD = (1 - E.eta) * Y / E.Vinf thetaCD g h ∧
     externalityResidual wVCD (g (E.eBar thetaCD)) (h (E.eBar thetaCD))
         (E.Lambda r) = E.pigouvianSubsidy_CD Y (E.Lambda r) := by
   have hwageHard := CESPricePathOn.ratio_eq E Phard hthetaHard
@@ -670,8 +682,14 @@ theorem paper_theorem13_externality_exact
           (E.Vinf theta (E.gSmooth b) (fun tau => tau ^ a)) theta := by
     intro theta htheta
     exact CESPricePathOn.ratio_eq E Psmooth htheta
+  have hshare := axiom_cobb_douglas_factor_share Fcd E.eta E.lam G
+    (E.Vinf thetaCD g h) wVCD Y hCD h_wVCD hY hG_pos hVCD_pos
+    E.eta_pos E.eta_lt_one E.lam_pos
+  have hwVeq : wVCD = (1 - E.eta) * Y / E.Vinf thetaCD g h :=
+    (eq_div_iff hVCD_pos.ne').2 hshare
+  have hsteady := E.cobb_douglas_steady_state_identity Y wVCD g h thetaCD hshare
   refine ⟨E.intervalIntegral_exp_neg_eq_LambdaJ hr,
-    E.intervalIntegral_exp_neg_eq_Lambda hr, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    E.intervalIntegral_exp_neg_eq_Lambda hr, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · exact E.wedge_eq_wedgeExplicit hr hthetaHard.1 hthetaHard.2
       (Phard.hwG_pos thetaHard hthetaHard) hwageHard
   · intro theta1 theta2 htheta1 htheta2 htheta12
@@ -681,18 +699,23 @@ theorem paper_theorem13_externality_exact
         theta2 Phard hr ha_pos ha_le htheta2]
     exact E.wedgeExplicit_monotone hr ha_pos ha_le Phard.hrho_lt hKAI_ge
       htheta1.1 htheta12 htheta2.2
-  · exact ⟨E.smoothMarginalProductWedge_tendsto_atTop hr
-        Psmooth.hwG_pos hwageSmooth,
-      E.smoothMarginalProductWedge_tendsto_endpoint hr
-        Psmooth.hwG_pos hwageSmooth,
+  · refine ⟨E.smoothMarginalProductWedge_tendsto_atTop hr
+        Psmooth.hwG_pos hwageSmooth, ?_,
       E.smoothMarginalProductWedge_tendsto_zero hr
         Psmooth.hwG_pos hwageSmooth⟩
+    intro hexponent
+    exact ⟨E.smoothWedgeEndpointCoefficient_pos hr,
+      E.smoothMarginalProductWedge_tendsto_endpoint hr
+        Psmooth.hwG_pos hwageSmooth hexponent⟩
   · exact E.gHard_of_ge (by simp)
-  · exact E.hardPromotion_externalityResidual_zero_above
-      wVBoundary hBoundary (E.Lambda r) thetaAbove hthetaAbove
-  · exact E.thm_externality_pigouvian_cobb_douglas_from_axioms
-      Fcd E.eta E.lam G Y wVCD (E.Lambda r) g h thetaCD hCD h_wVCD hY
-      hG_pos hVCD_pos E.eta_pos E.eta_lt_one E.lam_pos rfl
+  · exact E.hardPromotion_wedge_zero_above wGBoundary wVBoundary
+      (E.eBar thetaAbove ^ a) (E.LambdaJ r) (E.Lambda r)
+      thetaAbove hthetaAbove
+  · exact hshare
+  · exact hwVeq
+  · exact E.thm_externality_pigouvian_cobb_douglas
+      Y wVCD (g (E.eBar thetaCD)) (h (E.eBar thetaCD))
+      (E.Lambda r) hsteady
 
 /-! ## Proposition 14 and Equation (15): finite profession set. -/
 

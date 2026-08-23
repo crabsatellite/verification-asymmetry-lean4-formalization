@@ -427,7 +427,7 @@ theorem exactStepStock_zero_after_last_straddle
   rw [hintegral, mul_zero]
 
 /-- The last promoting straddling cohort is born at `-c*` and retires at
-    `T-c*`, matching the paper's clearance-time interpretation. -/
+    `T-c*`; this identifies the cutoff used by the zero-stock theorem above. -/
 theorem last_straddling_retirement_time (theta0 theta1 : ℝ) :
     -E.cStar theta0 theta1 + E.T = E.T - E.cStar theta0 theta1 := by
   ring

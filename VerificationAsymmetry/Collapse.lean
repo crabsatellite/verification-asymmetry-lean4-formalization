@@ -17,8 +17,9 @@
     Part 3.  Long-run zero stock above θ*: V_∞(θ) = 0.
     Part 4.  Pre-shock-senior component:
               V_pre(t) = V_∞(θ₀) · (1 - t/T_s)_+.
-              The complete straddling-cohort path and exact clearance time are
-              encoded in `CohortPath.lean`.
+              The complete straddling-cohort path and the proved zero-stock
+              bound after the last straddling cohort retires are encoded in
+              `CohortPath.lean`.
     Part 5.  Threshold value for arbitrary h; a left-limit statement
               additionally needs the paper's one-sided-continuity premise.
 

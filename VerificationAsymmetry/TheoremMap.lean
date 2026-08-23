@@ -191,6 +191,7 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.smoothWedgePower_tendsto_atTop
 #check VerificationAsymmetry.Economy.smoothWedgePower_eq_one
 #check VerificationAsymmetry.Economy.smoothWedgePower_tendsto_zero
+#check VerificationAsymmetry.Economy.smoothWedgeEndpointCoefficient_pos
 #check VerificationAsymmetry.Economy.smoothPaperWedge
 #check VerificationAsymmetry.Economy.smoothMarginalProductWedge
 #check VerificationAsymmetry.Economy.smoothMarginalProductWedge_eq_smoothPaperWedge
