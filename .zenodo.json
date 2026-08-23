@@ -6,8 +6,8 @@
     }
   ],
   "title": "Verification Asymmetry: Lean 4 Formalization",
-  "version": "0.4.3",
-  "description": "Machine-checked Lean 4 and Mathlib formal companion for Verification Asymmetry under AI Substitution. The current-paper theorem map covers Definition 1 through Proposition 14 and Equations (1)-(15), with exact-object bridges for the literal wV/wG infimum-defined inversion threshold, original piecewise-stock one-sided derivatives, discounted interval integrals, and the theta-indexed marginal-product wedge endpoint trichotomy; 25 typed current-paper entries, zero unfinished derived mathematics, zero executable sorry/admit, and an explicit two-input textbook axiom boundary.",
+  "version": "0.4.4",
+  "description": "Machine-checked Lean 4 and Mathlib formal companion for Verification Asymmetry under AI Substitution. The strict current-paper contract binds 26 formal manuscript fragments to 26 unique complete Lean declaration signatures and exact per-claim project-axiom sets, while classifying three interpretive fragments as scope-only. CES price-path endpoints consume the textbook CES wage-ratio axiom directly; the externality root consumes the CES and Cobb-Douglas factor-share axioms directly. The release has zero executable sorry/admit and exact-object bridges for the literal wV/wG infimum, original piecewise stock, discounted interval integrals, and marginal-product wedge endpoint trichotomy.",
   "access_right": "open",
   "upload_type": "software",
   "license": "mit",

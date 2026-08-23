@@ -87,6 +87,32 @@ REQUIRED_MAP_SYMBOLS = (
     "smoothMarginalProductWedge_tendsto_endpoint",
     "smoothMarginalProductWedge_tendsto_zero",
     "prop_aggregation_near_cobb_douglas_limit",
+    "paper_definition1_parameters_exact",
+    "paper_equation1_ces_exact",
+    "paper_definition3_generation_supply_exact",
+    "paper_equation2_generation_supply_exact",
+    "paper_definition4_cohort_dynamics_exact",
+    "paper_equation3_cumulative_experience_exact",
+    "paper_assumption6_time_indexed_stock_exact",
+    "paper_lemma7_steady_state_stock_exact",
+    "paper_equation4_steady_state_stock_exact",
+    "paper_equation5_hard_stock_exact",
+    "paper_equation6_smooth_stock_exact",
+    "paper_definition8_diagnostic_exact",
+    "paper_theorem9_inversion_exact",
+    "paper_equation7_wage_ratio_exact",
+    "paper_equation8_inversion_threshold_exact",
+    "paper_theorem10_pipeline_collapse_exact",
+    "paper_equation9_collapse_threshold_exact",
+    "paper_equation10_transient_stock_exact",
+    "paper_proposition11_smooth_collapse_exact",
+    "paper_equation11_smooth_stock_exact",
+    "paper_theorem13_externality_exact",
+    "paper_equation12_social_present_value_exact",
+    "paper_equation13_apprenticeship_wedge_exact",
+    "paper_equation14_explicit_wedge_exact",
+    "paper_proposition14_aggregation_exact",
+    "paper_equation15_aggregate_output_exact",
 )
 REQUIRED_DEFAULT_TARGETS = (
     "VerificationAsymmetry",
@@ -95,6 +121,7 @@ REQUIRED_DEFAULT_TARGETS = (
     "VerificationAsymmetry.CurrentPaperStatus",
     "VerificationAsymmetry.CurrentPaperAxiomAudit",
     "VerificationAsymmetry.PaperExactnessAudit",
+    "VerificationAsymmetry.CurrentPaperClaimBindings",
 )
 EXPECTED_TOOLCHAIN = "leanprover/lean4:v4.30.0-rc2"
 EXPECTED_MATHLIB_REV = "388f44f89d70fbad0e1accb8fd62fc8c97714a85"
@@ -285,6 +312,7 @@ def check_kernel_outputs(skip_build: bool) -> None:
         raise SystemExit("compiled theorem-map output lacks consumers: " + ", ".join(missing_outputs))
 
     run(["lake", "env", "lean", "VerificationAsymmetry/PaperExactnessAudit.lean"])
+    run(["lake", "env", "lean", "VerificationAsymmetry/CurrentPaperClaimBindings.lean"])
 
     status = run(["lake", "env", "lean", "VerificationAsymmetry/CurrentPaperStatus.lean"])
     if EXPECTED_STATUS not in status:

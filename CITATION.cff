@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this formalization, please cite the software repository and the companion paper."
 type: software
 title: "Verification Asymmetry: Lean 4 Formalization"
-version: 0.4.3
+version: 0.4.4
 date-released: 2026-08-23
 doi: "10.5281/zenodo.22058379"
 authors:
@@ -22,6 +22,6 @@ keywords:
 abstract: >-
   Machine-checked formal companion for Verification Asymmetry under AI
   Substitution. The current-paper theorem map covers the numbered mathematical
-  objects and displayed derivations of the 22-page EINT manuscript, including
-  exact-object consumption bridges and an explicit two-input textbook axiom
-  boundary.
+  objects and displayed derivations of the EINT manuscript, with one typed
+  declaration per formal claim, exact per-claim axiom boundaries, explicit
+  scope-only prose, and exact-object consumption bridges.

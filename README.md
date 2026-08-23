@@ -15,10 +15,15 @@ The current 22-page EINT manuscript has a complete publication-facing theorem
 map. Every derived mathematical claim in that manuscript has a named Lean
 carrier or theorem, and `CurrentPaperStatus.lean` evaluates to
 `unfinishedDerived=0`. The project contains zero executable `sorry` or `admit`.
-`PaperExactnessAudit.lean` additionally forces the publication-facing endpoints
-to consume the manuscript's literal `w_V/w_G` infimum, original piecewise
-stock, discounted integrals, theta-indexed marginal-product wedge, and
-endpoint-limit objects.
+`PaperExactnessAudit.lean` is now a compatibility audit over the strict roots;
+it declares no separate provider-premise endpoints.
+`CurrentPaperClaimBindings.lean` is the stricter publication root: every
+formalized numbered fragment has one unique declaration whose complete type and
+project-axiom dependency set are pinned by the paper infrastructure.  The
+frontier-relative residual definition and interpretive remarks are explicitly
+scope-only, rather than being misreported as proved propositions.
+The live contract contains 29 manuscript fragments: 26 unique typed formal
+claims and 3 explicit scope-only fragments.
 
 Two external textbook inputs are load-bearing for the current paper:
 `axiom_ces_wage_ratio` and `axiom_cobb_douglas_factor_share`. Their signatures
@@ -109,8 +114,10 @@ The authoritative current-paper surfaces are:
 
 - `TheoremMap.lean` — Definition 1 through Proposition 14 and Eqs. (1)--(15);
 - `CurrentPaperAxiomAudit.lean` — per-endpoint axiom dependencies;
-- `PaperExactnessAudit.lean` — exact-object consumption theorems compiled by the
-  manuscript/formalization infrastructure contract;
+- `PaperExactnessAudit.lean` — compatibility `#check`/axiom audit over the strict
+  claim declarations;
+- `CurrentPaperClaimBindings.lean` — one typed declaration per formal claim,
+  including axiom-discharged CES and Cobb--Douglas endpoint consumers;
 - `CurrentPaperStatus.lean` — typed current-paper ledger with zero unfinished
   derived entries;
 - `Ledger.lean` / `AxiomAudit.lean` — the broader historical project inventory.
@@ -135,7 +142,8 @@ The authoritative current-paper surfaces are:
 | [`VerificationAsymmetry/TheoremMap.lean`](VerificationAsymmetry/TheoremMap.lean) | Publication-facing `#check` map for every numbered current-paper object and derivation |
 | [`VerificationAsymmetry/CurrentPaperAxiomAudit.lean`](VerificationAsymmetry/CurrentPaperAxiomAudit.lean) | Current-paper-only `#print axioms` audit; allowed project axioms are exactly CES wage ratio and Cobb-Douglas factor share |
 | [`VerificationAsymmetry/CurrentPaperStatus.lean`](VerificationAsymmetry/CurrentPaperStatus.lean) | Current-paper ledger; evaluates to 25 entries and zero unfinished derived mathematics |
-| [`VerificationAsymmetry/PaperExactnessAudit.lean`](VerificationAsymmetry/PaperExactnessAudit.lean) | Exact-object consumers for the infimum threshold, original piecewise stock, discounted integrals, actual wedge, and actual endpoint trichotomy |
+| [`VerificationAsymmetry/PaperExactnessAudit.lean`](VerificationAsymmetry/PaperExactnessAudit.lean) | Compatibility audit that checks and prints axioms for the strict claim roots without introducing provider-premise wrappers |
+| [`VerificationAsymmetry/CurrentPaperClaimBindings.lean`](VerificationAsymmetry/CurrentPaperClaimBindings.lean) | Strict one-declaration-per-fragment types consumed by the signature and per-claim axiom contract |
 
 ## Building
 
@@ -161,6 +169,7 @@ lake env lean VerificationAsymmetry/CurrentPaperAxiomAudit.lean
 lake env lean VerificationAsymmetry/TheoremMap.lean
 lake env lean VerificationAsymmetry/CurrentPaperStatus.lean
 lake env lean VerificationAsymmetry/PaperExactnessAudit.lean
+lake env lean VerificationAsymmetry/CurrentPaperClaimBindings.lean
 ```
 
 ## Trust verification
