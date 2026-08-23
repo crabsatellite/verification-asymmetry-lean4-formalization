@@ -24,6 +24,10 @@ frontier-relative residual definition and interpretive remarks are explicitly
 scope-only, rather than being misreported as proved propositions.
 The live contract contains 29 manuscript fragments: 26 unique typed formal
 claims and 3 explicit scope-only fragments.
+The strict roots preserve the full production/cohort carriers, both weak and
+strict capacity cases, displayed ranges, capacity monotonicity, actual
+piecewise-stock derivatives, the literal step integral, smooth continuity and
+endpoint decay, actual-wedge monotonicity, and the finite aggregation domain.
 
 Two external textbook inputs are load-bearing for the current paper:
 `axiom_ces_wage_ratio` and `axiom_cobb_douglas_factor_share`. Their signatures

@@ -6,8 +6,8 @@
     }
   ],
   "title": "Verification Asymmetry: Lean 4 Formalization",
-  "version": "0.4.4",
-  "description": "Machine-checked Lean 4 and Mathlib formal companion for Verification Asymmetry under AI Substitution. The strict current-paper contract binds 26 formal manuscript fragments to 26 unique complete Lean declaration signatures and exact per-claim project-axiom sets, while classifying three interpretive fragments as scope-only. CES price-path endpoints consume the textbook CES wage-ratio axiom directly; the externality root consumes the CES and Cobb-Douglas factor-share axioms directly. The release has zero executable sorry/admit and exact-object bridges for the literal wV/wG infimum, original piecewise stock, discounted interval integrals, and marginal-product wedge endpoint trichotomy.",
+  "version": "0.4.5",
+  "description": "Machine-checked Lean 4 and Mathlib formal companion for Verification Asymmetry under AI Substitution. The strict current-paper contract binds 26 formal manuscript fragments to 26 unique complete Lean declaration signatures and exact per-claim project-axiom sets, while classifying three interpretive fragments as scope-only. The roots now preserve the full production and cohort carriers, weak and strict capacity cases, inversion range and capacity monotonicity, the actual piecewise-stock derivative, the literal permanent-step integral and cutoff range, smooth-stock continuity and endpoint decay, actual-wedge monotonicity, and the finite-aggregation domain. The release has zero executable sorry/admit; Theorem 9 and Theorem 13 consume their textbook CES and Cobb-Douglas inputs at the final roots.",
   "access_right": "open",
   "upload_type": "software",
   "license": "mit",
