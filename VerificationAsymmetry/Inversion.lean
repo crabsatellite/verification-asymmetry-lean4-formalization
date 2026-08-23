@@ -665,6 +665,89 @@ theorem thetaInvAtCapacity_tendsto_zero_right
     change 0 < (Gcrit - LG) / (K - LG)
     exact div_pos (by linarith) (by linarith)
 
+/-- The literal CES wage-ratio crossing set with AI capacity exposed as the
+    varying coordinate. -/
+def capacityRatioCrossingSet
+    (eta rho lam LG V rBar K : ℝ) : Set ℝ :=
+  {theta | theta ∈ Set.Icc (0 : ℝ) 1 ∧
+    rBar ≤ wageRatioAtCapacity eta rho lam LG V theta K}
+
+/-- The paper's actual infimum threshold along a finite-capacity family. -/
+noncomputable def thetaInvRatioInfAtCapacity
+    (eta rho lam LG V rBar K : ℝ) : ℝ :=
+  sInf (capacityRatioCrossingSet eta rho lam LG V rBar K)
+
+/-- For every interior-reachable finite capacity, the actual infimum of the
+    CES wage-ratio crossing set equals the displayed closed form. -/
+theorem thetaInvRatioInfAtCapacity_eq_closedForm
+    (V rBar K : ℝ) (hV_pos : 0 < V) (hrBar_pos : 0 < rBar)
+    (hrho_lt : E.rho < 1) (hGstar_lo : E.LG < E.Gstar V rBar)
+    (hGstar_hi : E.Gstar V rBar < K) :
+    thetaInvRatioInfAtCapacity E.eta E.rho E.lam E.LG V rBar K =
+      thetaInvAtCapacity E.LG (E.Gstar V rBar) K := by
+  have hK_pos : 0 < K := lt_trans E.LG_pos hGstar_lo |>.trans hGstar_hi
+  let EK : Economy := { E with KAI := K, KAI_pos := hK_pos }
+  have hEq := EK.thetaInvInf_eq_thetaInv V rBar hV_pos hrBar_pos
+    (by simpa [EK] using hGstar_lo.trans hGstar_hi) hrho_lt
+    (by simpa [EK] using hGstar_lo) (by simpa [EK] using hGstar_hi)
+  simpa [thetaInvRatioInfAtCapacity, capacityRatioCrossingSet,
+    inversionCrossingSet, wageRatioAtCapacity, wageRatio,
+    generationAtCapacity, G, thetaInvAtCapacity, thetaInv, EK] using hEq
+
+/-- Above the no-AI target, the actual infimum threshold exists in `(0,1)` for
+    all sufficiently large finite capacities and equals the paper's closed form. -/
+theorem thetaInvRatioInfAtCapacity_eventually_interior
+    (V rBar : ℝ) (hV_pos : 0 < V) (hrBar_pos : 0 < rBar)
+    (hrho_lt : E.rho < 1) (hGstar_lo : E.LG < E.Gstar V rBar) :
+    ∀ᶠ K : ℝ in atTop,
+      thetaInvRatioInfAtCapacity E.eta E.rho E.lam E.LG V rBar K =
+          thetaInvAtCapacity E.LG (E.Gstar V rBar) K ∧
+        thetaInvRatioInfAtCapacity E.eta E.rho E.lam E.LG V rBar K ∈
+          Set.Ioo (0 : ℝ) 1 := by
+  filter_upwards [eventually_ge_atTop (E.Gstar V rBar + 1)] with K hK
+  have hGstar_hi : E.Gstar V rBar < K := by linarith
+  have heq := E.thetaInvRatioInfAtCapacity_eq_closedForm V rBar K hV_pos
+    hrBar_pos hrho_lt hGstar_lo hGstar_hi
+  have hrange : thetaInvAtCapacity E.LG (E.Gstar V rBar) K ∈
+      Set.Ioo (0 : ℝ) 1 := by
+    constructor
+    · exact div_pos (by linarith) (by linarith)
+    · unfold thetaInvAtCapacity
+      rw [div_lt_one (by linarith)]
+      linarith
+  exact ⟨heq, by simpa [heq] using hrange⟩
+
+/-- The actual capacity-indexed infimum threshold tends to zero from above. -/
+theorem thetaInvRatioInfAtCapacity_tendsto_zero_right
+    (V rBar : ℝ) (hV_pos : 0 < V) (hrBar_pos : 0 < rBar)
+    (hrho_lt : E.rho < 1) (hGstar_lo : E.LG < E.Gstar V rBar) :
+    Tendsto
+      (fun K => thetaInvRatioInfAtCapacity E.eta E.rho E.lam E.LG V rBar K)
+      atTop (nhdsWithin 0 (Set.Ioi 0)) := by
+  have heventual := E.thetaInvRatioInfAtCapacity_eventually_interior V rBar
+    hV_pos hrBar_pos hrho_lt hGstar_lo
+  have heq :
+      (fun K => thetaInvRatioInfAtCapacity E.eta E.rho E.lam E.LG V rBar K)
+        =ᶠ[atTop]
+      (fun K => thetaInvAtCapacity E.LG (E.Gstar V rBar) K) := by
+    filter_upwards [heventual] with K hK
+    exact hK.1
+  exact (thetaInvAtCapacity_tendsto_zero_right hGstar_lo).congr' heq.symm
+
+/-- If the target is already reached at the no-AI endpoint, the literal
+    marginal-product crossing-set infimum is zero. -/
+theorem thetaInvMarginalProductInf_eq_zero_of_target_le_baseline
+    (wG wV : ℝ → ℝ) (rBar : ℝ)
+    (hbaseline : rBar ≤ wV 0 / wG 0) :
+    thetaInvMarginalProductInf wG wV rBar = 0 := by
+  unfold thetaInvMarginalProductInf
+  have hleast : IsLeast (marginalProductCrossingSet wG wV rBar) 0 := by
+    constructor
+    · exact ⟨⟨le_rfl, zero_le_one⟩, hbaseline⟩
+    · intro theta htheta
+      exact htheta.1.1
+  exact hleast.csInf_eq
+
 end Economy
 
 end VerificationAsymmetry

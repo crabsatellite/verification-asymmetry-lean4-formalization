@@ -6,8 +6,8 @@
     }
   ],
   "title": "Verification Asymmetry: Lean 4 Formalization",
-  "version": "0.4.6",
-  "description": "Machine-checked Lean 4 and Mathlib formal companion for Verification Asymmetry under AI Substitution. The strict current-paper contract binds 26 formal manuscript fragments to 26 unique complete Lean declaration signatures and exact per-claim project-axiom sets, while classifying three interpretive fragments as scope-only. The roots preserve the literal marginal-product infimum for reachable target comparisons, the positive-side large-capacity threshold limit, full substitution-rate and time ranges, the hard-promotion boundary, the literal permanent-step integral, smooth-stock continuity and endpoint decay, actual-wedge monotonicity, and the finite-aggregation domain. The release has zero executable sorry/admit; Theorem 9 and Theorem 13 consume their disclosed textbook CES and Cobb-Douglas inputs at the final roots.",
+  "version": "0.4.7",
+  "description": "Machine-checked Lean 4 and Mathlib formal companion for Verification Asymmetry under AI Substitution. Formal-contract schema 2 partitions all 29 protected mathematical environments into 72 atomic markers: 59 unique formal roots and 13 explicit scope-only fragments, with zero unmarked environment text. Each formal claim pins its complete declaration type, proof term, named consumers, and exact project-axiom set. The roots include the capacity-indexed actual infimum, eventual interior existence, positive-side limit, baseline-zero endpoint, full cohort path and ranges, smooth threshold, externality, and aggregation claims. The release has zero executable sorry/admit; the only current-paper project axioms are the disclosed textbook CES and Cobb-Douglas identities.",
   "access_right": "open",
   "upload_type": "software",
   "license": "mit",

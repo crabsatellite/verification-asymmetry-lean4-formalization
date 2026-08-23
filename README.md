@@ -17,13 +17,13 @@ carrier or theorem, and `CurrentPaperStatus.lean` evaluates to
 `unfinishedDerived=0`. The project contains zero executable `sorry` or `admit`.
 `PaperExactnessAudit.lean` is now a compatibility audit over the strict roots;
 it declares no separate provider-premise endpoints.
-`CurrentPaperClaimBindings.lean` is the stricter publication root: every
-formalized numbered fragment has one unique declaration whose complete type and
-project-axiom dependency set are pinned by the paper infrastructure.  The
-frontier-relative residual definition and interpretive remarks are explicitly
-scope-only, rather than being misreported as proved propositions.
-The live contract contains 29 manuscript fragments: 26 unique typed formal
-claims and 3 explicit scope-only fragments.
+`AtomicPaperClaimBindings.lean` is the strict publication root: every
+truth-bearing statement inside a protected mathematical environment has an
+invisible TeX claim marker and one unique declaration whose complete type,
+proof term, named consumers, and project-axiom dependency set are pinned by the
+paper infrastructure. The live contract contains 72 atomic fragments: 59
+unique typed formal claims and 13 explicit scope-only fragments. All 29
+protected environments have zero unmarked body text.
 The strict roots preserve the full production/cohort carriers, both weak and
 strict capacity cases, displayed ranges, capacity monotonicity, actual
 piecewise-stock derivatives, the literal step integral, smooth continuity and
@@ -122,6 +122,9 @@ The authoritative current-paper surfaces are:
   claim declarations;
 - `CurrentPaperClaimBindings.lean` — one typed declaration per formal claim,
   including axiom-discharged CES and Cobb--Douglas endpoint consumers;
+- `AtomicPaperClaimBindings.lean` — one typed declaration per schema-2 atomic
+  manuscript claim, including the capacity-indexed actual infimum and baseline
+  endpoint roots;
 - `CurrentPaperStatus.lean` — typed current-paper ledger with zero unfinished
   derived entries;
 - `Ledger.lean` / `AxiomAudit.lean` — the broader historical project inventory.
@@ -148,6 +151,7 @@ The authoritative current-paper surfaces are:
 | [`VerificationAsymmetry/CurrentPaperStatus.lean`](VerificationAsymmetry/CurrentPaperStatus.lean) | Current-paper ledger; evaluates to 25 entries and zero unfinished derived mathematics |
 | [`VerificationAsymmetry/PaperExactnessAudit.lean`](VerificationAsymmetry/PaperExactnessAudit.lean) | Compatibility audit that checks and prints axioms for the strict claim roots without introducing provider-premise wrappers |
 | [`VerificationAsymmetry/CurrentPaperClaimBindings.lean`](VerificationAsymmetry/CurrentPaperClaimBindings.lean) | Strict one-declaration-per-fragment types consumed by the signature and per-claim axiom contract |
+| [`VerificationAsymmetry/AtomicPaperClaimBindings.lean`](VerificationAsymmetry/AtomicPaperClaimBindings.lean) | Schema-2 atomic roots consumed by the 59-claim signature, proof-term, consumer, and axiom contract |
 
 ## Building
 

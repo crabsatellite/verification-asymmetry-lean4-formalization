@@ -16,6 +16,7 @@
 
 import VerificationAsymmetry
 import VerificationAsymmetry.CurrentPaperClaimBindings
+import VerificationAsymmetry.AtomicPaperClaimBindings
 
 open VerificationAsymmetry
 open VerificationAsymmetry.Economy
@@ -93,6 +94,10 @@ open VerificationAsymmetry.Economy
 #check VerificationAsymmetry.Economy.thetaInvAtCapacity_strictAnti
 #check VerificationAsymmetry.Economy.thetaInvAtCapacity_tendsto_zero
 #check VerificationAsymmetry.Economy.thetaInvAtCapacity_tendsto_zero_right
+#check VerificationAsymmetry.Economy.thetaInvRatioInfAtCapacity
+#check VerificationAsymmetry.Economy.thetaInvRatioInfAtCapacity_eventually_interior
+#check VerificationAsymmetry.Economy.thetaInvRatioInfAtCapacity_tendsto_zero_right
+#check VerificationAsymmetry.Economy.thetaInvMarginalProductInf_eq_zero_of_target_le_baseline
 
 /-! ## Theorem 10 and Eqs. (9)--(10): hard collapse and exact step path. -/
 #check VerificationAsymmetry.Economy.thetaStar
