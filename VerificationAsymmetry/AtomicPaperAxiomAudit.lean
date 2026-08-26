@@ -53,6 +53,7 @@ import VerificationAsymmetry.AtomicPaperClaimBindings
 #print axioms VerificationAsymmetry.Economy.paper_theorem13_hard_monotone_atomic
 #print axioms VerificationAsymmetry.Economy.paper_theorem13_smooth_trichotomy_atomic
 #print axioms VerificationAsymmetry.Economy.paper_theorem13_hard_boundary_atomic
+#print axioms VerificationAsymmetry.Economy.paper_theorem13_partial_capture_atomic
 #print axioms VerificationAsymmetry.Economy.paper_theorem13_residual_transfer_atomic
 #print axioms VerificationAsymmetry.Economy.paper_theorem13_cobb_douglas_transfer_atomic
 #print axioms VerificationAsymmetry.Economy.paper_theorem13_zero_boundary_atomic
@@ -61,4 +62,3 @@ import VerificationAsymmetry.AtomicPaperClaimBindings
 #print axioms VerificationAsymmetry.Economy.paper_proposition14_cobb_douglas_zero_atomic
 #print axioms VerificationAsymmetry.Economy.paper_proposition14_fixed_sigma_atomic
 #print axioms VerificationAsymmetry.Economy.paper_proposition14_limit_atomic
-

@@ -59,12 +59,14 @@ variable (E : Economy)
 -/
 
 /-- Paper-novel hypothesis predicate (Cat 3 hypothesisPredicate):
-    `F` is homogeneous of degree one — constant returns to scale.
+    `F` is homogeneous of degree one on the paper's nonnegative production
+    domain — constant returns to scale.
 
     Paper Theorem `\label{thm:decomp}` uses CRS to invoke Euler's
     identity. -/
 def IsCRS (F : ℝ → ℝ → ℝ) : Prop :=
-  ∀ t G V : ℝ, 0 < t → F (t * G) (t * V) = t * F G V
+  ∀ t G V : ℝ, 0 < t → 0 ≤ G → 0 ≤ V →
+    F (t * G) (t * V) = t * F G V
 
 /-- Paper-novel hypothesis predicate (Cat 3 hypothesisPredicate):
     `F` is Cobb-Douglas `F(G, V) = G^η · (λ V)^(1-η)` with share

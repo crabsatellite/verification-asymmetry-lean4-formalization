@@ -11,17 +11,18 @@ longer manuscript version.
 
 ## Status
 
-The current EINT manuscript has a complete publication-facing theorem
-map. Every derived mathematical claim in that manuscript has a named Lean
-carrier or theorem, and `CurrentPaperStatus.lean` evaluates to
-`unfinishedDerived=0`. The project contains zero executable `sorry` or `admit`.
+The current EINT manuscript has a publication-facing theorem map for its core
+theorem chain. The registered model definitions, numbered equations, and formal
+results in that chain have named Lean carriers or theorems, and
+`CurrentPaperStatus.lean` evaluates to `unfinishedDerived=0`. The project
+contains zero executable `sorry` or `admit`.
 `PaperExactnessAudit.lean` is now a compatibility audit over the strict roots;
 it declares no separate provider-premise endpoints.
 `AtomicPaperClaimBindings.lean` is the strict publication root: every
 truth-bearing statement inside a protected mathematical environment has an
 invisible TeX claim marker and one unique declaration whose complete type,
 proof term, named consumers, and project-axiom dependency set are pinned by the
-paper infrastructure. The live contract contains 114 atomic fragments: 59
+paper infrastructure. The live contract contains 115 atomic fragments: 60
 unique typed formal claims, 14 explicit scope-only fragments, 40 proof
 relations with exact target, premise, and conclusion sets, and one exact
 theorem-restatement relation. All 35 protected
@@ -31,11 +32,13 @@ strict capacity cases, displayed ranges, capacity monotonicity, actual
 piecewise-stock derivatives, the literal step integral, smooth continuity and
 endpoint decay, actual-wedge monotonicity, and the finite aggregation domain.
 
-Two external textbook inputs are load-bearing for the current paper:
+Two external textbook inputs are load-bearing for the registered core theorem chain:
 `axiom_ces_wage_ratio` and `axiom_cobb_douglas_factor_share`. Their signatures
 carry the exact production-function, derivative, positivity, and range
-antecedents used by the paper. All other current-paper mathematical deductions
-are derived in Lean from Mathlib and those explicit inputs.
+antecedents used by the paper. All other registered core deductions are derived
+in Lean from Mathlib and those explicit inputs. The formal scope comprises the
+registered core theorem chain and its proof dependencies; interpretive and
+empirical prose and background mathematical facts remain manuscript context.
 
 The repository remains a superset of an older 42-page model. Historical modules
 for credentialing, recursive verification, and endogenous adoption retain honest

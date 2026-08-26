@@ -419,12 +419,28 @@ theorem paper_theorem13_hard_boundary_atomic
       htheta htheta1⟩
 
 theorem paper_theorem13_partial_capture_atomic
-    (zeta wG wV gE hE LambdaJ Lambda theta : ℝ) :
-    internalizedWedge zeta wG wV gE hE LambdaJ Lambda theta =
-      (1 - zeta) *
-        (externalityResidual wV gE hE Lambda /
-          MPpriv wG LambdaJ theta) :=
-  prop_internalization zeta wG wV gE hE LambdaJ Lambda theta
+    (F : ℝ → ℝ → ℝ) (g h : ℝ → ℝ)
+    (theta V r wG wV zeta : ℝ)
+    {stationaryThetaAndPrices employerCapturesJuniorGeneration
+      employerCapturesNoLaterVerificationRent entrantIsPriceTaking : Prop}
+    (P : E.PaperExternalityIncidenceContext F g h theta V r wG wV
+      stationaryThetaAndPrices employerCapturesJuniorGeneration
+      employerCapturesNoLaterVerificationRent entrantIsPriceTaking)
+    (hzeta : zeta ∈ Icc (0 : ℝ) 1) :
+    theta ∈ Ico (0 : ℝ) 1 ∧ zeta ∈ Icc (0 : ℝ) 1 ∧
+      wedge wG wV (g (E.eBar theta)) (h (E.eBar theta))
+          (E.LambdaJ r) (E.Lambda r) theta =
+        (wV / wG) *
+          (g (E.eBar theta) * h (E.eBar theta) * E.Lambda r) /
+            ((1 - theta) * E.LambdaJ r) ∧
+      internalizedWedge zeta wG wV (g (E.eBar theta))
+          (h (E.eBar theta)) (E.LambdaJ r) (E.Lambda r) theta =
+        (1 - zeta) *
+          wedge wG wV (g (E.eBar theta)) (h (E.eBar theta))
+            (E.LambdaJ r) (E.Lambda r) theta := by
+  exact ⟨P.theta_range, hzeta,
+    E.paper_equation13_apprenticeship_wedge_exact F g h theta V r wG wV P,
+    rfl⟩
 
 theorem paper_theorem13_residual_transfer_atomic
     (F : ℝ → ℝ → ℝ) (g h : ℝ → ℝ) (theta V r wG wV : ℝ)
